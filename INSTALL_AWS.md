@@ -147,6 +147,17 @@ The following command takes around 30 minutes to complete. Make sure to run it o
 cd ../musicbrainz-server/
 screen -dmL ./admin/InitDb.pl --createdb --import /home/ubuntu/mbdump/mbdump*.tar.bz2 --echo
 ```
+# Setup cron jobs to automatically sync database
+Open crontab
+```bash
+crontab -e
+```
+Append the following and save the file
+```text
+0 * * * * /home/ubuntu/musicbrainz-server/admin/cron/hourly.sh
+0 0 * * * /home/ubuntu/musicbrainz-server/admin/cron/daily.sh
+0 0 1 * * /home/ubuntu/musicbrainz-server/admin/cron/monthly.sh
+```
 
 ## Run the server
 We need to run the server inside a `screen` so that it continues to run even when no SSH connection is active.
@@ -220,7 +231,14 @@ Update the file to verify that:
 `DB_HOST` is `localhost`, `DB_NAME` is `musicbrainz_db`, `DB_USER` is `musicbrainz`, `DB_PASSWORD` is `musicbrainz`
 `INDEXES_DIR` is `/home/search/indexdata` and `SERVLET_HOST` is `http://localhost:8080`
 
-TODO: Setup a cron job to run the updater every hour.
+Open crontab for tomcat8 user
+```bash
+sudo -u tomcat8 crontab -e
+```
+Append the following and save the file
+```text
+0 * * * * /home/search/search-server/updater/updateindex.sh
+```
 
 ## Change the ownership of `search` directory
 The `/home/search` directory must be owned by tomcat user so that there are no permission issues:
