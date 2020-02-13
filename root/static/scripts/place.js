@@ -1,29 +1,35 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
-const $ = require('jquery');
-const L = require('leaflet/dist/leaflet-src');
-const ko = require('knockout');
-const _ = require('lodash');
+import $ from 'jquery';
+import L from 'leaflet/dist/leaflet-src';
+import ko from 'knockout';
+import _ from 'lodash';
 
-const isBlank = require('./common/utility/isBlank');
-const initializeDuplicateChecker = require('./edit/check-duplicates');
-const initializeArea = require('./edit/MB/Control/Area').Area;
-const {initializeBubble} = require('./edit/MB/Control/Bubble');
-const {errorField} = require('./edit/validation');
-const {initialize_guess_case} = require('./guess-case/MB/Control/GuessCase');
-const {map, marker} = require('./place/map');
+import isBlank from './common/utility/isBlank';
+import initializeDuplicateChecker from './edit/check-duplicates';
+import {initializeArea} from './edit/MB/Control/Area';
+import {initializeBubble} from './edit/MB/Control/Bubble';
+import {errorField} from './edit/validation';
+import {initializeGuessCase} from './guess-case/MB/Control/GuessCase';
+import {map, marker} from './place/map';
 
-initialize_guess_case('place', 'id-edit-place');
+initializeGuessCase('place', 'id-edit-place');
 initializeArea('span.area.autocomplete');
 initializeDuplicateChecker('place');
 
 var bubble = initializeBubble('#coordinates-bubble', 'input[name=edit-place\\.coordinates]');
 
-// The map is hidden by default, which means it can't position itself correctly.
-// This tells it to update its position once it's visible.
+/*
+ * The map is hidden by default, which means it can't
+ * position itself correctly.
+ * This tells it to update its position once it's visible.
+ */
 const afterBubbleShow = _.once(function () {
     map.invalidateSize();
 });
@@ -38,7 +44,7 @@ bubble.show = function () {
 map.on('click', function (e) {
     if (map.getZoom() > 11) {
         marker.setLatLng(e.latlng);
-        update_coordinates(e.latlng);
+        updateCoordinates(e.latlng);
     } else {
         // If the map is zoomed too far out, marker placement would be wildly inaccurate, so just zoom in.
         map.setView(e.latlng);
@@ -46,23 +52,23 @@ map.on('click', function (e) {
     }
 });
 
-marker.on('dragend', function (e) {
+marker.on('dragend', function () {
     var latlng = marker.getLatLng().wrap();
-    update_coordinates(latlng)
+    updateCoordinates(latlng);
 });
 
-function update_coordinates(latlng) {
+function updateCoordinates(latlng) {
     $('#id-edit-place\\.coordinates').val(latlng.lat + ', ' + latlng.lng);
     $('#id-edit-place\\.coordinates').trigger('input');
 }
 
-var coordinates_request;
+var coordinatesRequest;
 var coordinatesError = errorField(ko.observable(false));
 
 $('input[name=edit-place\\.coordinates]').on('input', function () {
-    if (coordinates_request) {
-        coordinates_request.abort();
-        coordinates_request = null;
+    if (coordinatesRequest) {
+        coordinatesRequest.abort();
+        coordinatesRequest = null;
     }
     var coordinates = $('input[name=edit-place\\.coordinates]').val();
     if (isBlank(coordinates)) {
@@ -72,7 +78,7 @@ $('input[name=edit-place\\.coordinates]').on('input', function () {
         coordinatesError(false);
     } else {
         var url = '/ws/js/parse-coordinates?coordinates=' + encodeURIComponent(coordinates);
-        coordinates_request = $.getJSON(url, function (data) {
+        coordinatesRequest = $.getJSON(url, function (data) {
             $('.coordinates-errors').css('display', 'none');
             $('input[name=edit-place\\.coordinates]').removeClass('error');
             $('input[name=edit-place\\.coordinates]').addClass('success');
@@ -82,12 +88,14 @@ $('input[name=edit-place\\.coordinates]').on('input', function () {
 
             map.panTo(L.latLng(data.coordinates.latitude, data.coordinates.longitude));
             map.setZoom(16);
-        }).fail(function (jqxhr, text_status, error_thrown) {
-            if (text_status === 'abort') { return; }
+        }).fail(function (jqxhr, textStatus) {
+            if (textStatus === 'abort') {
+                return;
+            }
 
             $('input[name=edit-place\\.coordinates]').addClass('error');
             $('.coordinates-errors').css('display', 'block');
             coordinatesError(true);
         });
-    };
+    }
 });

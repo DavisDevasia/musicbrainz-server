@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2015 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -7,8 +7,6 @@
  * later version: http://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-function nonEmpty(value: mixed): boolean %checks {
+export default function nonEmpty(value: mixed): boolean %checks {
   return value !== null && value !== undefined && value !== '';
 }
-
-module.exports = nonEmpty;

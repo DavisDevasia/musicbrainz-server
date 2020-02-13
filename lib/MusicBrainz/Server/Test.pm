@@ -294,10 +294,10 @@ sub schema_validator
     $version = '1.4' if $version == 1;
     $version = '2.0' if $version == 2 || !$version;
 
-    my $mmd_home = $ENV{'MMDSCHEMA'} ||
+    my $mmd_root = $ENV{'MMD_SCHEMA_ROOT'} ||
                    Cwd::realpath( File::Basename::dirname(__FILE__) ) . "/../../../../mmd-schema";
 
-    my $rng_file = "$mmd_home/schema/musicbrainz_mmd-$version.rng";
+    my $rng_file = "$mmd_root/schema/musicbrainz_mmd-$version.rng";
 
     my $rngschema;
     eval
@@ -307,7 +307,7 @@ sub schema_validator
 
     if ($@)
     {
-        warn "Cannot find or parse RNG schema. Set environment var MMDSCHEMA to point ".
+        warn "Cannot find or parse RNG schema. Set environment var MMD_SCHEMA_ROOT to point ".
             "to the mmd-schema directory or check out the mmd-schema in parallel to ".
             "the mb_server source. No schema validation will happen.\n";
         undef $rngschema;
@@ -389,7 +389,7 @@ sub _build_ws_test_json {
                 $mech->clear_credentials;
             }
 
-            $Test->plan(tests => 2);
+            $Test->plan(tests => 2 + ($opts->{extra_plan} // 0));
 
             $mech->get($end_point . $url, 'fetching');
             if ($opts->{response_code}) {
@@ -399,6 +399,9 @@ sub _build_ws_test_json {
             }
 
             cmp_deeply(decode_json($mech->content), $expected);
+
+            my $cb = $opts->{content_cb};
+            $cb->($mech->content) if $cb;
         });
     };
 }

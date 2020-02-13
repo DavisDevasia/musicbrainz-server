@@ -20,9 +20,9 @@ sub serialize
     $body{length} = number($entity->length);
     $body{video} = boolean($entity->video);
 
-    $body{"artist-credit"} = serialize_entity($entity->artist_credit)
-        if ($entity->artist_credit &&
-            ($toplevel || ($inc && $inc->artist_credits)));
+    if ($entity->artist_credit && ($toplevel || ($inc && $inc->artist_credits))) {
+        $body{"artist-credit"} = serialize_entity($entity->artist_credit, $inc, $stash);
+    }
 
     $body{releases} = list_of($entity, $inc, $stash, "releases")
         if ($toplevel && $inc && $inc->releases);

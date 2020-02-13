@@ -7,12 +7,10 @@
  * later version: http://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-import _ from 'lodash';
 import React from 'react';
 
 import RequestLogin from '../../components/RequestLogin';
 import {withCatalystContext} from '../../context';
-import {l, lp} from '../../static/scripts/common/i18n';
 import returnUri from '../../utility/returnUri';
 
 import Search from './Search';
@@ -21,7 +19,7 @@ function userLink(userName, path) {
   return `/user/${encodeURIComponent(userName)}${path}`;
 }
 
-type UserProp = {|+user: CatalystUserT|};
+type UserProp = {+user: CatalystUserT};
 
 const AccountMenu = ({user}: UserProp) => (
   <li className="account" tabIndex="-1">
@@ -59,7 +57,9 @@ const DataMenu = ({user}: UserProp) => {
       </span>
       <ul>
         <li>
-          <a href={userLink(userName, '/collections')}>{l('My Collections')}</a>
+          <a href={userLink(userName, '/collections')}>
+            {l('My Collections')}
+          </a>
         </li>
         <li>
           <a href={userLink(userName, '/ratings')}>{l('My Ratings')}</a>
@@ -71,13 +71,15 @@ const DataMenu = ({user}: UserProp) => {
           <a href={userLink(userName, '/edits/open')}>{l('My Open Edits')}</a>
         </li>
         <li>
-          <a href={userLink(userName, '/edits/all')}>{l('All My Edits')}</a>
+          <a href={userLink(userName, '/edits')}>{l('All My Edits')}</a>
         </li>
         <li>
           <a href="/edit/subscribed">{l('Edits for Subscribed Entities')}</a>
         </li>
         <li>
-          <a href="/edit/subscribed_editors">{l('Edits by Subscribed Editors')}</a>
+          <a href="/edit/subscribed_editors">
+            {l('Edits by Subscribed Editors')}
+          </a>
         </li>
         <li>
           <a href="/edit/notes-received">{l('Notes Left on My Edits')}</a>
@@ -103,7 +105,12 @@ const AdminMenu = ({user}: UserProp) => (
       {user.is_relationship_editor ? (
         <>
           <li>
-            <a href="/instrument/create">{lp('Add Instrument', 'button/menu')}</a>
+            <a href="/instrument/create">
+              {lp('Add Instrument', 'button/menu')}
+            </a>
+          </li>
+          <li>
+            <a href="/genre/create">{lp('Add Genre', 'button/menu')}</a>
           </li>
           <li>
             <a href="/relationships">{l('Edit Relationship Types')}</a>

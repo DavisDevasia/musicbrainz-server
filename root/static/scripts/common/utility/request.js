@@ -1,17 +1,20 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
-const $ = require('jquery');
-const _ = require('lodash');
+import $ from 'jquery';
+import _ from 'lodash';
 
 var nextAvailableTime = new Date().getTime();
 var previousDeferred = null;
 var timeout = 1000;
 
 function makeRequest(args, context, deferred) {
-    deferred.jqXHR = $.ajax(_.extend({ dataType: "json" }, args))
+    deferred.jqXHR = $.ajax({...args, dataType: "json"})
         .done(function () {
             if (!deferred.aborted) {
                 deferred.resolveWith(context, arguments);
@@ -68,4 +71,4 @@ function request(args, context) {
     return promise;
 }
 
-module.exports = request;
+export default request;

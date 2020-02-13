@@ -10,13 +10,9 @@
 import React from 'react';
 
 import {withCatalystContext} from '../../context';
-import {l} from '../../static/scripts/common/i18n';
-import {lp_attributes} from '../../static/scripts/common/i18n/attributes';
-import EntityLink from '../../static/scripts/common/components/EntityLink';
-import formatDate from '../../static/scripts/common/utility/formatDate';
-import formatEndDate from '../../static/scripts/common/utility/formatEndDate';
-import loopParity from '../../utility/loopParity';
-import type {InlineResultsPropsT, ResultsPropsT} from '../types';
+import ArtistListEntry
+  from '../../static/scripts/common/components/ArtistListEntry';
+import type {InlineResultsPropsT, ResultsPropsWithContextT} from '../types';
 
 import PaginatedSearchResults from './PaginatedSearchResults';
 import ResultsLayout from './ResultsLayout';
@@ -26,34 +22,18 @@ function buildResult(result, index) {
   const score = result.score;
 
   return (
-    <tr className={loopParity(index)} data-score={score} key={artist.id}>
-      <td>
-        <EntityLink entity={artist} />
-      </td>
-      <td>{artist.sort_name}</td>
-      <td>
-        {artist.typeName ? lp_attributes(artist.typeName, 'artist_type') : null}
-      </td>
-      <td>
-        {artist.gender ? lp_attributes(artist.gender.name, 'gender') : null}
-      </td>
-      <td>
-        {artist.area ? <EntityLink entity={artist.area} /> : null}
-      </td>
-      <td>{formatDate(artist.begin_date)}</td>
-      <td>
-        {artist.begin_area ? <EntityLink entity={artist.begin_area} /> : null}
-      </td>
-      <td>{formatEndDate(artist)}</td>
-      <td>
-        {artist.end_area ? <EntityLink entity={artist.end_area} /> : null}
-      </td>
-    </tr>
+    <ArtistListEntry
+      artist={artist}
+      index={index}
+      key={artist.id}
+      score={score}
+      showBeginEnd
+      showSortName
+    />
   );
 }
 
 export const ArtistResultsInline = ({
-  $c,
   pager,
   query,
   results,
@@ -86,17 +66,16 @@ const ArtistResults = ({
   pager,
   query,
   results,
-}: ResultsPropsT<ArtistT>) => (
+}: ResultsPropsWithContextT<ArtistT>) => (
   <ResultsLayout form={form} lastUpdated={lastUpdated}>
     <ArtistResultsInline
-      $c={$c}
       pager={pager}
       query={query}
       results={results}
     />
     {$c.user && !$c.user.is_editing_disabled ? (
       <p>
-        {l('Alternatively, you may {uri|add a new artist}.', {
+        {exp.l('Alternatively, you may {uri|add a new artist}.', {
           uri: '/artist/create?edit-artist.name=' + encodeURIComponent(query),
         })}
       </p>

@@ -18,6 +18,9 @@ my $mech = $test->mech;
 $mech->default_header("Accept" => "application/xml");
 
 MusicBrainz::Server::Test->prepare_test_database($c, '+webservice');
+MusicBrainz::Server::Test->prepare_test_database($c, <<'EOSQL');
+INSERT INTO release_tag (count, release, tag) VALUES (1, 123054, 114);
+EOSQL
 
 ws_test 'browse releases via artist (paging)',
     '/release?artist=3088b672-fba9-4b4b-8ae0-dce13babfbb4&offset=2' =>
@@ -62,6 +65,44 @@ ws_test 'browse releases via label',
     '<?xml version="1.0" encoding="UTF-8"?>
 <metadata xmlns="http://musicbrainz.org/ns/mmd-2.0#">
     <release-list count="2">
+        <release id="adcf7b48-086e-48ee-b420-1001f88d672f">
+            <title>My Demons</title>
+            <status id="4e304316-386d-3409-af2e-78857eec5cfe">Official</status>
+            <quality>normal</quality>
+            <text-representation>
+                <language>eng</language>
+                <script>Latn</script>
+            </text-representation>
+            <date>2007-01-29</date>
+            <country>GB</country>
+            <release-event-list count="1">
+                <release-event>
+                    <date>2007-01-29</date>
+                    <area id="8a754a16-0027-3a29-b6d7-2b40ea0481ed">
+                        <name>United Kingdom</name>
+                        <sort-name>United Kingdom</sort-name>
+                        <iso-3166-1-code-list>
+                            <iso-3166-1-code>GB</iso-3166-1-code>
+                        </iso-3166-1-code-list>
+                    </area>
+                </release-event>
+            </release-event-list>
+            <barcode>600116817020</barcode>
+            <asin>B000KJTG6K</asin>
+            <cover-art-archive>
+                <artwork>false</artwork>
+                <count>0</count>
+                <front>false</front>
+                <back>false</back>
+            </cover-art-archive>
+            <medium-list count="1">
+                <medium>
+                    <position>1</position>
+                    <format id="9712d52a-4509-3d4b-a1a2-67c88c643e31">CD</format>
+                    <track-list count="12" />
+                </medium>
+            </medium-list>
+        </release>
         <release id="3b3d130a-87a8-4a47-b9fb-920f2530d134">
             <title>Repercussions</title>
             <status id="4e304316-386d-3409-af2e-78857eec5cfe">Official</status>
@@ -102,44 +143,6 @@ ws_test 'browse releases via label',
                     <title>Chestplate Singles</title><position>2</position>
                     <format id="9712d52a-4509-3d4b-a1a2-67c88c643e31">CD</format>
                     <track-list count="9" />
-                </medium>
-            </medium-list>
-        </release>
-        <release id="adcf7b48-086e-48ee-b420-1001f88d672f">
-            <title>My Demons</title>
-            <status id="4e304316-386d-3409-af2e-78857eec5cfe">Official</status>
-            <quality>normal</quality>
-            <text-representation>
-                <language>eng</language>
-                <script>Latn</script>
-            </text-representation>
-            <date>2007-01-29</date>
-            <country>GB</country>
-            <release-event-list count="1">
-                <release-event>
-                    <date>2007-01-29</date>
-                    <area id="8a754a16-0027-3a29-b6d7-2b40ea0481ed">
-                        <name>United Kingdom</name>
-                        <sort-name>United Kingdom</sort-name>
-                        <iso-3166-1-code-list>
-                            <iso-3166-1-code>GB</iso-3166-1-code>
-                        </iso-3166-1-code-list>
-                    </area>
-                </release-event>
-            </release-event-list>
-            <barcode>600116817020</barcode>
-            <asin>B000KJTG6K</asin>
-            <cover-art-archive>
-                <artwork>false</artwork>
-                <count>0</count>
-                <front>false</front>
-                <back>false</back>
-            </cover-art-archive>
-            <medium-list count="1">
-                <medium>
-                    <position>1</position>
-                    <format id="9712d52a-4509-3d4b-a1a2-67c88c643e31">CD</format>
-                    <track-list count="12" />
                 </medium>
             </medium-list>
         </release>
@@ -216,27 +219,24 @@ ws_test 'browse releases via release group',
     </release-list>
 </metadata>';
 
-my $response = $mech->get('/ws/2/release?recording=7b1f6e95-b523-43b6-a048-810ea5d463a8');
-is ($response->code, 404, 'browse releases via non-existent recording');
-
-ws_test 'browse releases via recording',
-    '/release?inc=labels&status=official&recording=0c0245df-34f0-416b-8c3f-f20f66e116d0' =>
+ws_test 'browse releases via release group with inc=tags',
+    '/release?release-group=b84625af-6229-305f-9f1b-59c0185df016&inc=tags' =>
     '<?xml version="1.0" encoding="UTF-8"?>
 <metadata xmlns="http://musicbrainz.org/ns/mmd-2.0#">
     <release-list count="2">
-        <release id="28fc2337-985b-3da9-ac40-ad6f28ff0d8e">
-            <title>LOVE &amp; HONESTY</title>
+        <release id="0385f276-5f4f-4c81-a7a4-6bd7b8d85a7e">
+            <title>サマーれげぇ!レインボー</title>
             <status id="4e304316-386d-3409-af2e-78857eec5cfe">Official</status>
             <quality>normal</quality>
             <text-representation>
                 <language>jpn</language>
                 <script>Jpan</script>
             </text-representation>
-            <date>2004-01-15</date>
+            <date>2001-07-04</date>
             <country>JP</country>
             <release-event-list count="1">
                 <release-event>
-                     <date>2004-01-15</date>
+                     <date>2001-07-04</date>
                      <area id="2db42837-c832-3c27-b4a3-08198f75693c">
                          <name>Japan</name>
                          <sort-name>Japan</sort-name>
@@ -246,23 +246,60 @@ ws_test 'browse releases via recording',
                      </area>
                 </release-event>
             </release-event-list>
-            <barcode>4988064173891</barcode>
-            <asin>B0000YGBSG</asin>
+            <barcode>4942463511227</barcode>
+            <asin>B00005LA6G</asin>
             <cover-art-archive>
                 <artwork>false</artwork>
                 <count>0</count>
                 <front>false</front>
                 <back>false</back>
             </cover-art-archive>
-            <label-info-list count="1">
-                <label-info>
-                    <catalog-number>AVCD-17389</catalog-number>
-                    <label id="168f48c8-057e-4974-9600-aa9956d21e1a">
-                        <name>avex trax</name><sort-name>avex trax</sort-name>
-                    </label>
-                </label-info>
-            </label-info-list>
         </release>
+        <release id="b3b7e934-445b-4c68-a097-730c6a6d47e6">
+            <title>Summer Reggae! Rainbow</title>
+            <status id="41121bb9-3413-3818-8a9a-9742318349aa">Pseudo-Release</status>
+            <quality>normal</quality>
+            <text-representation>
+                <language>jpn</language>
+                <script>Latn</script>
+            </text-representation>
+            <date>2001-07-04</date>
+            <country>JP</country>
+            <release-event-list count="1">
+                <release-event>
+                     <date>2001-07-04</date>
+                     <area id="2db42837-c832-3c27-b4a3-08198f75693c">
+                         <name>Japan</name>
+                         <sort-name>Japan</sort-name>
+                         <iso-3166-1-code-list>
+                             <iso-3166-1-code>JP</iso-3166-1-code>
+                         </iso-3166-1-code-list>
+                     </area>
+                </release-event>
+            </release-event-list>
+            <barcode>4942463511227</barcode>
+            <asin>B00005LA6G</asin>
+            <tag-list>
+              <tag count="1"><name>hello project</name></tag>
+            </tag-list>
+            <cover-art-archive>
+                <artwork>false</artwork>
+                <count>0</count>
+                <front>false</front>
+                <back>false</back>
+            </cover-art-archive>
+        </release>
+    </release-list>
+</metadata>';
+
+my $response = $mech->get('/ws/2/release?recording=7b1f6e95-b523-43b6-a048-810ea5d463a8');
+is ($response->code, 404, 'browse releases via non-existent recording');
+
+ws_test 'browse releases via recording',
+    '/release?inc=labels&status=official&recording=0c0245df-34f0-416b-8c3f-f20f66e116d0' =>
+    '<?xml version="1.0" encoding="UTF-8"?>
+<metadata xmlns="http://musicbrainz.org/ns/mmd-2.0#">
+    <release-list count="2">
         <release id="cacc586f-c2f2-49db-8534-6f44b55196f2">
             <title>LOVE &amp; HONESTY</title>
             <status id="4e304316-386d-3409-af2e-78857eec5cfe">Official</status>
@@ -302,11 +339,50 @@ ws_test 'browse releases via recording',
                 </label-info>
             </label-info-list>
         </release>
+        <release id="28fc2337-985b-3da9-ac40-ad6f28ff0d8e">
+            <title>LOVE &amp; HONESTY</title>
+            <status id="4e304316-386d-3409-af2e-78857eec5cfe">Official</status>
+            <quality>normal</quality>
+            <text-representation>
+                <language>jpn</language>
+                <script>Jpan</script>
+            </text-representation>
+            <date>2004-01-15</date>
+            <country>JP</country>
+            <release-event-list count="1">
+                <release-event>
+                     <date>2004-01-15</date>
+                     <area id="2db42837-c832-3c27-b4a3-08198f75693c">
+                         <name>Japan</name>
+                         <sort-name>Japan</sort-name>
+                         <iso-3166-1-code-list>
+                             <iso-3166-1-code>JP</iso-3166-1-code>
+                         </iso-3166-1-code-list>
+                     </area>
+                </release-event>
+            </release-event-list>
+            <barcode>4988064173891</barcode>
+            <asin>B0000YGBSG</asin>
+            <cover-art-archive>
+                <artwork>false</artwork>
+                <count>0</count>
+                <front>false</front>
+                <back>false</back>
+            </cover-art-archive>
+            <label-info-list count="1">
+                <label-info>
+                    <catalog-number>AVCD-17389</catalog-number>
+                    <label id="168f48c8-057e-4974-9600-aa9956d21e1a">
+                        <name>avex trax</name><sort-name>avex trax</sort-name>
+                    </label>
+                </label-info>
+            </label-info-list>
+        </release>
     </release-list>
 </metadata>';
 
-ws_test 'browse releases via track artist',
-    '/release?track_artist=a16d1433-ba89-4f72-a47b-a370add0bb55' =>
+ws_test 'browse releases via track artist, including RGs and ratings',
+    '/release?track_artist=a16d1433-ba89-4f72-a47b-a370add0bb55&inc=release-groups+ratings' =>
     '<?xml version="1.0"?>
 <metadata xmlns="http://musicbrainz.org/ns/mmd-2.0#">
   <release-list count="1">
@@ -315,6 +391,12 @@ ws_test 'browse releases via track artist',
       <status id="4e304316-386d-3409-af2e-78857eec5cfe">Official</status>
       <quality>normal</quality>
       <text-representation><language>eng</language><script>Latn</script></text-representation>
+      <release-group type="Single" type-id="d6038452-8ee0-3f68-affc-2de9a1ede0b9" id="153f0a09-fead-3370-9b17-379ebd09446b">
+        <title>the Love Bug</title>
+        <first-release-date>2004-03-17</first-release-date>
+        <primary-type id="d6038452-8ee0-3f68-affc-2de9a1ede0b9">Single</primary-type>
+        <rating votes-count="2">5</rating>
+      </release-group>
       <date>2004-03-17</date>
       <country>JP</country>
       <release-event-list count="1">

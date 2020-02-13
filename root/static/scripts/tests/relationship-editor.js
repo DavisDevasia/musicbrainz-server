@@ -1,7 +1,10 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import './typeInfo';
 
@@ -10,8 +13,8 @@ import ko from 'knockout';
 import _ from 'lodash';
 import test from 'tape';
 
+import linkedEntities from '../common/linkedEntities';
 import MB from '../common/MB';
-import typeInfo from '../common/typeInfo';
 import fields from '../relationship-editor/common/fields';
 import {
   AddDialog,
@@ -47,18 +50,20 @@ var testRelease = {
     entityType: "release",
     relationships: [],
     name: "Love Me Do / I Saw Her Standing There",
-    artistCredit: [
-        {
-            artist: {
-                entityType: "artist",
-                sort_name: "Beatles, The",
-                name: "The Beatles",
-                id: 303,
-                gid: "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d"
+    artistCredit: {
+        names: [
+            {
+                artist: {
+                    entityType: "artist",
+                    sort_name: "Beatles, The",
+                    name: "The Beatles",
+                    id: 303,
+                    gid: "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d"
+                },
+                joinPhrase: ""
             },
-            joinPhrase: ""
-        }
-    ],
+        ],
+    },
     id: 211431,
     mediums: [
         {
@@ -76,7 +81,7 @@ var testRelease = {
                     },
                     position: 1,
                     name: "Love Me Do",
-                    artistCredit: []
+                    artistCredit: {names: []},
                 },
                 {
                     length: 176000,
@@ -91,10 +96,13 @@ var testRelease = {
                     },
                     position: 2,
                     name: "I Saw Her Standing There",
-                    artistCredit: []
+                    artistCredit: {names: []},
                 }
             ],
-            format: "Vinyl",
+            format: {
+                name: "Vinyl",
+            },
+            format_id: 7,
             position: 1
         }
     ],
@@ -109,9 +117,13 @@ var testRelease = {
     }
 };
 
-function id2attr(id) { return { type: typeInfo.link_attribute_type[id] } }
+function id2attr(id) {
+    return { type: linkedEntities.link_attribute_type[id] };
+}
 
-function ids2attrs(ids) { return _.map(ids, id2attr) }
+function ids2attrs(ids) {
+    return _.map(ids, id2attr);
+}
 
 function setupReleaseRelationshipEditor() {
     var vm = new FakeReleaseViewModel({
@@ -130,7 +142,9 @@ function setupGenericRelationshipEditor(options) {
 
 function formData() {
     var inputsArray = _.toArray($("input[type=hidden]"));
-    return _.transform(inputsArray, function (result, input) { result[input.name] = input.value }, {});
+    return _.transform(inputsArray, function (result, input) {
+        result[input.name] = input.value;
+    }, {});
 };
 
 function relationshipEditorTest(name, callback) {
@@ -141,14 +155,16 @@ function relationshipEditorTest(name, callback) {
                 .append('<div id="content"></div><div id="dialog"></div></div>')
                 .appendTo('body');
 
-        // _.defer makes its target functions asynchronous. It is redefined
-        // here to call its target right away, so that we don't have to deal
-        // with writing async tests.
+        /*
+         * _.defer makes its target functions asynchronous. It is redefined
+         * here to call its target right away, so that we don't have to deal
+         * with writing async tests.
+         */
         var _defer = _.defer;
 
         _.defer = function (func) {
             func.apply(null, _.toArray(arguments).slice(1));
-        }
+        };
 
         callback(t);
 
@@ -198,7 +214,7 @@ relationshipEditorTest("link phrase interpolation", function (t) {
             linkTypeID: 154,
             attributes: ids2attrs([1, 69, 75, 109, 302]),
             expected: "contains additional samples by",
-            expectedExtra: "strings, guitars, lyre, plucked string instruments"
+            expectedExtra: "strings, guitars, lyre and plucked string instruments"
         },
         // MBS-6129
         {
@@ -217,16 +233,19 @@ relationshipEditorTest("link phrase interpolation", function (t) {
         relationship.linkTypeID(test.linkTypeID);
         relationship.setAttributes(test.attributes);
 
-        var result = relationship.phraseAndExtraAttributes();
+        var result = relationship.phraseAndExtraAttributes(
+            entities.indexOf(source) === 0 ? 'link_phrase' : 'reverse_link_phrase',
+            false,
+        );
 
         t.equal(
-            result[entities.indexOf(source)],
+            result[0],
             test.expected,
             [test.linkTypeID, JSON.stringify(_(test.attributes).map('type.id').value())].join(", ")
         );
 
         if (test.expectedExtra) {
-            t.equal(result[2], test.expectedExtra);
+            t.equal(result[1], test.expectedExtra);
         }
     });
 
@@ -265,7 +284,10 @@ relationshipEditorTest("merging duplicate relationships", function (t) {
     t.ok(source.mergeRelationship(duplicateRelationship), "relationships were merged");
 
     t.deepEqual(
-        _(relationship.attributes()).map('type.id').value().sort(),
+        _(relationship.attributes())
+            .map('type.id')
+            .value()
+            .sort(),
         [123, 194, 277],
         "attributes are the same"
     );
@@ -360,10 +382,10 @@ relationshipEditorTest("dialog backwardness", function (t) {
     ];
 
     _.each(tests, function (test) {
-        var options = _.assign({ viewModel: vm }, test.input);
+        var options = {...test.input, viewModel: vm};
         var dialog = new AddDialog(options);
 
-        t.equal(dialog.backward(), test.expected.backward)
+        t.equal(dialog.backward(), test.expected.backward);
         t.deepEqual(dialog.relationship().entities(), test.expected.entities);
 
         dialog.close();
@@ -405,7 +427,8 @@ relationshipEditorTest("BatchRelationshipDialog", function (t) {
     });
 
     var relationship = dialog.relationship();
-    var relationships, attributes;
+    let relationships;
+    let attributes;
 
     relationship.linkTypeID(154);
     relationship.setAttributes(ids2attrs([1]));
@@ -517,14 +540,14 @@ relationshipEditorTest("MBS-5389: added recording-recording relationship appears
 relationshipEditorTest("backwardness of submitted relationships is preserved (MBS-7636)", function (t) {
     t.plan(2);
 
-    var source = {
-            entityType: "recording",
-            gid: fakeGID0
-        },
-        target = {
-            entityType: "recording",
-            gid: fakeGID1
-        };
+    const source = {
+        entityType: "recording",
+        gid: fakeGID0,
+    };
+    const target = {
+        entityType: "recording",
+        gid: fakeGID1,
+    };
 
     window.sessionStorage.setItem('submittedRelationships', JSON.stringify([
         {
@@ -946,7 +969,7 @@ relationshipEditorTest('relationships with different link orders are not duplica
     var relationship = vm.source.relationships()[0];
 
     var newRelationship = vm.getRelationship(
-        _.assign(_.clone(sourceData.relationships[0]), { linkOrder: 1 }),
+        {...sourceData.relationships[0], linkOrder: 1},
         vm.source
     );
 
@@ -982,14 +1005,14 @@ relationshipEditorTest("empty dates are submitted as a hash, not as undef (MBS-8
             name: "3 Great Piano Sonatas (Wilhelm Backhaus)",
             gid: "b01c805e-0d25-45ad-9ddb-785658fe56ce",
             relationships: [compositionData],
-            artistCredit: [{artist: beethoven, joinPhrase: ""}],
+            artistCredit: {names: [{artist: beethoven, joinPhrase: ""}]},
             mediums: [],
             releaseGroup: {
                 entityType: "release_group",
                 id: 188961,
                 gid: "d0dd466b-3385-356b-bdf0-856737c6baf7",
                 name: "3 Great Piano Sonatas",
-                artistCredit: [{name: "Beethoven", joinPhrase: "; ", artist: beethoven}],
+                artistCredit: {names: [{name: "Beethoven", joinPhrase: "; ", artist: beethoven}]},
             }
         }
     });

@@ -22,7 +22,7 @@
                           descriptive_link(edit.display_data.group.old),
                           descriptive_link(edit.display_data.group.new)) -%]
 
-  [%- display_word_diff(l('Disambiguation:'),
+  [%- display_word_diff(add_colon(l('Disambiguation')),
                         html_escape(edit.display_data.comment.old),
                         html_escape(edit.display_data.comment.new)) -%]
 
@@ -40,32 +40,10 @@
 
 
   [%- IF edit.display_data.events -%]
-    [%- MACRO diff_side(side) BLOCK;
-        '<td class="' _ side _ '">';
-          '<ul>';
-          FOR common_event=edit.display_data.events.unchanged_countries;
-            event =
-              edit.display_data.events.unchanged_countries.${common_event.key};
-            '<li>';
-            Diff.diff_html_side(
-                           release_event(event.old),
-                           release_event(event.new),
-                           side == 'old' ? '-' : '+',
-                           '');
-            '</li>';
-          END;
-          FOR event=edit.display_data.events.changed_countries.${side};
-            '<li>' _ release_event(event) _ '</li>';
-          END;
-          '</ul>';
-        '</td>';
-    END -%]
-
-    <tr>
-      <th>[% l('Release events:') %]</th>
-      [%- diff_side('old') -%]
-      [%- diff_side('new') -%]
-    </tr>
+    [%- React.embed(c, 'static/scripts/edit/components/edit/ReleaseEventsDiff', {
+          oldEvents => edit.display_data.events.old,
+          newEvents => edit.display_data.events.new,
+        }) -%]
   [%- END -%]
 
   [%- display_full_change(l('Packaging:'),

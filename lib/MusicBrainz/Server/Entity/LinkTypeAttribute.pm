@@ -17,7 +17,10 @@ has 'max' => (
 
 sub TO_JSON {
     my ($self) = @_;
-    return { min => $self->min, max => $self->max };
+    return {
+      max => defined $self->max ? 0 + $self->max : undef,
+      min => defined $self->min ? 0 + $self->min : undef,
+    };
 }
 
 __PACKAGE__->meta->make_immutable;

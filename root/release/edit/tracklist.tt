@@ -49,8 +49,13 @@
       </td>
     </tr>
     <tr>
-      <td></td>
       <td>
+        <label>
+        <input type="checkbox" name="use-custom-delimiter" data-bind="checked: useCustomDelimiter" />
+          [%= l('Use custom artist delimiter') %]
+        </label>
+       </td>
+       <td>
         <label>
           <input type="checkbox" name="use-titles" data-bind="checked: useTrackNames" />
           [%= l('Use track titles') %]
@@ -58,7 +63,19 @@
       </td>
     </tr>
     <tr>
-      <td></td>
+      <td style="padding-left: 2em">
+        <label data-bind="visible: useCustomDelimiter">
+          [%= add_colon(l('Custom delimiter')) %]
+          <input type="text" name="custom-delimiter" data-bind="value: customDelimiter, valueUpdate: 'input'" />
+          (<a href="#" data-bind="click: $root.trackParser.toggleDelimiterHelp">[% l('help') %]</a>)
+          <p class="error" data-bind="text: $root.trackParser.customDelimiterError"></p>
+          <p data-bind="visible: $root.trackParser.delimiterHelpVisible" style="max-width: 25em">
+            <i>[% l('Enter the delimiter that separates the track name from the artist name
+                     (valid {url|regular expressions} are accepted).',
+                     { url => 'https://developer.mozilla.org/docs/Web/JavaScript/Guide/Regular_Expressions' }) %]</i>
+          </p>
+        </label>
+      </td>
       <td>
         <label>
           <input type="checkbox" name="use-lengths" data-bind="checked: useTrackLengths" />
@@ -91,6 +108,7 @@
 
   <!-- ko if: searchResults() && searchResults().length > 0 -->
   <p>[% l('Select a medium from the search results below and then click "Add Medium".') %]</p>
+  <p>[% l('The tracklist for the medium (including the track/recording associations, but not other data such as medium format) will be loaded as a medium on this release.') %]</p>
   <!-- /ko -->
 
   <!-- ko if: totalPages() > 1 -->
@@ -110,7 +128,7 @@
   <!-- /ko -->
 
   <!-- ko if: error -->
-    <p>[% l('An error occured: ') %] <span data-bind="text: error"></span></p>
+    <p>[% l('An error occurred: ') %] <span data-bind="text: error"></span></p>
   <!-- /ko -->
 
   <!-- ko foreach: { data: searchResults, if: searchResults } -->
@@ -293,7 +311,7 @@
           </p>
         </td>
 
-        <td class="icon" style="text-align: right">
+        <td class="align-right icon" >
           <button type="button" class="icon disc-down" title="[% l('Move disc down') %]" data-click="moveMediumDown"></button>
           <button type="button" class="icon disc-up" title="[% l('Move disc up') %]" data-click="moveMediumUp"></button>
           <button type="button" class="icon remove-item" title="[% l('Remove disc') %]" style="margin-left: 16px" data-click="removeMedium"></button>
@@ -319,6 +337,13 @@
         <p>
           <strong>[% l('Warning:') | html_entity %]</strong>
           [% l('You’ve used the {valink|Various Artists} special purpose artist on some tracks below. {valink|Various Artists} should very rarely be used on tracks; please make sure the artists have been entered correctly.', { valink => va_doc_link }) %]
+        </p>
+        <label>
+          <input id="confirm-va" type="checkbox" data-bind="checked: confirmedVariousArtists" />
+          [% l('I confirm this is an intentional use of Various Artists on tracks.') %]
+        </label>
+        <p class="error field-error" style="padding-left: 1em" data-bind="showErrorWhenTabIsSwitched: hasUnconfirmedVariousArtists">
+          [%~ l('If you’re sure the use of Various Artists is correct, confirm it above. Otherwise, please fix the data.') %]
         </p>
       </div>
     <!-- /ko -->
@@ -383,14 +408,32 @@
           <p style="margin-top: 0;">
             <label>
               <input class="has-pregap" type="checkbox" data-bind="checked: hasPregap" />
-              [% l('This disc has a hidden pregap track before track 1 ({info|more info})', { info => { href => doc_link('Hidden_Track'), target => '_blank' } }) %]
+              [% l('This disc has a hidden pregap track before track 1') %]
+              (<a href="#" data-bind="click: togglePregapTrackHelp">[% l('help') %]</a>)
             </label>
+            <div class="ar-descr" data-bind="visible: showPregapTrackHelp">
+              <p>
+                [% l('Some discs contain a hidden track in the pregap section that precedes track 1. Use this to add (or remove) the special pregap track section.') %]
+              </p>
+              <p>
+                [% l('Keep in mind that unselecting this will delete the track if the medium has a disc ID! If you unselect it by mistake, please readd the pregap track before submitting.') %]
+              </p>
+            </div>
           </p>
           <p style="margin-top: 0;">
             <label>
               <input class="has-data-tracks" type="checkbox" data-bind="checked: hasDataTracks" />
-              [% l('This disc contains data tracks at the end ({info|more info})', { info => { href => doc_link('Data_Track'), target => '_blank' } }) %]
+              [% l('This disc contains data tracks at the end') %]
+              (<a href="#" data-bind="click: toggleDataTracksHelp">[% l('help') %]</a>)
             </label>
+            <div class="ar-descr" data-bind="visible: showDataTracksHelp">
+              <p>
+                [% l('Some discs contain one or more data tracks after all audio tracks. Use this to add (or remove) the special data tracks section. You should only add data tracks that contain audio or video ({info|more info})', { info => { href => doc_link('Data_Track'), target => '_blank' } }) %]
+              </p>
+              <p>
+                [% l('Keep in mind that unselecting this will delete the tracks if the medium has a disc ID! If you unselect it by mistake, please readd the data tracks before submitting.') %]
+              </p>
+            </div>
           </p>
         <!-- /ko -->
 

@@ -18,7 +18,21 @@ sub base : Chained('/') PathPart('tag') CaptureArgs(0) { }
 sub _load
 {
     my ($self, $c, $name) = @_;
-    return $c->model('Tag')->get_by_name($name);
+    my $tag = $c->model('Tag')->get_by_name($name);
+    if ($tag && $tag->genre_id) {
+        $c->model('Genre')->load($tag);
+    }
+    return $tag;
+}
+
+sub no_tag_provided : Path('/tag') Args(0)
+{
+    my ($self, $c, $name) = @_;
+
+    # If no tag is passed, redirect to the tag cloud
+    $c->response->redirect(
+        $c->uri_for_action('/tag/cloud'));
+    $c->detach;
 }
 
 sub cloud : Path('/tags')
@@ -29,7 +43,7 @@ sub cloud : Path('/tags')
 
     $c->stash(
         current_view => 'Node',
-        component_path => 'tag/TagCloud.js',
+        component_path => 'tag/TagCloud',
         component_props => {
             %{$c->stash->{component_props}},
             tagMaxCount => $hits ? $cloud->[0]->{count} : 0,
@@ -44,7 +58,7 @@ sub show : Chained('load') PathPart('')
     my $tag = $c->stash->{tag};
     $c->stash(
         current_view => 'Node',
-        component_path => 'tag/TagIndex.js',
+        component_path => 'tag/TagIndex',
         component_props => {
             %{$c->stash->{component_props}},
             tag => $tag,
@@ -84,7 +98,7 @@ map {
         $c->model('ArtistCredit')->load(map { $_->entity } @$entity_tags) if $entity_properties->{artist_credits};
         $c->stash(
             current_view => 'Node',
-            component_path => 'tag/EntityList.js',
+            component_path => 'tag/EntityList',
             component_props => {
                 %{$c->stash->{component_props}},
                 entityTags => [map +{
@@ -95,7 +109,7 @@ map {
                 entityType => $entity_type,
                 page => "/$url",
                 pager => serialize_pager($c->stash->{pager}),
-                tag => $c->stash->{tag}->name,
+                tag => $c->stash->{tag},
             },
         );
     };
@@ -110,7 +124,7 @@ sub not_found : Private
     $c->response->status(404);
     $c->stash(
         current_view => 'Node',
-        component_path => 'tag/NotFound.js',
+        component_path => 'tag/NotFound',
         component_props => {
             %{$c->stash->{component_props}},
             tag => $tagname,

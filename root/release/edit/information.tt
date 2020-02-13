@@ -47,6 +47,8 @@
         </td>
       </tr>
 
+      [% table_row_help_message(2, 'showMessageRightAway: willCreateReleaseGroup', l('If you don’t select an existing release group, a new one will be created with the types selected below.')) %]
+
       [% table_row_error(2, 'showErrorWhenTabIsSwitched: needsReleaseGroup', l('You must select an existing release group.')) %]
 
       <!-- ko with: releaseGroup -->
@@ -153,6 +155,7 @@
       </tr>
 
       [% table_row_error(4, 'showErrorRightAway: hasInvalidDate', l('The date you\'ve entered is not valid.')) %]
+      [% table_row_error(4, 'showErrorRightAway: hasTooShortYear', l('The year should have four digits. If you want to enter a year earlier than 1000 CE, please pad with zeros, such as “0123”.')) %]
       [% table_row_error(4, 'showErrorRightAway: isDuplicate', l('You cannot use the same country more than once.')) %]
     <!-- /ko -->
 
@@ -246,7 +249,7 @@
       </tr>
 
       <tr>
-        <td><label for="comment">[% l('Disambiguation:') %]</label></td>
+        <td><label for="comment">[% add_colon(l('Disambiguation')) %]</label></td>
         <td>
           <input id="comment" type="text" maxlength="255" data-bind="value: comment, controlsBubble: $root.commentBubble" />
         </td>
@@ -270,7 +273,7 @@
 
   <div class="bubble" data-bind="bubble: $root.dateBubble">
     <p data-bind="visible: target() && target().hasAmazonDate()">
-      [% l('Warning! "1990-10-25" is the bogus date that Amazon gives to all releases for which they don\'t know the actual date. <b>Please use this date only if you\'re certain this date is correct!</b>') %]
+      [% l('Warning! "1990-10-25" is the bogus date that Amazon gives to all releases for which they don\'t know the actual date. <strong>Please use this date only if you\'re certain this date is correct!</strong>') %]
     </p>
     <p data-bind="visible: target() && target().hasJanuaryFirstDate()">
       [% l('Note! If you do not know the month or day of release, please leave them empty.  January 1st is not often the actual release date, please double check that you have entered the release date correctly.') %]
@@ -336,7 +339,7 @@
 
   <div class="bubble" data-bind="bubble: $root.commentBubble">
     <p>
-      [% l('The comment field is used to help users distinguish between identically named releases.') %]
+      [% l('The disambiguation field is used to help users distinguish between identically named releases.') %]
     </p>
     <p>
       [% l('This field is not a place to store general background information about the release: that kind of information should go in the annotation field.') %]

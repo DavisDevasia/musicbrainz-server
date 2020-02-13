@@ -62,21 +62,25 @@
                             [%-INCLUDE "edit/details/${edit.edit_template}.tt" %]
                           [% END %]
                         [% ELSE %]
-                           <p>[% l('An error occured while loading this edit') %]</p>
+                           <p>[% l('An error occurred while loading this edit.') %]</p>
                         [% END %]
                     </div>
 
-                    [% INCLUDE 'edit/notes.tt' verbose='not-verbose' hide=1 rows=1 index=loop.index %]
-
+                    [%~ IF c.user_exists ~%]
+                        [% INCLUDE 'edit/notes.tt' verbose='not-verbose' hide=1 rows=1 index=loop.index %]
+                    [%~ END ~%]
                     <div class="seperator">
                     </div>
                 </div>
             [%- END -%]
 
             <input type="hidden" name="url" value="[% c.req.uri %]" />
-            <div class="row no-label" style="text-align: right">
-                [% form_submit(l('Submit votes &amp; edit notes')) %]
-            </div>
+
+            [%~ IF c.user_exists ~%]
+                <div class="align-right row no-label" >
+                    [% form_submit(l('Submit votes &amp; edit notes')) %]
+                </div>
+            [%~ END ~%]
         </form>
     [% END %]
     </div>

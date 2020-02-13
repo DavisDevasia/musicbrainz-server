@@ -11,20 +11,21 @@ import React from 'react';
 import type {Node as ReactNode} from 'react';
 
 import Layout from '../layout';
-import InstrumentSidebar from '../layout/components/sidebar/InstrumentSidebar';
-import {hyphenateTitle} from '../static/scripts/common/i18n';
-import localizeInstrumentName from '../static/scripts/common/i18n/localizeInstrumentName';
+import InstrumentSidebar
+  from '../layout/components/sidebar/InstrumentSidebar';
+import localizeInstrumentName
+  from '../static/scripts/common/i18n/localizeInstrumentName';
 
 
 import InstrumentHeader from './InstrumentHeader';
 
-type Props = {|
+type Props = {
   +children: ReactNode,
   +entity: InstrumentT,
   +fullWidth?: boolean,
   +page: string,
   +title?: string,
-|};
+};
 
 const InstrumentLayout = ({
   children,
@@ -32,19 +33,26 @@ const InstrumentLayout = ({
   fullWidth,
   page,
   title,
-}: Props) => (
-  <Layout
-    title={title
-      ? hyphenateTitle(localizeInstrumentName(instrument), title)
-      : localizeInstrumentName(instrument)}
-  >
-    <div id="content">
-      <InstrumentHeader instrument={instrument} page={page} />
-      {children}
-    </div>
-    {fullWidth ? null : <InstrumentSidebar instrument={instrument} />}
-  </Layout>
-);
-
+}: Props) => {
+  const nameWithType = texp.l('{type} “{instrument}”', {
+    instrument: localizeInstrumentName(instrument),
+    type: instrument.typeName
+      ? lp_attributes(instrument.typeName, 'instrument_type')
+      : l('Instrument'),
+  });
+  return (
+    <Layout
+      title={title
+        ? hyphenateTitle(nameWithType, title)
+        : nameWithType}
+    >
+      <div id="content">
+        <InstrumentHeader instrument={instrument} page={page} />
+        {children}
+      </div>
+      {fullWidth ? null : <InstrumentSidebar instrument={instrument} />}
+    </Layout>
+  );
+};
 
 export default InstrumentLayout;

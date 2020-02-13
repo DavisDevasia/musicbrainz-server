@@ -22,12 +22,14 @@ my $ws_defs = Data::OptList::mkopt([
      },
      recording => {
                          method   => 'GET',
-                         linked   => [ qw(artist release collection) ],
+                         linked   => [ qw(artist release collection work) ],
                          inc      => [ qw(aliases artist-credits puids isrcs annotation
-                                          _relations tags user-tags genres user-genres ratings user-ratings) ],
+                                          _relations tags user-tags genres user-genres ratings user-ratings
+                                          work-level-rels) ],
                          optional => [ qw(fmt limit offset) ],
      },
      recording => {
+                         action   => '/ws/2/recording/lookup',
                          method   => 'GET',
                          inc      => [ qw(artists releases artist-credits puids isrcs aliases
                                           _relations tags user-tags genres user-genres ratings user-ratings
@@ -157,6 +159,14 @@ sub recording_browse : Private
         my @tmp = $c->model('Recording')->find_by_release($release->id, $limit, $offset);
         $recordings = $self->make_list(@tmp, $offset);
     }
+    elsif ($resource eq 'work')
+    {
+        my $work = $c->model('Work')->get_by_gid($id);
+        $c->detach('not_found') unless ($work);
+
+        my @tmp = $c->model('Recording')->find_by_work($work->id, $limit, $offset);
+        $recordings = $self->make_list(@tmp, $offset);
+    }
 
     my $stash = WebServiceStash->new;
 
@@ -220,7 +230,7 @@ sub recording_submit : Private
     }
 
     if (!$c->user->has_confirmed_email_address) {
-        $self->_error($c, "You must have a confirmed email address to submit edits");
+        $self->_error($c, "You must have a verified email address to submit edits");
     }
 
     $c->model('MB')->with_transaction(sub {

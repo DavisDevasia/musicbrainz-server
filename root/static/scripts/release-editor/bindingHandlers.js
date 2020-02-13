@@ -1,7 +1,10 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import $ from 'jquery';
 import ko from 'knockout';
@@ -9,7 +12,6 @@ import _ from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import {l} from '../common/i18n';
 import {reduceArtistCredit} from '../common/immutable-entities';
 import ArtistCreditEditor from '../edit/components/ArtistCreditEditor';
 
@@ -55,9 +57,11 @@ ko.bindingHandlers.artistCreditEditor = {
         const prev = entity.medium.tracks()[entity.position() - 2];
         if (prev) {
             entity.artistCreditEditorInst.runDoneCallback();
-            // Defer until the setState calls in doneCallback finish,
-            // since initialArtistText (which is set in updateBubble)
-            // depends on the artist credit state.
+            /*
+             * Defer until the setState calls in doneCallback finish,
+             * since initialArtistText (which is set in updateBubble)
+             * depends on the artist credit state.
+             */
             _.defer(() => {
                 prev.artistCreditEditorInst.updateBubble(true, this.uncheckChangeMatchingArtists);
             });
@@ -85,7 +89,9 @@ ko.bindingHandlers.artistCreditEditor = {
         const artistCredit = track.artistCredit.peek();
 
         _(track.medium.release.mediums())
-            .invokeMap("tracks").flatten().without(track)
+            .invokeMap("tracks")
+            .flatten()
+            .without(track)
             .each(function (t) {
                 if (initialArtistText === reduceArtistCredit(t.artistCredit.peek())) {
                     t.artistCredit(artistCredit);
@@ -95,10 +101,11 @@ ko.bindingHandlers.artistCreditEditor = {
     },
 
     update: function (element, valueAccessor) {
-        const bindingHandler = ko.bindingHandlers.artistCreditEditor;
         const entity = valueAccessor();
-        // Subscribe to the artistCredit observable so that we
-        // re-render the ArtistCreditEditor when it changes.
+        /*
+         * Subscribe to the artistCredit observable so that we
+         * re-render the ArtistCreditEditor when it changes.
+         */
         entity.artistCredit();
         const props = {
             entity: entity,

@@ -18,7 +18,11 @@ after load => sub {
     my @user_tags = $tags_model->find_user_tags($c->user->id, $entity->id)
         if $c->user_exists;
 
+    $c->model('Genre')->load(map { $_->tag } (@tags, @user_tags));
+    my %genre_map = map { $_->name => $_ } $c->model('Genre')->get_all;
+
     $c->stash(
+        genre_map => \%genre_map,
         top_tags => \@tags,
         more_tags => $count > @tags,
         user_tags => \@user_tags,
@@ -31,30 +35,20 @@ sub tags : Chained('load') PathPart('tags') {
 
     my $entity = $c->stash->{$self->{entity_name}};
     my @tags = $c->model($self->{model})->tags->find_tags($entity->id);
-    my @display_tags = grep { $_->count > 0 && !$_->tag->is_genre_tag } @tags;
-    my @display_genres = grep { $_->count > 0 && $_->tag->is_genre_tag } @tags;
+    $c->model('Genre')->load(map { $_->tag } @tags);
 
-    if ($entity->entity_type =~ /^(?:area|artist|event|instrument|label|place|recording|release_group|series)$/) {
-        my %props = (
-            entity        => $entity,
-            allTags       => \@tags,
-            userTags      => $c->stash->{user_tags},
-            moreTags      => $c->stash->{more_tags},
-        );
+    my %props = (
+        entity        => $entity,
+        allTags       => \@tags,
+        userTags      => $c->stash->{user_tags},
+        moreTags      => $c->stash->{more_tags},
+    );
 
-        $c->stash(
-            component_path  => 'entity/Tags.js',
-            component_props => \%props,
-            current_view    => 'Node',
-        );
-    } else {
-        $c->stash(
-            display_tags   => \@display_tags,
-            display_genres => \@display_genres,
-            tags_json      => $c->json->encode(\@tags),
-            template       => 'entity/tags.tt',
-        );
-    }
+    $c->stash(
+        component_path  => 'entity/Tags.js',
+        component_props => \%props,
+        current_view    => 'Node',
+    );
 }
 
 sub parse_tags {

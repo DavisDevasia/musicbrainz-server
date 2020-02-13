@@ -12,17 +12,16 @@ import type {Node as ReactNode} from 'react';
 
 import Layout from '../layout';
 import SeriesSidebar from '../layout/components/sidebar/SeriesSidebar';
-import {hyphenateTitle} from '../static/scripts/common/i18n';
 
 import SeriesHeader from './SeriesHeader';
 
-type Props = {|
+type Props = {
   +children: ReactNode,
   +entity: SeriesT,
   +fullWidth?: boolean,
   +page: string,
   +title?: string,
-|};
+};
 
 const SeriesLayout = ({
   children,

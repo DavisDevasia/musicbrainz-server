@@ -10,8 +10,9 @@
 import * as React from 'react';
 
 import PaginatedResults from '../components/PaginatedResults';
-import DescriptiveLink from '../static/scripts/common/components/DescriptiveLink';
-import {l, ln, N_l, N_ln} from '../static/scripts/common/i18n';
+import DescriptiveLink
+  from '../static/scripts/common/components/DescriptiveLink';
+import expand2text from '../static/scripts/common/i18n/expand2text';
 
 import TagLayout from './TagLayout';
 
@@ -24,7 +25,10 @@ const headingsText = {
   place: N_ln('{num} place found', '{num} places found'),
   recording: N_ln('{num} recording found', '{num} recordings found'),
   release: N_ln('{num} release found', '{num} releases found'),
-  release_group: N_ln('{num} release group found', '{num} release groups found'),
+  release_group: N_ln(
+    '{num} release group found',
+    '{num} release groups found',
+  ),
   series: N_ln('{num} series found', '{num} series found'),
   work: N_ln('{num} work found', '{num} works found'),
 };
@@ -43,17 +47,17 @@ const noEntitiesText = {
   work: N_l('No works with this tag were found.'),
 };
 
-type Props = {|
-  +entityTags: $ReadOnlyArray<{|
+type Props = {
+  +entityTags: $ReadOnlyArray<{
     +count: number,
     +entity: CoreEntityT,
     +entity_id: number,
-  |}>,
+  }>,
   +entityType: string,
   +page: string,
   +pager: PagerT,
-  +tag: string,
-|};
+  +tag: TagT,
+};
 
 const EntityList = ({
   entityTags,
@@ -64,9 +68,10 @@ const EntityList = ({
 }: Props) => (
   <TagLayout page={page} tag={tag}>
     <h2>
-      {headingsText[entityType].toLocaleString(pager.total_entries, {
-        num: pager.total_entries.toLocaleString(),
-      })}
+      {expand2text(
+        headingsText[entityType](pager.total_entries),
+        {num: pager.total_entries},
+      )}
     </h2>
 
     {entityTags.length ? (
@@ -81,7 +86,7 @@ const EntityList = ({
           ))}
         </ul>
       </PaginatedResults>
-    ) : <p>{noEntitiesText[entityType].toLocaleString()}</p>}
+    ) : <p>{noEntitiesText[entityType]()}</p>}
   </TagLayout>
 );
 

@@ -120,16 +120,20 @@ has 'orderable_direction' => (
     isa => 'Int',
 );
 
+has 'root_id' => (
+    is => 'rw',
+    isa => 'Int',
+);
+
 around TO_JSON => sub {
     my ($orig, $self) = @_;
 
     my $json = $self->$orig;
 
     my %attrs = map {
-        $_->type_id => {
-            min => defined $_->min ? 0 + $_->min : undef,
-            max => defined $_->max ? 0 + $_->max : undef,
-        }
+        $self->link_entity('link_attribute_type', $_->type_id, $_->type);
+
+        $_->type_id => $_->TO_JSON
     } $self->all_attributes;
 
     $json->{attributes} = \%attrs;
@@ -138,6 +142,7 @@ around TO_JSON => sub {
     $json->{deprecated} = boolean_to_json($self->is_deprecated);
     $json->{has_dates} = boolean_to_json($self->has_dates);
     $json->{id} = $self->id;
+    $json->{root_id} = $self->root_id;
     $json->{link_phrase} = $self->link_phrase;
     $json->{long_link_phrase} = $self->long_link_phrase;
     $json->{orderable_direction} = $self->orderable_direction;

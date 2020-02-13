@@ -7,28 +7,24 @@
  * later version: http://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-import noop from 'lodash/noop';
 import React from 'react';
 
-import {l, N_l, N_lp} from '../../static/scripts/common/i18n';
 import * as DBDefs from '../../static/scripts/common/DBDefs';
-import FieldErrors from '../../components/FieldErrors';
-import FormRow from '../../components/FormRow';
 import FormRowRadio from '../../components/FormRowRadio';
 import FormRowSelect from '../../components/FormRowSelect';
 import FormRowTextLong from '../../components/FormRowTextLong';
 import FormSubmit from '../../components/FormSubmit';
 
-type Props = {|
+type Props = {
   +form: SearchFormT,
-|};
+};
 
 const limitOptions = {
   grouped: false,
   options: [
-    {label: N_l('Up to {n}', {n: 25}), value: 25},
-    {label: N_l('Up to {n}', {n: 50}), value: 50},
-    {label: N_l('Up to {n}', {n: 100}), value: 100},
+    {label: () => texp.l('Up to {n}', {n: 25}), value: 25},
+    {label: () => texp.l('Up to {n}', {n: 50}), value: 50},
+    {label: () => texp.l('Up to {n}', {n: 100}), value: 100},
   ],
 };
 
@@ -60,7 +56,7 @@ if (DBDefs.GOOGLE_CUSTOM_SEARCH) {
 const methodOptions = [
   {label: N_l('Indexed search'), value: 'indexed'},
   {
-    label: N_l('Indexed search with {doc|advanced query syntax}', {
+    label: () => exp.l('Indexed search with {doc|advanced query syntax}', {
       doc: '/doc/Indexed_Search_Syntax',
     }),
     value: 'advanced',
@@ -68,49 +64,46 @@ const methodOptions = [
   {label: N_l('Direct database search'), value: 'direct'},
 ];
 
-const SearchForm = ({form}: Props) => {
-  const limitField = form.field.limit;
-  const methodField = form.field.method;
-  return (
-    <>
-      <div className="searchform">
-        <form action="/search" method="get">
-          <FormRowTextLong
-            field={form.field.query}
-            label={l('Query:')}
-            required
-          />
-          <FormRowSelect
-            field={form.field.type}
-            label={l('Type:')}
-            onChange={noop}
-            options={typeOptions}
-          />
-          <FormRowSelect
-            field={form.field.limit}
-            label={l('Results per page:')}
-            onChange={noop}
-            options={limitOptions}
-          />
-          <FormRowRadio
-            field={form.field.method}
-            label={l('Search method:')}
-            options={methodOptions}
-          />
-          <div className="row no-label">
-            <FormSubmit label={l('Search')} />
-          </div>
-        </form>
-      </div>
-      <div className="searchinfo">
-        <p>
-          {l('For more information, check the {doc_doc|documentation}.', {
-            doc_doc: '/doc/Search',
-          })}
-        </p>
-      </div>
-    </>
-  );
-};
+const SearchForm = ({form}: Props) => (
+  <>
+    <div className="searchform">
+      <form action="/search" method="get">
+        <FormRowTextLong
+          field={form.field.query}
+          label={l('Query:')}
+          required
+          uncontrolled
+        />
+        <FormRowSelect
+          field={form.field.type}
+          label={l('Type:')}
+          options={typeOptions}
+          uncontrolled
+        />
+        <FormRowSelect
+          field={form.field.limit}
+          label={l('Results per page:')}
+          options={limitOptions}
+          uncontrolled
+        />
+        <FormRowRadio
+          field={form.field.method}
+          label={l('Search method:')}
+          options={methodOptions}
+        />
+        <div className="row no-label">
+          <FormSubmit label={l('Search')} />
+        </div>
+      </form>
+    </div>
+    <div className="searchinfo">
+      <p>
+        {exp.l('For more information, check the {doc_doc|documentation}.', {
+          doc_doc: '/doc/Search',
+        })}
+      </p>
+    </div>
+  </>
+);
 
 export default SearchForm;

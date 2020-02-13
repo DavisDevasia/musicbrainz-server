@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2018 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -7,11 +7,11 @@
  * later version: http://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-const url = require('url');
+import url from 'url';
 
-export default function uriWith(
+export default function uriWith<T: {...}>(
   uriString: string,
-  params: {[string]: mixed},
+  params: T,
 ) {
   const u = url.parse(uriString, true);
 

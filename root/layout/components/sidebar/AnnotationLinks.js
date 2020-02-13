@@ -10,19 +10,25 @@
 import * as React from 'react';
 
 import {withCatalystContext} from '../../../context';
-import {l} from '../../../static/scripts/common/i18n';
 import entityHref from '../../../static/scripts/common/utility/entityHref';
 import returnUri from '../../../utility/returnUri';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +entity: CoreEntityT,
-|};
+};
 
 const AnnotationLinks = ({$c, entity}: Props) => (
   <>
     <li>
-      <a href={returnUri($c, entityHref(entity, 'edit_annotation'), 'returnto', $c.req.uri)}>
+      <a
+        href={returnUri(
+          $c,
+          entityHref(entity, 'edit_annotation'),
+          'returnto',
+          $c.req.uri,
+        )}
+      >
         {entity.latest_annotation && entity.latest_annotation.text
           ? l('Edit annotation')
           : l('Add annotation')}

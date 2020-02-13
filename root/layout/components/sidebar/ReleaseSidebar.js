@@ -10,23 +10,27 @@
 import {URL} from 'url';
 
 import * as React from 'react';
+import * as ReactDOMServer from 'react-dom/server';
 
 import {QUALITY_UNKNOWN} from '../../../constants';
 import {withCatalystContext} from '../../../context';
 import EntityLink from '../../../static/scripts/common/components/EntityLink';
-import {l, lp} from '../../../static/scripts/common/i18n';
-import {l_attributes} from '../../../static/scripts/common/i18n/attributes';
-import {l_languages} from '../../../static/scripts/common/i18n/languages';
-import {l_scripts} from '../../../static/scripts/common/i18n/scripts';
+import ReleaseEvents
+  from '../../../static/scripts/common/components/ReleaseEvents';
+import linkedEntities from '../../../static/scripts/common/linkedEntities';
 import entityHref from '../../../static/scripts/common/utility/entityHref';
-import formatBarcode from '../../../static/scripts/common/utility/formatBarcode';
-import formatTrackLength from '../../../static/scripts/common/utility/formatTrackLength';
-import releaseLabelKey from '../../../static/scripts/common/utility/releaseLabelKey';
+import formatBarcode
+  from '../../../static/scripts/common/utility/formatBarcode';
+import formatTrackLength
+  from '../../../static/scripts/common/utility/formatTrackLength';
+import releaseLabelKey
+  from '../../../static/scripts/common/utility/releaseLabelKey';
 import {Artwork} from '../../../components/Artwork';
 import CritiqueBrainzLinks from '../../../components/CritiqueBrainzLinks';
-import LinkSearchableLanguage from '../../../components/LinkSearchableLanguage';
-import LinkSearchableProperty from '../../../components/LinkSearchableProperty';
-import ReleaseEvents from '../../../components/ReleaseEvents';
+import LinkSearchableLanguage
+  from '../../../components/LinkSearchableLanguage';
+import LinkSearchableProperty
+  from '../../../components/LinkSearchableProperty';
 import coverArtUrl from '../../../utility/coverArtUrl';
 import ExternalLinks from '../ExternalLinks';
 
@@ -42,16 +46,25 @@ import {SidebarProperty, SidebarProperties} from './SidebarProperties';
 import SidebarRating from './SidebarRating';
 import SidebarTags from './SidebarTags';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +release: ReleaseT,
-|};
+};
 
 const ReleaseSidebar = ({$c, release}: Props) => {
   const releaseGroup = release.releaseGroup;
   if (!releaseGroup) {
     return null;
   }
+
+  const {
+    combined_format_name: combinedFormatName,
+    events: releaseEvents,
+    labels: releaseLabels,
+    packagingID: packagingId,
+    scriptID: scriptId,
+    statusID: statusId,
+  } = release;
 
   const releaseArtwork = $c.stash.release_artwork;
   const releaseCoverUrl = release.cover_art_url
@@ -61,12 +74,12 @@ const ReleaseSidebar = ({$c, release}: Props) => {
     ? new URL(releaseCoverUrl).host
     : null;
   const barcode = formatBarcode(release.barcode);
-  const typeName = releaseGroup.typeName;
+  const typeName = releaseGroup.l_type_name;
   const language = release.languageID
-    ? $c.linked_entities.language[release.languageID]
+    ? linkedEntities.language[release.languageID]
     : null;
-  const script = release.scriptID
-    ? $c.linked_entities.script[release.scriptID]
+  const script = scriptId
+    ? linkedEntities.script[scriptId]
     : null;
 
   return (
@@ -76,10 +89,11 @@ const ReleaseSidebar = ({$c, release}: Props) => {
           <Artwork
             artwork={releaseArtwork}
             fallback={releaseCoverUrl}
-            message={l(
-              'Front cover image failed to load correctly.<br/>{all|View all artwork}.',
+            message={ReactDOMServer.renderToStaticMarkup(exp.l(
+              'Front cover image failed to load correctly.' +
+              '<br/>{all|View all artwork}.',
               {all: entityHref(release, 'cover-art')},
-            )}
+            ))}
           />
         ) : (
           release.cover_art_presence !== 'darkened' &&
@@ -89,11 +103,11 @@ const ReleaseSidebar = ({$c, release}: Props) => {
                 <img src={releaseCoverUrl} />
                 <span className="cover-art-note">
                   {/(?:ssl-)?images-amazon\.com/.test(releaseCoverHost) ? (
-                    l('Cover art from {cover|Amazon}', {
+                    exp.l('Cover art from {cover|Amazon}', {
                       cover: releaseCoverUrl,
                     })
                   ) : (
-                    l('Cover art from {cover|{host}}', {
+                    exp.l('Cover art from {cover|{host}}', {
                       cover: releaseCoverUrl,
                       host: releaseCoverHost,
                     })
@@ -127,9 +141,9 @@ const ReleaseSidebar = ({$c, release}: Props) => {
           </SidebarProperty>
         ) : null}
 
-        {release.combined_format_name ? (
+        {combinedFormatName ? (
           <SidebarProperty className="format" label={l('Format:')}>
-            {release.combined_format_name}
+            {combinedFormatName}
           </SidebarProperty>
         ) : null}
 
@@ -147,29 +161,35 @@ const ReleaseSidebar = ({$c, release}: Props) => {
       <SidebarProperties>
         {typeName ? (
           <SidebarProperty className="type" label={l('Type:')}>
-            {l_attributes(typeName)}
+            {typeName}
           </SidebarProperty>
         ) : null}
 
-        {release.packagingID ? (
+        {packagingId ? (
           <SidebarProperty className="packaging" label={l('Packaging:')}>
             {l_attributes(
-              $c.linked_entities.release_packaging[release.packagingID].name,
+              linkedEntities.release_packaging[packagingId].name,
             )}
           </SidebarProperty>
         ) : null}
 
-        {release.statusID ? (
-          <SidebarProperty className="status" label={lp('Status:', 'release status')}>
+        {statusId ? (
+          <SidebarProperty
+            className="status"
+            label={lp('Status:', 'release status')}
+          >
             {l_attributes(
-              $c.linked_entities.release_status[release.statusID].name,
+              linkedEntities.release_status[statusId].name,
             )}
           </SidebarProperty>
         ) : null}
 
         {language ? (
           <SidebarProperty className="language" label={l('Language:')}>
-            <LinkSearchableLanguage entityType="release" language={language} />
+            <LinkSearchableLanguage
+              entityType="release"
+              language={language}
+            />
           </SidebarProperty>
         ) : null}
 
@@ -189,12 +209,11 @@ const ReleaseSidebar = ({$c, release}: Props) => {
         )}
       </SidebarProperties>
 
-      {release.labels && release.labels.length ? (
+      {releaseLabels?.length ? (
         <>
           <h2 className="labels">{l('Labels')}</h2>
           <ul className="links">
-            {/* $FlowFixMe */}
-            {release.labels.map(releaseLabel => (
+            {releaseLabels.map(releaseLabel => (
               <li key={releaseLabelKey(releaseLabel)}>
                 {releaseLabel.label ? (
                   <>
@@ -216,11 +235,10 @@ const ReleaseSidebar = ({$c, release}: Props) => {
         </>
       ) : null}
 
-      {release.events && release.events.length ? (
+      {releaseEvents?.length ? (
         <>
           <h2 className="release-events">{l('Release events')}</h2>
-          {/* $FlowFixMe */}
-          <ReleaseEvents events={release.events} />
+          <ReleaseEvents abbreviated={false} events={releaseEvents} />
         </>
       ) : null}
 
@@ -229,7 +247,7 @@ const ReleaseSidebar = ({$c, release}: Props) => {
         heading={l('Release group rating')}
       />
 
-      {releaseGroup.review_count != null ? (
+      {releaseGroup.review_count == null ? null : (
         <>
           <h2 className="reviews">
             {l('Release group reviews')}
@@ -238,7 +256,7 @@ const ReleaseSidebar = ({$c, release}: Props) => {
             <CritiqueBrainzLinks releaseGroup={releaseGroup} />
           </p>
         </>
-      ) : null}
+      )}
 
       <SidebarTags
         aggregatedTags={$c.stash.top_tags}

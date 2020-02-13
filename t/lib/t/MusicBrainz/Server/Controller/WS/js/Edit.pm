@@ -184,64 +184,69 @@ test 'previewing/creating/editing a release group and release' => sub {
             length => 0,
             gid => ignore(),
             artist => 'Boredoms plus a fake artist and a trailing join phrase',
-            artistCredit => [
-                {
-                    joinPhrase => ' plus ',
-                    artist => {
-                        area => undef,
-                        begin_area_id => undef,
-                        begin_date => undef,
-                        comment => '',
-                        editsPending => JSON::false,
-                        end_area_id => undef,
-                        end_date => undef,
-                        ended => JSON::false,
-                        entityType => 'artist',
-                        gender_id => undef,
-                        gid => '0798d15b-64e2-499f-9969-70167b1d8617',
-                        id => 39282,
-                        ipi_codes => [],
-                        isni_codes => [],
-                        last_updated => ignore,
+            artistCredit => {
+                editsPending => JSON::false,
+                entityType => 'artist_credit',
+                id => 101,
+                names => [
+                    {
+                        joinPhrase => ' plus ',
+                        artist => {
+                            area => undef,
+                            begin_area_id => undef,
+                            begin_date => undef,
+                            comment => '',
+                            editsPending => JSON::false,
+                            end_area_id => undef,
+                            end_date => undef,
+                            ended => JSON::false,
+                            entityType => 'artist',
+                            gender_id => undef,
+                            gid => '0798d15b-64e2-499f-9969-70167b1d8617',
+                            id => 39282,
+                            ipi_codes => [],
+                            isni_codes => [],
+                            last_updated => ignore,
+                            name => 'Boredoms',
+                            rating => undef,
+                            rating_count => 0,
+                            sort_name => 'Boredoms',
+                            typeID => undef,
+                            unaccented_name => undef,
+                            user_rating => undef,
+                        },
                         name => 'Boredoms',
-                        rating => undef,
-                        rating_count => 0,
-                        sort_name => 'Boredoms',
-                        typeID => undef,
-                        unaccented_name => undef,
-                        user_rating => undef,
                     },
-                    name => 'Boredoms',
-                },
-                {
-                    joinPhrase => ' and a trailing join phrase',
-                    artist => {
-                        area => undef,
-                        begin_area_id => undef,
-                        begin_date => undef,
-                        comment => '',
-                        editsPending => JSON::false,
-                        end_area_id => undef,
-                        end_date => undef,
-                        ended => JSON::false,
-                        entityType => 'artist',
-                        gender_id => undef,
-                        gid => '1e6092a0-73d3-465a-b06a-99c81f7bec37',
-                        id => 66666,
-                        ipi_codes => [],
-                        isni_codes => [],
-                        last_updated => ignore,
+                    {
+                        joinPhrase => ' and a trailing join phrase',
+                        artist => {
+                            area => undef,
+                            begin_area_id => undef,
+                            begin_date => undef,
+                            comment => '',
+                            editsPending => JSON::false,
+                            end_area_id => undef,
+                            end_date => undef,
+                            ended => JSON::false,
+                            entityType => 'artist',
+                            gender_id => undef,
+                            gid => '1e6092a0-73d3-465a-b06a-99c81f7bec37',
+                            id => 66666,
+                            ipi_codes => [],
+                            isni_codes => [],
+                            last_updated => ignore,
+                            name => 'a fake artist',
+                            rating => undef,
+                            rating_count => 0,
+                            sort_name => 'a fake artist',
+                            typeID => undef,
+                            unaccented_name => undef,
+                            user_rating => undef,
+                        },
                         name => 'a fake artist',
-                        rating => undef,
-                        rating_count => 0,
-                        sort_name => 'a fake artist',
-                        typeID => undef,
-                        unaccented_name => undef,
-                        user_rating => undef,
                     },
-                    name => 'a fake artist',
-                }
-            ],
+                ],
+            },
             events => [
                 {
                     country => {
@@ -260,7 +265,8 @@ test 'previewing/creating/editing a release group and release' => sub {
                         iso_3166_1_codes => ['JP'],
                         iso_3166_2_codes => [],
                         iso_3166_3_codes => [],
-                        primary_code => 'JP'
+                        primary_code => 'JP',
+                        country_code => 'JP',
                     },
                     date => {
                         day => 27,
@@ -272,6 +278,7 @@ test 'previewing/creating/editing a release group and release' => sub {
             editsPending => JSON::false,
             cover_art_presence => undef,
             cover_art_url => undef,
+            may_have_discids => JSON::false,
             quality => 1,
         },
         response => $WS_EDIT_RESPONSE_OK,
@@ -459,6 +466,24 @@ test 'previewing/creating/editing a release group and release' => sub {
 
     $c->model('Track')->load_for_mediums($medium2);
     $c->model('Recording')->load($medium2->all_tracks);
+
+    # MBS-9512
+    @edits = capture_edits {
+        post_json($mech, '/ws/js/edit/create', encode_json({
+            edits => [
+                {
+                    edit_type   => $EDIT_RECORDING_EDIT,
+                    name        => '',
+                    to_edit     => $medium2->tracks->[0]->recording->gid,
+                },
+            ],
+            makeVotable => 0,
+        }));
+    } $c;
+
+    ok(scalar(@edits) == 0, 'recording edit with empty name is not created');
+    $response = from_json($mech->content);
+    like($response->{error}, qr/^empty name/, 'error is returned for empty recording name');
 
     $medium_edits = [
         {
@@ -1030,7 +1055,7 @@ test 'Edits are rejected without a confirmed email address' => sub {
     post_json($mech, '/ws/js/edit/create', encode_json({ edits => [] }));
 
     my $response = from_json($mech->content);
-    is($response->{error}, 'a confirmed email address is required', 'error is returned for unconfirmed email');
+    is($response->{error}, 'a verified email address is required', 'error is returned for unconfirmed email');
 };
 
 

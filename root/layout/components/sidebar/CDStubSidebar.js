@@ -10,16 +10,16 @@
 import * as React from 'react';
 
 import CDStubLink from '../../../static/scripts/common/components/CDStubLink';
-import {l} from '../../../static/scripts/common/i18n';
-import escapeLuceneValue from '../../../static/scripts/common/utility/escapeLuceneValue';
+import escapeLuceneValue
+  from '../../../static/scripts/common/utility/escapeLuceneValue';
 import parseDate from '../../../static/scripts/common/utility/parseDate';
 import {age, displayAgeAgo} from '../../../utility/age';
 
 import {SidebarProperties, SidebarProperty} from './SidebarProperties';
 
-type Props = {|
+type Props = {
   +cdstub: CDStubT,
-|};
+};
 
 const CDStubSidebar = ({cdstub}: Props) => {
   const now = parseDate((new Date()).toISOString().slice(0, 10));
@@ -36,12 +36,22 @@ const CDStubSidebar = ({cdstub}: Props) => {
     ended: true,
   }) : null;
 
+  const artistField =
+    escapeLuceneValue(cdstub.artist || l('Various Artists'));
+  const releaseField = escapeLuceneValue(cdstub.title);
+  const tracksMediumField = escapeLuceneValue(cdstub.track_count);
+  const barcodeField = cdstub.barcode
+    ? escapeLuceneValue(cdstub.barcode)
+    : null;
+
   const searchQuery = (
-    'artist:(' + escapeLuceneValue(cdstub.artist || l('Various Artists')) + ') ' +
-    'release:(' + escapeLuceneValue(cdstub.title) + ') ' +
-    'tracksmedium:(' + escapeLuceneValue(cdstub.track_count) + ')' +
-    (cdstub.barcode ? ' barcode:(' + escapeLuceneValue(cdstub.barcode) + ')' : '')
+    `artist:(${artistField}) ` +
+    `release:(${releaseField}) ` +
+    `tracksmedium:(${tracksMediumField})` +
+    (barcodeField ? ` barcode:(${barcodeField})` : '')
   );
+
+  const toc = cdstub.toc;
 
   return (
     <div id="sidebar">
@@ -77,16 +87,18 @@ const CDStubSidebar = ({cdstub}: Props) => {
             subPath="import"
           />
         </li>
-        {cdstub.toc ? (
+        {toc ? (
           <li>
-            {/* $FlowFixMe */}
-            <a href={'/cdtoc/attach?toc=' + encodeURIComponent(cdstub.toc)}>
+            <a href={'/cdtoc/attach?toc=' + encodeURIComponent(toc)}>
               {l('Add disc ID to an existing release')}
             </a>
           </li>
         ) : null}
         <li>
-          <a href={'/search?advanced=1&type=release&query=' + encodeURIComponent(searchQuery)}>
+          <a
+            href={'/search?advanced=1&type=release&query=' +
+              encodeURIComponent(searchQuery)}
+          >
             {l('Search the database for this CD')}
           </a>
         </li>

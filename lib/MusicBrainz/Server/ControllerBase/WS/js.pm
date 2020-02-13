@@ -31,7 +31,12 @@ sub output_error : Private
     $c->res->body($c->stash->{serializer}->output_error($c->stash->{error}));
 }
 
-sub begin : Private { }
+sub begin : Private {
+    my ($self, $c) = @_;
+
+    $c->stash->{current_view} = 'WS';
+    $c->stash->{serializer} = MusicBrainz::Server::WebService::JSONSerializer->new;
+}
 
 sub root : Chained('/') PathPart("ws/js") CaptureArgs(0)
 {

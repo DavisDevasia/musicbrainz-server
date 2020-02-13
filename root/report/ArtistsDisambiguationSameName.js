@@ -12,7 +12,6 @@ import * as React from 'react';
 import {withCatalystContext} from '../context';
 import Layout from '../layout';
 import formatUserDate from '../utility/formatUserDate';
-import {l} from '../static/scripts/common/i18n';
 
 import ArtistList from './components/ArtistList';
 import FilterLink from './FilterLink';
@@ -26,16 +25,26 @@ const ArtistsDisambiguationSameName = ({
   items,
   pager,
 }: ReportDataT<ReportArtistT>) => (
-  <Layout fullWidth title={l('Artists with disambiguation the same as the name')}>
+  <Layout
+    fullWidth
+    title={l('Artists with disambiguation the same as the name')}
+  >
     <h1>{l('Artists with disambiguation the same as the name')}</h1>
 
     <ul>
       <li>
-        {l('This report lists artists that have their disambiguation set to be the same \
-            as their name. Disambiguation should not be filled in this case.')}
+        {l(`This report lists artists that have their disambiguation set
+            to be the same as their name. Disambiguation should
+            not be filled in this case.`)}
       </li>
-      <li>{l('Total artists found: {count}', {count: pager.total_entries})}</li>
-      <li>{l('Generated on {date}', {date: formatUserDate($c.user, generated)})}</li>
+      <li>
+        {texp.l('Total artists found: {count}',
+                {count: pager.total_entries})}
+      </li>
+      <li>
+        {texp.l('Generated on {date}',
+                {date: formatUserDate($c, generated)})}
+      </li>
 
       {canBeFiltered ? <FilterLink filtered={filtered} /> : null}
     </ul>

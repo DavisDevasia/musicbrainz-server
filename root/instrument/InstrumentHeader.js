@@ -9,21 +9,21 @@
 
 import React from 'react';
 
-import {l} from '../static/scripts/common/i18n';
-import {lp_attributes} from '../static/scripts/common/i18n/attributes';
 import EntityHeader from '../components/EntityHeader';
 
-type Props = {|
+type Props = {
   +instrument: InstrumentT,
   +page: string,
-|};
+};
 
 const InstrumentHeader = ({instrument, page}: Props) => (
   <EntityHeader
     entity={instrument}
     headerClass="instrumentheader"
     page={page}
-    subHeading={instrument.typeName ? lp_attributes(instrument.typeName, 'instrument_type') : l('instrument')}
+    subHeading={instrument.typeName
+      ? lp_attributes(instrument.typeName, 'instrument_type')
+      : l('instrument')}
   />
 );
 

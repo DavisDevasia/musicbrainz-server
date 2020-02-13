@@ -9,8 +9,6 @@
 
 import * as React from 'react';
 
-import {l} from '../../static/scripts/common/i18n';
-import {lp_attributes} from '../../static/scripts/common/i18n/attributes';
 import PaginatedResults from '../../components/PaginatedResults';
 import EntityLink from '../../static/scripts/common/components/EntityLink';
 import loopParity from '../../utility/loopParity';
@@ -30,11 +28,23 @@ const ArtistList = ({
       </thead>
       <tbody>
         {items.map((item, index) => (
-          <tr className={loopParity(index)} key={item.artist.gid}>
-            <td>
-              <EntityLink entity={item.artist} />
-            </td>
-            <td>{item.artist.typeName ? lp_attributes(item.artist.typeName, 'artist_type') : l('Unknown')}</td>
+          <tr className={loopParity(index)} key={item.artist_id}>
+            {item.artist ? (
+              <>
+                <td>
+                  <EntityLink entity={item.artist} />
+                </td>
+                <td>
+                  {item.artist.typeName
+                    ? lp_attributes(item.artist.typeName, 'artist_type')
+                    : l('Unknown')}
+                </td>
+              </>
+            ) : (
+              <td colSpan="2">
+                {l('This artist no longer exists.')}
+              </td>
+            )}
           </tr>
         ))}
       </tbody>

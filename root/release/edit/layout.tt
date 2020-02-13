@@ -1,8 +1,8 @@
 [%- PROCESS 'release/edit/macros.tt' -%]
 
-[%- WRAPPER 'layout.tt' full_width=1 edit=1 gettext_domains=['attributes', 'countries', 'languages', 'relationships'] -%]
+[%- WRAPPER 'layout.tt' full_width=1 edit=1 -%]
   [% IF release.name %]
-    [%- INCLUDE "release/header.tt" page="edit" -%]
+    [%- React.embed(c, 'release/ReleaseHeader', { release => release, page => 'edit' }) -%]
   [% ELSE %]
     <h1>[% lp('Add Release', 'header') %]</h1>
   [% END %]
@@ -55,22 +55,23 @@
     </div>
 
     <div class="buttons">
+      <button type="button" id="enter-edit" class="positive" data-click="submitEdits" data-bind="visible: activeTabID() === '#edit-note', enable: allowsSubmission()">[% l('Enter edit') %]</button>
       <button type="button" class="negative" data-click="cancelPage">[% l('Cancel') | html_entity %]</button>
 
       <button type="button" data-bind="visible: activeTabIndex() > 0" data-click="previousTab">[% l('« Previous') | html_entity %]</button>
       <button type="button" data-bind="visible: activeTabIndex() < tabCount - 1" data-click="nextTab">[% l('Next »') | html_entity %]</button>
+      <!-- For release adds, we want to make sure the user at least sees release duplicates -->
+      <button type="button" data-bind="visible: (activeTabIndex() > 0 || action === 'edit') && (activeTabIndex() < tabCount - 1)" data-click="lastTab">[% l('Finish') | html_entity %]</button>
 
       <!-- ko template: { if: activeTabID() === "#tracklist", data: addDiscDialog } -->
         <button type="button" data-click="open">[% l('Add Medium') %]</button>
       <!-- /ko -->
 
-      <button type="button" id="enter-edit" class="positive" data-click="submitEdits" data-bind="visible: activeTabID() === '#edit-note', enable: allowsSubmission()">[% l('Enter edit') %]</button>
     </div>
   </div>
 
   [%- guesscase_options() -%]
 
-  [% script_manifest('guess-case.js') %]
   [% script_manifest('edit.js') %]
   [% script_manifest('release-editor.js') %]
 
@@ -86,7 +87,7 @@
 
     MB.releaseEditor.init({
     [%- IF release.gid %]
-      gid: "[% release.gid | js %]",
+      release: [% closing_tag_escape(release_json) %],
       action: "edit",
     [%- ELSE %]
       action: "add",

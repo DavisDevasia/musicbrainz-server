@@ -4,7 +4,15 @@
 // Licensed under the GPL version 2, or (at your option) any later version:
 // http://www.gnu.org/licenses/gpl-2.0.txt
 
+require('@babel/register');
+
 const argv = require('yargs')
+  .option('c', {
+    alias: 'coverage',
+    default: true,
+    describe: 'dump coverage data to .nyc_output/',
+    type: 'boolean',
+  })
   .option('h', {
     alias: 'headless',
     default: true,
@@ -29,20 +37,19 @@ const httpProxy = require('http-proxy');
 const jsdom = require('jsdom');
 const isEqualWith = require('lodash/isEqualWith');
 const path = require('path');
-const shellQuote = require('shell-quote');
 const test = require('tape');
 const TestCls = require('tape/lib/test');
 const utf8 = require('utf8');
 const webdriver = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const webdriverProxy = require('selenium-webdriver/proxy');
-const {UnexpectedAlertOpenError} = require('selenium-webdriver/lib/error');
 const {Key} = require('selenium-webdriver/lib/input');
 const promise = require('selenium-webdriver/lib/promise');
 const until = require('selenium-webdriver/lib/until');
 
 const DBDefs = require('../root/static/scripts/common/DBDefs');
-const escapeRegExp = require('../root/static/scripts/common/utility/escapeRegExp');
+const escapeRegExp = require('../root/static/scripts/common/utility/escapeRegExp').default;
+const writeCoverage = require('../root/utility/writeCoverage');
 
 const IGNORE = Symbol();
 
@@ -91,6 +98,11 @@ function execFile(...args) {
 }
 
 const proxy = httpProxy.createProxyServer({});
+let pendingReqs = [];
+
+proxy.on('proxyReq', function (req) {
+  pendingReqs.push(req);
+});
 
 const customProxyServer = http.createServer(function (req, res) {
   const host = req.headers.host;
@@ -98,7 +110,9 @@ const customProxyServer = http.createServer(function (req, res) {
     req.headers['mb-set-database'] = 'SELENIUM';
     req.rawHeaders['mb-set-database'] = 'SELENIUM';
   }
-  proxy.web(req, res, {target: 'http://' + host});
+  proxy.web(req, res, {target: 'http://' + host}, function (e) {
+    console.error(e);
+  });
 });
 
 const driver = (x => {
@@ -111,6 +125,7 @@ const driver = (x => {
       new chrome.Options()
         .headless()
         .addArguments(
+          'disable-dev-shm-usage',
           'no-sandbox',
           'proxy-server=http://localhost:5050',
         )
@@ -204,13 +219,49 @@ async function selectOption(select, optionLocator) {
 
 const KEY_CODES = {
   '${KEY_BKSP}': Key.BACK_SPACE,
+  '${KEY_DOWN}': Key.ARROW_DOWN,
   '${KEY_END}': Key.END,
+  '${KEY_ENTER}': Key.ENTER,
+  '${KEY_ESC}': Key.ESCAPE,
   '${KEY_HOME}': Key.HOME,
   '${KEY_SHIFT}': Key.SHIFT,
 };
 
 function getPageErrors() {
   return driver.executeScript('return ((window.MB || {}).js_errors || [])');
+}
+
+let coverageObjectIndex = 0;
+function writeSeleniumCoverage(coverageString) {
+  writeCoverage(`selenium-${coverageObjectIndex++}`, coverageString);
+}
+
+async function writePreviousSeleniumCoverage() {
+  /*
+   * `previousCoverage` means for the previous window.
+   *
+   * We only want to write the __coverage__ object to disk before the page
+   * is about to change, for the obvious reason that it's not complete until
+   * then, but also because retrieving the large (> 1MB) __coverage__ object
+   * from the driver is slow, so we only want to do that when absolutely
+   * necessary.
+   */
+  const previousCoverage = await driver.executeScript(
+    `if (!window.__seen__) {
+       window.__seen__ = true;
+       window.addEventListener('beforeunload', function () {
+         sessionStorage.setItem(
+           '__previous_coverage__',
+           JSON.stringify(window.__coverage__),
+         );
+       });
+       return sessionStorage.getItem('__previous_coverage__');
+     }
+     return null;`,
+  );
+  if (previousCoverage) {
+    writeSeleniumCoverage(previousCoverage);
+  }
 }
 
 function parseEditData(value) {
@@ -226,41 +277,15 @@ async function handleCommandAndWait(file, command, target, value, t) {
 }
 
 async function handleCommand(file, command, target, value, t) {
-  // Die if there are any JS errors on the page since the previous command.
-  let errors;
-  try {
-    errors = await getPageErrors();
-  } catch (e) {
-    // Handle the "All of your changes will be lost" confirmation dialog in
-    // the release editor.
-    //  1. Setting the unexpectedAlertBehavior capability on the session
-    //     doesn't seem to handle this.
-    //  2. The webdriver thinks the alert text is empty, so we don't bother
-    //     checking it.
-    if (e instanceof UnexpectedAlertOpenError) {
-      await driver.switchTo().alert().accept();
-      errors = await getPageErrors();
-    } else {
-      throw e;
-    }
-  }
-
-  if (errors.length) {
-    throw new Error(
-      'Errors were found on the page since executing the previous command:\n' +
-      errors.join('\n\n')
-    );
-  }
-
   if (/AndWait$/.test(command)) {
     return handleCommandAndWait.apply(null, arguments);
   }
 
-  // The CATALYST_DEBUG views interfere with our tests. Remove them.
-  await driver.executeScript(`
-    node = document.getElementById('plDebug');
-    if (node) node.remove();
-  `);
+  // Wait for all pending network requests before running the next command.
+  await driver.wait(function () {
+    pendingReqs = pendingReqs.filter(req => !(req.aborted || req.finished));
+    return pendingReqs.length === 0;
+  });
 
   let commentValue;
   switch (command) {
@@ -351,6 +376,9 @@ async function handleCommand(file, command, target, value, t) {
         await findElement(target)
       );
 
+    case 'handleAlert':
+      return driver.switchTo().alert()[target]();
+
     case 'mouseOver':
       return driver.actions()
         .mouseMove(await findElement(target))
@@ -407,14 +435,20 @@ async function handleCommand(file, command, target, value, t) {
 
 const seleniumTests = [
   {name: 'Create_Account.html'},
+  {name: 'MBS-5387.html', login: true},
   {name: 'MBS-7456.html', login: true},
   {name: 'MBS-9548.html'},
+  {name: 'MBS-9669.html'},
   {name: 'MBS-9941.html', login: true},
+  {name: 'MBS-10188.html', login: true, sql: 'mbs-10188.sql'},
+  {name: 'MBS-10510.html', login: true, sql: 'mbs-10510.sql'},
   {name: 'Artist_Credit_Editor.html', login: true},
   {name: 'External_Links_Editor.html', login: true},
   {name: 'Work_Editor.html', login: true},
   {name: 'Redirect_Merged_Entities.html', login: true},
+  {name: 'admin/Edit_Banner.html', login: true},
   {name: 'release-editor/The_Downward_Spiral.html', login: true},
+  {name: 'release-editor/Duplicate_Selection.html', login: true, sql: 'whatever_it_takes.sql'},
   {name: 'release-editor/Seeding.html', login: true, sql: 'vision_creation_newsun.sql'},
 ];
 
@@ -451,6 +485,36 @@ function getPlan(file) {
 async function runCommands(commands, t) {
   for (let i = 0; i < commands.length; i++) {
     await handleCommand(...commands[i], t);
+
+    const nextCommand = i < (commands.length - 1) ? commands[i + 1] : null;
+
+    /*
+     * If there's an alert open on the page, we can't execute any scripts;
+     * they'll die with an UnexpectedAlertOpenError. Since these must be
+     * handled explicitly with the `handleAlert` command, we check if that's
+     * the next command before proceeding.
+     */
+    if (!nextCommand || nextCommand[1] !== 'handleAlert') {
+      if (argv.coverage) {
+        await writePreviousSeleniumCoverage();
+      }
+
+      // Die if there are any JS errors on the page since the previous command.
+      const errors = await getPageErrors();
+
+      if (errors.length) {
+        throw new Error(
+          'Errors were found on the page since executing the previous command:\n' +
+          errors.join('\n\n')
+        );
+      }
+
+      // The CATALYST_DEBUG views interfere with our tests. Remove them.
+      await driver.executeScript(`
+        node = document.getElementById('plDebug');
+        if (node) node.remove();
+      `);
+    }
   }
 }
 
@@ -469,10 +533,6 @@ async function runCommands(commands, t) {
   }
 
   async function getDbConfig(name) {
-    if (name !== 'SYSTEM' && name !== 'TEST') {
-      return null;
-    }
-
     const result = (await execFile(
       'sh', [
         '-c',
@@ -490,78 +550,30 @@ async function runCommands(commands, t) {
     };
   }
 
-  const sysDb = await getDbConfig('SYSTEM');
-  const testDb = await getDbConfig('TEST');
+  const seleniumDb = await getDbConfig('SELENIUM');
+  const systemDb = await getDbConfig('SYSTEM');
+  const hostPort = ['-h', seleniumDb.host, '-p', seleniumDb.port];
 
-  const hostPort = ['-h', testDb.host, '-p', testDb.port];
-
-  /*
-   * In our production tests setup, there exists a musicbrainz_test_template
-   * database based on a pristine musicbrainz_test, so that we can run
-   * t/tests.t in parallel without having to worry about modifications to
-   * musicbrainz_test.
-   */
-  const testTemplateExists = await dbExists('musicbrainz_test_template');
-  const createdbArgs = [
-    '-O', testDb.user,
-    '-T', testTemplateExists ? 'musicbrainz_test_template' : testDb.database,
-    '-U', sysDb.user,
-    ...hostPort,
-    'musicbrainz_selenium',
-  ];
-
-  const dropdbArgs = [...hostPort, '-U', sysDb.user, 'musicbrainz_selenium'];
-
-  function execSql(sqlFile) {
-    const args = [
-      '-c',
-      shellQuote.quote(['cat', path.resolve(__dirname, 'sql', sqlFile)]) +  ' | ' +
-      shellQuote.quote(['psql', ...hostPort, '-U', testDb.user, 'musicbrainz_selenium']),
-    ];
-    return execFile('sh', args, pgPasswordEnv(testDb));
-  }
-
-  async function createSeleniumDb() {
-    await execFile('createdb', createdbArgs, pgPasswordEnv(sysDb));
-    await execSql('selenium.sql');
-  }
-
-  async function dropSeleniumDb() {
+  async function cleanSeleniumDb(extraSql) {
     // Close active sessions before dropping the database.
     await execFile(
       'psql',
       [
         ...hostPort,
-        '-U', sysDb.user,
+        '-U', systemDb.user,
         '-c', `
           SELECT pg_terminate_backend(pg_stat_activity.pid)
             FROM pg_stat_activity
-           WHERE datname = 'musicbrainz_selenium'
+           WHERE datname = '${seleniumDb.database.replace(/'/g, "''")}'
         `,
         'template1',
       ],
-      pgPasswordEnv(sysDb),
+      pgPasswordEnv(systemDb),
     );
-    return execFile('dropdb', dropdbArgs, pgPasswordEnv(sysDb));
-  }
-
-  async function dbExists(name) {
-    const result = await execFile(
-      'psql', [...hostPort, '-U', sysDb.user, '-c', 'SELECT 1', name],
-      pgPasswordEnv(sysDb),
-    ).catch(x => x);
-
-    if (result.code === 0) {
-      return true;
-    } else if (result.code !== 2) {
-      // An error other than the database not existing occurred.
-      throw result.error;
-    }
-    return false;
-  }
-
-  if (await dbExists('musicbrainz_selenium')) {
-    await dropSeleniumDb();
+    await execFile(
+      path.resolve(__dirname, '../script/reset_selenium_env.sh'),
+      extraSql ? [path.resolve(__dirname, 'sql', extraSql)] : [],
+    );
   }
 
   const loginPlan = getPlan(testPath('Log_In.html'));
@@ -586,11 +598,7 @@ async function runCommands(commands, t) {
 
         accum.then(async function () {
           try {
-            await createSeleniumDb();
-
-            if (stest.sql) {
-              await execSql(stest.sql);
-            }
+            await cleanSeleniumDb(stest.sql);
 
             if (stest.login) {
               await runCommands(loginPlan.commands, t);
@@ -602,7 +610,6 @@ async function runCommands(commands, t) {
               if (stest.login) {
                 await runCommands(logoutPlan.commands, t);
               }
-              await dropSeleniumDb();
             }
           } catch (error) {
             t.fail(
@@ -619,6 +626,15 @@ async function runCommands(commands, t) {
       });
     });
   }, Promise.resolve());
+
+  if (argv.coverage) {
+    const remainingCoverage = await driver.executeScript(
+      'return JSON.stringify(window.__coverage__)',
+    );
+    if (remainingCoverage) {
+      writeSeleniumCoverage(remainingCoverage);
+    }
+  }
 
   if (!argv.stayOpen) {
     await quit();

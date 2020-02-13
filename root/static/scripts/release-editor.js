@@ -1,4 +1,6 @@
-require("./edit/confirmNavigationFallback")
+require('./edit');
+
+require("./edit/confirmNavigationFallback");
 
 // The order here is important!
 require("./release-editor/viewModel");

@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2019 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -9,13 +9,11 @@
 
 import * as React from 'react';
 
-import * as manifest from '../../static/manifest';
-
 const HeaderLogo = () => (
   <img
     alt="MusicBrainz"
     className="logo"
-    src={manifest.pathTo('/images/layout/header-logo.svg')}
+    src={require('../../static/images/layout/header-logo.svg')}
   />
 );
 

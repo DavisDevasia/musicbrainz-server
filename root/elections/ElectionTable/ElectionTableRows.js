@@ -11,16 +11,15 @@ import React from 'react';
 import type {Node as ReactNode} from 'react';
 
 import {withCatalystContext} from '../../context';
-import {l, lp} from '../../static/scripts/common/i18n';
 import EditorLink from '../../static/scripts/common/components/EditorLink';
 import formatUserDate from '../../utility/formatUserDate';
 import {votesVisible} from '../../utility/voting';
 
-type RowProps = {|
+type RowProps = {
   +$c: CatalystContextT,
   +election: AutoEditorElectionT,
   +index: number,
-|};
+};
 
 const ElectionTableRow = withCatalystContext(({
   $c,
@@ -29,9 +28,15 @@ const ElectionTableRow = withCatalystContext(({
 }: RowProps) => (
   <tr className={index % 2 ? 'even' : 'odd'}>
     <td><EditorLink editor={election.candidate} /></td>
-    <td>{lp(election.status_name_short, 'autoeditor election status (short)')}</td>
-    <td>{formatUserDate($c.user, election.propose_time)}</td>
-    <td>{election.close_time ? formatUserDate($c.user, election.close_time) : '-'}</td>
+    <td>
+      {lp(election.status_name_short, 'autoeditor election status (short)')}
+    </td>
+    <td>{formatUserDate($c, election.propose_time)}</td>
+    <td>
+      {election.close_time
+        ? formatUserDate($c, election.close_time)
+        : '-'}
+    </td>
     <td><EditorLink editor={election.proposer} /></td>
     <td>
       {election.seconder_1
@@ -58,7 +63,7 @@ const ElectionTableRow = withCatalystContext(({
 ));
 
 const ElectionTableRows = (
-  {elections}: {|+elections: $ReadOnlyArray<AutoEditorElectionT>|},
+  {elections}: {+elections: $ReadOnlyArray<AutoEditorElectionT>},
 ): ReactNode => elections.map((election, index) => (
   <ElectionTableRow
     election={election}

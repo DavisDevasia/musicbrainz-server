@@ -24,17 +24,19 @@ sub _get
 }
 
 our %EXPORT_TAGS = (
-    edit_type       => _get(qr/^EDIT_/),
-    expire_action   => _get(qr/^EXPIRE_/),
-    quality         => _get(qr/^QUALITY_/),
-    alias           => _get(qr/^EDIT_.*_ALIAS$/),
-    annotation      => _get(qr/^EDIT_.*_ADD_ANNOTATION$/),
-    historic        => _get(qr/^EDIT_HISTORIC_/),
-    editor          => _get(qr/^EDITOR_/),
-    vote            => _get(qr/^VOTE_/),
-    edit_status     => _get(qr/^STATUS_/),
-    access_scope    => _get(qr/^ACCESS_SCOPE_/),
-    privileges      => _get(qr/_FLAG$/),
+    edit_type          => _get(qr/^EDIT_/),
+    expire_action      => _get(qr/^EXPIRE_/),
+    quality            => _get(qr/^QUALITY_/),
+    alias              => _get(qr/^EDIT_.*_ALIAS$/),
+    annotation         => _get(qr/^EDIT_.*_ADD_ANNOTATION$/),
+    historic           => _get(qr/^EDIT_HISTORIC_/),
+    editor             => _get(qr/^EDITOR_/),
+    vote               => _get(qr/^VOTE_/),
+    edit_status        => _get(qr/^STATUS_/),
+    access_scope       => _get(qr/^ACCESS_SCOPE_/),
+    privileges         => _get(qr/_FLAG$/),
+    language_frequency => _get(qr/^LANGUAGE_FREQUENCY/),
+    script_frequency   => _get(qr/^SCRIPT_FREQUENCY/),
     election_status => [
         qw( $ELECTION_SECONDER_1 $ELECTION_SECONDER_2 $ELECTION_OPEN
             $ELECTION_ACCEPTED   $ELECTION_REJECTED   $ELECTION_CANCELLED )
@@ -43,7 +45,11 @@ our %EXPORT_TAGS = (
         qw( $ELECTION_VOTE_YES $ELECTION_VOTE_NO $ELECTION_VOTE_ABSTAIN )
     ],
     email_addresses => [
-        qw( $EMAIL_NOREPLY_ADDR_SPEC $EMAIL_NOREPLY_ADDRESS $EMAIL_SUPPORT_ADDRESS )
+        qw( $EMAIL_NOREPLY_ADDR_SPEC $EMAIL_NOREPLY_ADDRESS
+            $EMAIL_SUPPORT_ADDRESS $EMAIL_ACCOUNT_ADMINS_ADDRESS )
+    ],
+    oauth_redirect_uri_re => [
+        qw( $OAUTH_INSTALLED_APP_REDIRECT_URI_RE $OAUTH_WEB_APP_REDIRECT_URI_RE )
     ],
 );
 
@@ -73,6 +79,7 @@ our @EXPORT_OK = (
         @PRIVATE_TABLE_LIST
         @CDSTUBS_TABLE_LIST
         @CAA_TABLE_LIST
+        @EAA_TABLE_LIST
         @WIKIDOCS_TABLE_LIST
         @DOCUMENTATION_TABLE_LIST
         @SITEMAPS_TABLE_LIST
@@ -294,6 +301,16 @@ Readonly our $ELECTION_CANCELLED  => 6;
 Readonly our $EMAIL_NOREPLY_ADDR_SPEC => 'noreply@musicbrainz.org';
 Readonly our $EMAIL_NOREPLY_ADDRESS => 'MusicBrainz Server <' . $EMAIL_NOREPLY_ADDR_SPEC . '>';
 Readonly our $EMAIL_SUPPORT_ADDRESS => 'MusicBrainz <support@musicbrainz.org>';
+Readonly our $EMAIL_ACCOUNT_ADMINS_ADDRESS => 'MusicBrainz Account Admins <musicbrainz-account-admin@metabrainz.org>';
+
+Readonly our $LANGUAGE_FREQUENCY_HIDDEN   =>  0;
+Readonly our $LANGUAGE_FREQUENCY_OTHER    =>  1;
+Readonly our $LANGUAGE_FREQUENCY_FREQUENT =>  2;
+
+Readonly our $SCRIPT_FREQUENCY_HIDDEN   =>  1;
+Readonly our $SCRIPT_FREQUENCY_UNCOMMON =>  2;
+Readonly our $SCRIPT_FREQUENCY_OTHER    =>  3;
+Readonly our $SCRIPT_FREQUENCY_FREQUENT =>  4;
 
 Readonly our $VOTE_ABSTAIN => -1;
 Readonly our $VOTE_NO      =>  0;
@@ -384,6 +401,7 @@ Readonly our $WS_EDIT_RESPONSE_NO_CHANGES => 2;
 Readonly our %ENTITIES_WITH_RELATIONSHIP_CREDITS => map { $_ => 1 } qw(
     area
     artist
+    instrument
     label
     place
 );
@@ -477,6 +495,8 @@ Readonly our @CORE_TABLE_LIST => qw(
     event_gid_redirect
     event_type
     gender
+    genre
+    genre_alias
     instrument
     instrument_alias
     instrument_alias_type
@@ -736,6 +756,7 @@ Readonly our @PRIVATE_TABLE_LIST => qw(
     editor_collection
     editor_collection_area
     editor_collection_artist
+    editor_collection_collaborator
     editor_collection_event
     editor_collection_instrument
     editor_collection_label
@@ -787,6 +808,12 @@ Readonly our @CAA_TABLE_LIST => qw(
     cover_art_archive.cover_art_type
     cover_art_archive.image_type
     cover_art_archive.release_group_cover_art
+);
+
+Readonly our @EAA_TABLE_LIST => qw(
+    event_art_archive.art_type
+    event_art_archive.event_art
+    event_art_archive.event_art_type
 );
 
 Readonly our @WIKIDOCS_TABLE_LIST => qw(
@@ -895,6 +922,7 @@ Readonly our @FULL_TABLE_LIST => (
     @PRIVATE_TABLE_LIST,
     @CDSTUBS_TABLE_LIST,
     @CAA_TABLE_LIST,
+    @EAA_TABLE_LIST,
     @WIKIDOCS_TABLE_LIST,
     @DOCUMENTATION_TABLE_LIST,
     @SITEMAPS_TABLE_LIST,
@@ -920,6 +948,9 @@ Readonly our $EDITOR_SANITISED_COLUMNS => join(', ',
 );
 
 Readonly our $PASSPHRASE_BCRYPT_COST => 12;
+
+Readonly our $OAUTH_INSTALLED_APP_REDIRECT_URI_RE => qr/^(?![_-])[\w-]+(?:\.(?![_-])[\w-]+)+:/;
+Readonly our $OAUTH_WEB_APP_REDIRECT_URI_RE => qr/^https?:\/\//;
 
 =head1 NAME
 

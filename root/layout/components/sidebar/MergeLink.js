@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2018 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -9,11 +9,10 @@
 
 import React from 'react';
 
-import {l} from '../../../static/scripts/common/i18n';
 
-type Props = {|
+type Props = {
   +entity: CoreEntityT,
-|};
+};
 
 const mergeUrl = entity => {
   const entityType = entity.entityType;

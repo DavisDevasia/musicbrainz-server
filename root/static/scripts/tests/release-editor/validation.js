@@ -1,7 +1,10 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import _ from 'lodash';
 import test from 'tape';
@@ -35,8 +38,8 @@ validationTest("non-loaded mediums validate, even though they have no tracks (MB
         ]
     });
 
-    var release = releaseEditor.rootField.release(),
-        medium = release.mediums()[0];
+    const release = releaseEditor.rootField.release();
+    const medium = release.mediums()[0];
 
     t.ok(!medium.loaded(), "medium is not loaded");
     t.ok(!medium.needsTracks(), "medium doesn't require tracks");

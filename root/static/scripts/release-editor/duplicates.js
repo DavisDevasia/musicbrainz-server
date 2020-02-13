@@ -1,7 +1,10 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import $ from 'jquery';
 import ko from 'knockout';
@@ -27,7 +30,7 @@ releaseEditor.baseRelease.subscribe(function (gid) {
     var release = releaseEditor.rootField.release();
 
     if (!gid) {
-        release.mediums([ new releaseEditor.fields.Medium({}, release) ]);
+        release.mediums([new releaseEditor.fields.Medium({}, release)]);
         return;
     }
 
@@ -51,7 +54,9 @@ releaseEditor.findReleaseDuplicates = function () {
         var releaseGroup = release.releaseGroup();
         var gid = releaseGroup.gid;
 
-        if (!gid) return;
+        if (!gid) {
+            return;
+        }
 
         var url = `/ws/2/release?release-group=${gid}&inc=labels+media&fmt=json`;
 
@@ -71,8 +76,10 @@ releaseEditor.findReleaseDuplicates = function () {
     debounce(utils.withRelease(function (release) {
         var name = release.name();
 
-        // If a release group is selected, just show the releases from
-        // there without searching.
+        /*
+         * If a release group is selected, just show the releases from
+         * there without searching.
+         */
         var rgReleases = releaseGroupReleases();
 
         if (rgReleases.length > 0) {
@@ -88,11 +95,12 @@ releaseEditor.findReleaseDuplicates = function () {
         }
 
         var query = utils.constructLuceneFieldConjunction({
-            release: [ utils.escapeLuceneValue(name) ],
+            release: [utils.escapeLuceneValue(name)],
 
-            arid: _(ac)
-                    .map('artist.gid')
-                    .map(utils.escapeLuceneValue).value()
+            arid: _(ac.names)
+                .map('artist.gid')
+                .map(utils.escapeLuceneValue)
+                .value()
         });
 
         toggleLoadingIndicator(true);
@@ -125,7 +133,9 @@ function toggleLoadingIndicator(show) {
 }
 
 
-function pluck(chain, name) { return chain.map(name).compact() }
+function pluck(chain, name) {
+    return chain.map(name).compact();
+}
 
 
 function formatReleaseData(release) {
@@ -134,14 +144,18 @@ function formatReleaseData(release) {
     var events = _(release["release-events"]);
     var labels = _(release["label-info"]);
 
-    clean.formats = combinedMediumFormatName(release.media);
-    clean.tracks = _.map(release.media, "track-count").join(" + ");
+    clean.formats = combinedMediumFormatName(release.media) || l('[missing media]');
+    clean.tracks = _.map(release.media, "track-count").join(" + ") ||
+        lp('-', 'missing data');
 
     clean.dates = pluck(events, "date").value();
 
     clean.countries = pluck(events, "area")
         .map("iso-3166-1-codes")
-        .flatten().compact().uniq().value();
+        .flatten()
+        .compact()
+        .uniq()
+        .value();
 
     clean.labels = pluck(labels, "label").map(function (info) {
         return new MB.entity.Label({ gid: info.id, name: info.name });
@@ -156,13 +170,18 @@ function formatReleaseData(release) {
 
 
 function combinedMediumFormatName(mediums) {
-    var formats = pluck(_(mediums), "format");
-    var formatCounts = formats.countBy(_.identity);
+    const getFormat = medium => medium.format || '';
+    const formats = _.uniq(mediums.map(getFormat));
+    const formatCounts = _.countBy(mediums, getFormat);
 
-    return formats.uniq().map(function (format) {
-        var count = formatCounts[format];
+    return formats
+        .map(function (format) {
+            const count = formatCounts[format];
 
-        return (count > 1 ? count + "\u00D7" : "") + format;
-    })
-    .value().join(" + ");
+            return (count > 1 ? count + "\u00D7" : "") +
+                (format
+                    ? lp_attributes(format, 'medium_format')
+                    : l('(unknown)'));
+        })
+        .join(" + ");
 }

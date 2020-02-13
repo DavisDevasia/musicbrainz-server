@@ -1,49 +1,52 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2015 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2015 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
-const ko = require('knockout');
-const _ = require('lodash');
-const React = require('react');
-const ReactDOMServer = require('react-dom/server');
+import ko from 'knockout';
+import _ from 'lodash';
+import React from 'react';
+import ReactDOMServer from 'react-dom/server';
 
-const ArtistCreditLink = require('./components/ArtistCreditLink');
-const EditorLink = require('./components/EditorLink');
-const EntityLink = require('./components/EntityLink');
-const {
-    ENTITY_NAMES,
-    PART_OF_SERIES_LINK_TYPES,
-    PROBABLY_CLASSICAL_LINK_TYPES,
-    VARTIST_GID,
-} = require('./constants');
-const i18n = require('./i18n');
-const {
-        artistCreditFromArray,
-        artistCreditsAreEqual,
-        isCompleteArtistCredit,
-    } = require('./immutable-entities');
-const MB = require('./MB');
-const linkTypeInfo = require('./typeInfo').link_type;
-const bracketed = require('./utility/bracketed').default;
-const clean = require('./utility/clean');
-const formatTrackLength = require('./utility/formatTrackLength');
+import ArtistCreditLink from './components/ArtistCreditLink';
+import EditorLink from './components/EditorLink';
+import EntityLink from './components/EntityLink';
+import DescriptiveLink from './components/DescriptiveLink';
+import MediumDescription from './components/MediumDescription';
+import {
+  ENTITY_NAMES,
+  PART_OF_SERIES_LINK_TYPES,
+  PROBABLY_CLASSICAL_LINK_TYPES,
+} from './constants';
+import {
+  artistCreditsAreEqual,
+  isCompleteArtistCredit,
+} from './immutable-entities';
+import linkedEntities from './linkedEntities';
+import MB from './MB';
+import clean from './utility/clean';
+import formatTrackLength from './utility/formatTrackLength';
 
 (function () {
 
-    // Base class that both core and non-core entities inherit from. The only
-    // purpose this really serves is allowing the `data instanceof Entity`
-    // check in MB.entity() to work.
+    /*
+     * Base class that both core and non-core entities inherit from. The only
+     * purpose this really serves is allowing the `data instanceof Entity`
+     * check in MB.entity() to work.
+     */
     class Entity {
 
         constructor(data) {
-            _.assign(this, data);
+            Object.assign(this, data);
             this.name = this.name || "";
         }
 
         toJSON() {
-            var key, result = {};
-            for (key in this) {
+            const result = {};
+            for (const key in this) {
                 toJSON(result, this[key], key);
             }
             return result;
@@ -51,12 +54,6 @@ const formatTrackLength = require('./utility/formatTrackLength');
 
         renderArtistCredit(ac) {
             ac = ko.unwrap(ac);
-            // XXX For suggested recording data in the release editor,
-            // which root/release/edit/recordings.tt passes into here as plain
-            // JSON (can't really "instantiate" things anywhere else).
-            if (Array.isArray(ac)) {
-                ac = artistCreditFromArray(ac);
-            }
             return ReactDOMServer.renderToStaticMarkup(
                 <ArtistCreditLink artistCredit={ac} target="_blank" />
             );
@@ -64,14 +61,11 @@ const formatTrackLength = require('./utility/formatTrackLength');
 
         isCompleteArtistCredit(ac) {
             ac = ko.unwrap(ac);
-            if (Array.isArray(ac)) {
-                ac = artistCreditFromArray(ac);
-            }
             return isCompleteArtistCredit(ac);
         }
 
         entityTypeLabel() {
-            return i18n.addColon(ENTITY_NAMES[this.entityType].toLocaleString());
+            return addColon(ENTITY_NAMES[this.entityType]());
         }
 
         html(...args) {
@@ -91,13 +85,15 @@ const formatTrackLength = require('./utility/formatTrackLength');
         }
     }
 
-    // Usually, this function should be called to create new entities instead
-    // of directly instantiating any of the classes below. MB.entity() caches
-    // everything with a GID, so if you pass in the same entity twice, you get
-    // the same object back (which is ideal, because otherwise there could be a
-    // lot of duplication for things like track artists). This also allows
-    // comparing entities for equality with a simple `===` instead of having to
-    // compare the GIDs.
+    /*
+     * Usually, this function should be called to create new entities instead
+     * of directly instantiating any of the classes below. MB.entity() caches
+     * everything with a GID, so if you pass in the same entity twice, you get
+     * the same object back (which is ideal, because otherwise there could be
+     * a lot of duplication for things like track artists). This also allows
+     * comparing entities for equality with a simple `===` instead of having
+     * to compare the GIDs.
+     */
 
     MB.entity = function (data, type) {
         if (!data) {
@@ -144,7 +140,7 @@ const formatTrackLength = require('./utility/formatTrackLength');
             this.relationships = ko.observableArray([]);
 
             if (data.artistCredit) {
-                this.artistCredit = artistCreditFromArray(data.artistCredit);
+                this.artistCredit = _.cloneDeep(data.artistCredit);
             }
 
             if (this._afterCoreEntityCtor) {
@@ -234,7 +230,7 @@ const formatTrackLength = require('./utility/formatTrackLength');
     class Label extends CoreEntity {
         selectionMessage() {
             return ReactDOMServer.renderToStaticMarkup(
-                i18n.l('You selected {label}.', {label: this.reactElement({target: '_blank'})})
+                exp.l('You selected {label}.', {label: this.reactElement({target: '_blank'})})
             );
         }
     }
@@ -244,7 +240,7 @@ const formatTrackLength = require('./utility/formatTrackLength');
     class Area extends CoreEntity {
         selectionMessage() {
             return ReactDOMServer.renderToStaticMarkup(
-                i18n.l('You selected {area}.', {area: this.reactElement({ target: '_blank'})})
+                exp.l('You selected {area}.', {area: this.reactElement({ target: '_blank'})})
             );
         }
     }
@@ -263,9 +259,11 @@ const formatTrackLength = require('./utility/formatTrackLength');
 
             // Returned from the /ws/js/recording search.
             if (this.appearsOn) {
-                // Depending on where we're getting the data from (search
-                // server, /ws/js...) we may have either releases or release
-                // groups here. Assume the latter by default.
+                /*
+                 * Depending on where we're getting the data from (search
+                 * server, /ws/js...) we may have either releases or release
+                 * groups here. Assume the latter by default.
+                 */
                 var appearsOnType = this.appearsOn.entityType || "release_group";
 
                 this.appearsOn.results = _.map(this.appearsOn.results, function (appearance) {
@@ -274,7 +272,7 @@ const formatTrackLength = require('./utility/formatTrackLength');
             }
 
             if (!this.artistCredit) {
-                this.artistCredit = artistCreditFromArray([]);
+                this.artistCredit = {names: []};
             }
 
             this.relatedArtists = relatedArtists(data.relationships);
@@ -286,7 +284,7 @@ const formatTrackLength = require('./utility/formatTrackLength');
         }
 
         toJSON() {
-            return _.assign(super.toJSON(), { isrcs: this.isrcs, appearsOn: this.appearsOn });
+            return Object.assign(super.toJSON(), { isrcs: this.isrcs, appearsOn: this.appearsOn });
         }
     }
 
@@ -329,8 +327,8 @@ const formatTrackLength = require('./utility/formatTrackLength');
     class ReleaseGroup extends CoreEntity {
         selectionMessage() {
             return ReactDOMServer.renderToStaticMarkup(
-                i18n.l('You selected {releasegroup}.', {
-                    releasegroup: this.reactElement({target: '_blank'}),
+                exp.l('You selected {releasegroup}.', {
+                    releasegroup: <DescriptiveLink entity={this} target="_blank" />,
                 })
             );
         }
@@ -349,10 +347,12 @@ const formatTrackLength = require('./utility/formatTrackLength');
 
         getSeriesItems(viewModel) {
             var type = this.type();
-            if (!type) return [];
+            if (!type) {
+                return [];
+            }
 
             var gid = PART_OF_SERIES_LINK_TYPES[type.item_entity_type];
-            var linkTypeID = linkTypeInfo.byId[gid].id;
+            var linkTypeID = linkedEntities.link_type[gid].id;
 
             return _.filter(this.displayableRelationships(viewModel)(), function (r) {
                 return r.linkTypeID() === linkTypeID;
@@ -360,7 +360,7 @@ const formatTrackLength = require('./utility/formatTrackLength');
         }
 
         toJSON() {
-            return _.assign(super.toJSON(), {
+            return Object.assign(super.toJSON(), {
                 type: this.type(),
                 typeID: this.typeID,
                 orderingTypeID: this.orderingTypeID
@@ -411,7 +411,7 @@ const formatTrackLength = require('./utility/formatTrackLength');
 
     class Work extends CoreEntity {
         toJSON() {
-            return _.assign(super.toJSON(), { artists: this.artists });
+            return Object.assign(super.toJSON(), { artists: this.artists });
         }
     }
 
@@ -423,18 +423,9 @@ const formatTrackLength = require('./utility/formatTrackLength');
 
             this.tracks = _.map(data.tracks, x => new Track(x));
 
-            var positionName;
-            if (this.name) {
-                positionName = this.format ? "{medium_format} {position}: {title}" : "Medium {position}: {title}";
-            } else {
-                positionName = this.format ? "{medium_format} {position}" : "Medium {position}";
-            }
-
-            this.positionName = i18n.l(positionName, {
-                medium_format: this.format,
-                position: this.position,
-                title: this.name
-            });
+            this.positionName = ReactDOMServer.renderToString(
+                <MediumDescription medium={this} />,
+            );
         }
     }
 
@@ -457,7 +448,10 @@ const formatTrackLength = require('./utility/formatTrackLength');
     MB.entity.Work = Work;
 
     function relatedArtists(relationships) {
-        return _(relationships).filter({target: {entityType: 'artist'}}).map('target').value();
+        return _(relationships)
+            .filter({target: {entityType: 'artist'}})
+            .map('target')
+            .value();
     }
 
     var classicalRoles = /\W(baritone|cello|conductor|gamba|guitar|orch|orchestra|organ|piano|soprano|tenor|trumpet|vocals?|viola|violin): /;
@@ -468,8 +462,10 @@ const formatTrackLength = require('./utility/formatTrackLength');
         });
     }
 
-    // Used by MB.entity() to look up classes. JSON from the web service
-    // usually includes a lower-case type name, which is used as the key.
+    /*
+     * Used by MB.entity() to look up classes. JSON from the web service
+     * usually includes a lower-case type name, which is used as the key.
+     */
 
     var coreEntityMapping = {
         artist:        Artist,
@@ -489,4 +485,4 @@ const formatTrackLength = require('./utility/formatTrackLength');
     };
 }());
 
-module.exports = MB.entity;
+export default MB.entity;

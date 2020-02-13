@@ -1,16 +1,18 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import ko from 'knockout';
 import _ from 'lodash';
 
 import 'knockout-arraytransforms';
 
-import {addColon} from '../../common/i18n';
+import linkedEntities from '../../common/linkedEntities';
 import MB from '../../common/MB';
-import typeInfo from '../../common/typeInfo';
 import deferFocus from '../../edit/utility/deferFocus';
 
 import mergeDates from './mergeDates';
@@ -18,7 +20,7 @@ import mergeDates from './mergeDates';
 import '../../common/entity';
 
 function getDirection(relationship, source) {
-  let entities = relationship.entities();
+  const entities = relationship.entities();
 
   if (source === entities[0]) {
     return 'forward';
@@ -27,6 +29,8 @@ function getDirection(relationship, source) {
   if (source === entities[1]) {
     return 'backward';
   }
+
+  throw 'source not in the entities array';
 }
 
 const RE = MB.relationshipEditor = MB.relationshipEditor || {};
@@ -40,7 +44,7 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
         this.relationshipElements = {};
     };
 
-    _.assign(coreEntityPrototype, {
+    Object.assign(coreEntityPrototype, {
 
         parseRelationships: function (relationships) {
             var self = this;
@@ -50,13 +54,13 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
             }
 
             var newRelationships = _(relationships)
-                .map(function (data) { return MB.getRelationship(data, self) })
+                .map(data => MB.getRelationship(data, self))
                 .compact()
                 .value();
 
             var allRelationships = _(this.relationships.peek())
                 .union(newRelationships)
-                .sortBy(function (r) { return r.lowerCasePhrase(self) })
+                .sortBy(r => r.lowerCasePhrase(self))
                 .value();
 
             this.relationships(allRelationships);
@@ -71,7 +75,6 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
         }),
 
         relationshipsInViewModel: cacheByID(function (vm) {
-            var self = this;
             return this.relationships.filter(function (relationship) {
                 return vm === relationship.parent;
             });
@@ -85,8 +88,8 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
             }
 
             function openAddDialog(source, event) {
-                var relationships = this.values(),
-                    firstRelationship = relationships[0];
+                const relationships = this.values();
+                const firstRelationship = relationships[0];
 
                 var dialog = new RE.UI.AddDialog({
                     source: self,
@@ -114,7 +117,9 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
             }
 
             return this.displayableRelationships(vm)
-                .groupBy(linkPhrase).sortBy("key").map(function (group) {
+                .groupBy(linkPhrase)
+                .sortBy("key")
+                .map(function (group) {
                     group.openAddDialog = openAddDialog;
                     group.canBeOrdered = ko.observable(false);
 
@@ -131,7 +136,9 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
                     }
 
                     if (ko.unwrap(group.canBeOrdered)) {
-                        var hasOrdering = group.values.any(function (r) { return r.linkOrder() > 0 });
+                        var hasOrdering = group.values.any(function (r) {
+                            return r.linkOrder() > 0;
+                        });
 
                         group.hasOrdering = ko.computed({
                             read: hasOrdering,
@@ -139,9 +146,13 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
                                 var currentValue = hasOrdering.peek();
 
                                 if (currentValue && !newValue) {
-                                    _.each(group.values.slice(0), function (r) { r.linkOrder(0) });
+                                    _.each(group.values.slice(0), function (r) {
+                                        r.linkOrder(0);
+                                    });
                                 } else if (newValue && !currentValue) {
-                                    _.each(group.values.slice(0), function (r, i) { r.linkOrder(i + 1) });
+                                    _.each(group.values.slice(0), function (r, i) {
+                                        r.linkOrder(i + 1);
+                                    });
                                 }
                             }
                         });
@@ -155,8 +166,10 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
             return addColon(key);
         },
 
-        // searches this entity's relationships for potential duplicate "rel"
-        // if it is a duplicate, remove and merge it
+        /*
+         * Searches this entity's relationships for potential duplicate "rel"
+         * if it is a duplicate, remove and merge it
+         */
 
         mergeRelationship: function (rel) {
             var relationships = this.relationships();
@@ -180,13 +193,15 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
         },
 
         getRelationshipGroup: function (relationship, viewModel) {
-            // Returns all relationships that belong to the same 'ordering'
-            // group as `relationship`, i.e. that have the same link type and
-            // direction. Used in fields.js to recalculate link orders when an
-            // item is moved. Since displayableRelationships is used, it should
-            // be in the same order as it appears in the UI.
-            let linkTypeID = String(relationship.linkTypeID());
-            let direction = getDirection(relationship, this);
+            /*
+             * Returns all relationships that belong to the same 'ordering'
+             * group as `relationship`, i.e. that have the same link type and
+             * direction. Used in fields.js to recalculate link orders when an
+             * item is moved. Since displayableRelationships is used,
+             * it should be in the same order as it appears in the UI.
+             */
+            const linkTypeID = String(relationship.linkTypeID());
+            const direction = getDirection(relationship, this);
 
             return _.filter(
                 this.displayableRelationships(viewModel)(),
@@ -206,7 +221,7 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
     }
 
     function isFreeText(linkAttribute) {
-        return typeInfo.link_attribute_type[linkAttribute.type.id].freeText;
+        return linkedEntities.link_attribute_type[linkAttribute.type.id].free_text;
     }
 
     function cacheByID(func) {

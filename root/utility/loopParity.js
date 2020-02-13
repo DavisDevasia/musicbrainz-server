@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2018 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -8,5 +8,5 @@
  */
 
 export default function loopParity(x: number): string {
-  return x % 2 === 0 ? 'even' : 'odd';
+  return (x + 1) % 2 === 0 ? 'even' : 'odd';
 }

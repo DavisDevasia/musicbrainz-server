@@ -10,11 +10,9 @@
 import React from 'react';
 
 import {withCatalystContext} from '../../context';
-import {l} from '../../static/scripts/common/i18n';
-import {lp_attributes} from '../../static/scripts/common/i18n/attributes';
 import EntityLink from '../../static/scripts/common/components/EntityLink';
 import loopParity from '../../utility/loopParity';
-import type {ResultsPropsT} from '../types';
+import type {ResultsPropsWithContextT} from '../types';
 
 import PaginatedSearchResults from './PaginatedSearchResults';
 import ResultsLayout from './ResultsLayout';
@@ -29,7 +27,9 @@ function buildResult(result, index) {
         <EntityLink entity={series} />
       </td>
       <td>
-        {series.typeName ? lp_attributes(series.typeName, 'series_type') : null}
+        {series.typeName
+          ? lp_attributes(series.typeName, 'series_type')
+          : null}
       </td>
     </tr>
   );
@@ -42,7 +42,7 @@ const SeriesResults = ({
   pager,
   query,
   results,
-}: ResultsPropsT<SeriesT>) => (
+}: ResultsPropsWithContextT<SeriesT>) => (
   <ResultsLayout form={form} lastUpdated={lastUpdated}>
     <PaginatedSearchResults
       buildResult={buildResult}
@@ -58,7 +58,7 @@ const SeriesResults = ({
     />
     {$c.user && !$c.user.is_editing_disabled ? (
       <p>
-        {l('Alternatively, you may {uri|add a new series}.', {
+        {exp.l('Alternatively, you may {uri|add a new series}.', {
           uri: '/series/create?edit-series.name=' + encodeURIComponent(query),
         })}
       </p>

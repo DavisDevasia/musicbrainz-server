@@ -1,7 +1,10 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import $ from 'jquery';
 import ko from 'knockout';
@@ -10,22 +13,23 @@ import ReactDOMServer from 'react-dom/server';
 
 import '../../../lib/jquery-ui';
 
-import {ENTITY_NAMES, PART_OF_SERIES_LINK_TYPES} from '../../common/constants';
-import {compare, l} from '../../common/i18n';
-import {l_relationships} from '../../common/i18n/relationships';
+import {ENTITY_NAMES, PART_OF_SERIES_LINK_TYPES}
+    from '../../common/constants';
+import {compare} from '../../common/i18n';
+import expand2react from '../../common/i18n/expand2react';
+import linkedEntities from '../../common/linkedEntities';
 import MB from '../../common/MB';
-import {link_type as linkTypeInfo} from '../../common/typeInfo';
 import * as URLCleanup from '../../edit/URLCleanup';
 import * as dates from '../../edit/utility/dates';
-import * as linkPhrase from '../../edit/utility/linkPhrase';
+import {stripAttributes} from '../../edit/utility/linkPhrase';
 import isBlank from '../../common/utility/isBlank';
+import debounce from '../../common/utility/debounce';
 
 const PART_OF_SERIES_LINK_TYPE_GIDS = _.values(PART_OF_SERIES_LINK_TYPES);
 
 const RE = MB.relationshipEditor = MB.relationshipEditor || {};
 
     var UI = RE.UI = RE.UI || {};
-    var fields = RE.fields = RE.fields || {};
 
     var incorrectEntityForSeries = {
         recording:      l("The series you’ve selected is for recordings."),
@@ -49,7 +53,7 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
         }
 
         return {
-            init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+            init: function (element, valueAccessor) {
                 dialog = valueAccessor();
 
                 dialog.autocomplete = $(element).entitylookup({
@@ -67,6 +71,7 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
                             }
 
                             dialog.targetType(type);
+                            return true;
                         },
 
                         resultHook: function (items) {
@@ -75,9 +80,8 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
                                 return _.filter(items, function (item) {
                                     return item.type.item_entity_type === dialog.source.entityType;
                                 });
-                            } else {
-                                return items;
-                            }
+                            } 
+                            return items;
                         }
                     }).data("mb-entitylookup");
 
@@ -109,7 +113,7 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
                 instruments.push(observable);
 
                 observable.subscribe(function (instrument) {
-                    relationship.attributes.remove(observable.linkAttribute.peek())
+                    relationship.attributes.remove(observable.linkAttribute.peek());
                     if (instrument.gid) {
                         observable.linkAttribute(relationship.addAttribute(instrument.gid));
                     } else {
@@ -123,7 +127,7 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
             }
 
             _.each(relationship.attributes.peek(), function (attribute) {
-                if (attribute.type.rootID == 14) {
+                if (attribute.type.root_id == 14) {
                     addInstrument(MB.entity(attribute.type, "instrument"), attribute);
                 }
             });
@@ -183,7 +187,7 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
                 }, source);
 
                 options.relationship.linkTypeID(
-                    defaultLinkType({ children: linkTypeInfo.byTypes[options.relationship.entityTypes] })
+                    defaultLinkType({ children: linkedEntities.link_type_tree[options.relationship.entityTypes] })
                 );
             }
 
@@ -195,6 +199,22 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
 
             this.changeOtherRelationshipCredits = {source: ko.observable(false), target: ko.observable(false)};
             this.selectedRelationshipCredits = {source: ko.observable('all'), target: ko.observable('all')};
+
+            function tooShortYear(date) {
+                const valid = dates.isYearFourDigits(date.year());
+                return valid ? '' : l('The year should have four digits. If you want to enter a year earlier than 1000 CE, please pad with zeros, such as “0123”.');
+            }
+
+            this.tooShortBeginYearError = debounce(function () {
+                const relationship = self.relationship();
+                return tooShortYear(relationship.begin_date);
+            });
+
+            this.tooShortEndYearError = debounce(function () {
+                const relationship = self.relationship();
+                return tooShortYear(relationship.end_date);
+            });
+
             this.setupUI();
         }
 
@@ -232,17 +252,27 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
                         var targetCredit = relationship.creditField(target)();
                         var relationshipFilter = this.selectedRelationshipCredits[role]();
 
-                        // XXX HACK XXX
-                        // MB.entityCache isn't supposed to be exposed outside of
-                        // whatever module it's defined in, but there's no easier
-                        // way to iterate over all entities on the page.
+                        /*
+                         * XXX HACK XXX
+                         * MB.entityCache isn't supposed to be exposed outside of
+                         * whatever module it's defined in, but there's no easier
+                         * way to iterate over all entities on the page.
+                         */
 
                         _.each(MB.entityCache, function (entity, gid) {
                             if (gid === target.gid) {
                                 _.each(entity.displayableRelationships(vm)(), function (r) {
                                     switch (relationshipFilter) {
-                                      case 'same-entity-types': if (r.entityTypes !== relationship.entityTypes) { return; }; break;
-                                      case 'same-relationship-type': if (r.linkTypeID() !== relationship.linkTypeID()) { return; }; break;
+                                        case 'same-entity-types':
+                                            if (r.entityTypes !== relationship.entityTypes) {
+                                                return;
+                                            }
+                                            break;
+                                        case 'same-relationship-type':
+                                            if (r.linkTypeID() !== relationship.linkTypeID()) {
+                                                return;
+                                            }
+                                            break;
                                     }
 
                                     var entities = r.entities();
@@ -283,24 +313,30 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
 
         keydownEvent(data, event) {
             if (event.isDefaultPrevented()) {
-                return;
+                return false;
             }
 
             var nodeName = event.target.nodeName.toLowerCase();
             var self = this;
 
-            // Firefox needs a small delay in order to allow for the change
-            // event to trigger on <select> menus, and Opera 12.0* needs it
-            // triggered explicitly, so do that first.
+            /*
+             * Firefox needs a small delay in order to allow for the change
+             * event to trigger on <select> menus, and Opera 12.0* needs it
+             * triggered explicitly, so do that first.
+             */
 
             if (event.keyCode === 13 && /^input|select$/.test(nodeName)) {
                 $(event.target).trigger('change');
 
                 if (!this.hasErrors()) {
-                    // Opera 12.0* also has a bug where the pencil icon is
-                    // clicked if the dialog is closed too fast, which makes
-                    // it immediately reopen, hence the added delay here.
-                    _.defer(function () { self.accept() });
+                    /*
+                     * Opera 12.0* also has a bug where the pencil icon is
+                     * clicked if the dialog is closed too fast, which makes
+                     * it immediately reopen, hence the added delay here.
+                     */
+                    _.defer(function () {
+                        self.accept();
+                    });
                 }
             } else if (event.keyCode === 27 && nodeName !== "select") {
                 this.close();
@@ -327,8 +363,18 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
         }
 
         linkTypeName() {
-            var linkTypeID = this.relationship().linkTypeID();
-            return linkTypeID ? linkPhrase.clean(linkTypeID, this.backward()) : "";
+            var linkType = this.relationship().getLinkType();
+            if (!linkType) {
+                return '';
+            }
+            return stripAttributes(
+                linkType,
+                l_relationships(
+                  this.backward()
+                    ? linkType.reverse_link_phrase
+                    : linkType.link_phrase
+                ),
+            );
         }
 
         linkTypeDescription() {
@@ -337,8 +383,8 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
 
             if (linkType && linkType.description) {
                 description = ReactDOMServer.renderToStaticMarkup(
-                    l("{description} ({url|more documentation})", {
-                        description: l_relationships(linkType.description),
+                    exp.l("{description} ({url|more documentation})", {
+                        description: expand2react(l_relationships(linkType.description)),
                         url: { href: "/relationship/" + linkType.gid, target: "_blank" }
                     })
                 );
@@ -355,19 +401,21 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
 
         linkTypeOptions(entityTypes) {
             var options = MB.forms.linkTypeOptions(
-                { children: linkTypeInfo.byTypes[entityTypes] }, this.backward()
+                { children: linkedEntities.link_type_tree[entityTypes] }, this.backward()
             );
 
             if (this.source.entityType === "series") {
                 var itemType = MB.seriesTypesByID[this.source.typeID()].item_entity_type;
 
                 options = _.reject(options, function (opt) {
-                    var linkType = linkTypeInfo.byId[opt.value];
+                    var linkType = linkedEntities.link_type[opt.value];
 
                     if (_.includes(PART_OF_SERIES_LINK_TYPE_GIDS, linkType.gid) &&
                             linkType.gid !== PART_OF_SERIES_LINK_TYPES[itemType]) {
                         return true;
                     }
+
+                    return false;
                 });
             }
 
@@ -387,11 +435,13 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
                     if (self.linkTypeOptions(key).length) {
                         return true;
                     }
-                })
+
+                    return false;
+                });
             }
 
             var options = _.map(targetTypes, function (type) {
-                return { value: type, text: ENTITY_NAMES[type].toLocaleString() };
+                return { value: type, text: ENTITY_NAMES[type]() };
             });
 
             options.sort(function (a, b) {
@@ -402,7 +452,9 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
         }
 
         targetTypeChanged(newType) {
-            if (!newType) return;
+            if (!newType) {
+                return;
+            }
 
             var currentRelationship = this.relationship();
             var currentTarget = currentRelationship.target(this.source);
@@ -410,11 +462,13 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
             var data = currentRelationship.editData();
             data.target = MB.entity({ name: currentTarget.name }, newType);
 
-            // Always keep any existing dates, even if the new relationship
-            // doesn't support them. If they're not supported they'll be
-            // hidden/ignored anyway, but if the user changes the target type
-            // or link type again (to something that does support them), we
-            // want to preserve what they previously entered.
+            /*
+             * Always keep any existing dates, even if the new relationship
+             * doesn't support them. If they're not supported they'll be
+             * hidden/ignored anyway, but if the user changes the target type
+             * or link type again (to something that does support them), we
+             * want to preserve what they previously entered.
+             */
             data.begin_date = MB.edit.fields.partialDate(currentRelationship.begin_date);
             data.end_date = MB.edit.fields.partialDate(currentRelationship.end_date);
             data.ended = !!currentRelationship.ended();
@@ -422,15 +476,17 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
             delete data.entities;
 
             var entityTypes = [this.source.entityType, newType].sort().join("-");
-            data.linkTypeID = defaultLinkType({ children: linkTypeInfo.byTypes[entityTypes] });
+            data.linkTypeID = defaultLinkType({ children: linkedEntities.link_type_tree[entityTypes] });
             data.attributes = [];
 
             var newRelationship = this.viewModel.getRelationship(data, this.source);
 
             this.relationship(newRelationship);
 
-            // XXX knockout is stupid and unsets the linkTypeID for no apparent
-            // reason, so do it again...
+            /*
+             * XXX knockout is stupid and unsets the linkTypeID for no apparent
+             * reason, so do it again...
+             */
             newRelationship.linkTypeID(data.linkTypeID);
 
             currentRelationship.remove();
@@ -509,35 +565,39 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
             return this.linkTypeError() ||
                    this.targetEntityError() ||
                    _(relationship.getLinkType().attributes)
-                     .values().map(_.bind(relationship.attributeError, relationship)).some() ||
+                       .values()
+                       .map(_.bind(relationship.attributeError, relationship))
+                       .some() ||
                    this.dateError(relationship.begin_date) ||
                    this.dateError(relationship.end_date) ||
+                   this.tooShortBeginYearError() ||
+                   this.tooShortEndYearError() ||
                    this.datePeriodError();
         }
 
         changeOtherRelationshipCreditsLabel(entity) {
             return ReactDOMServer.renderToStaticMarkup(
-                l('Change credits for other {entity} relationships on the page.', {entity: entity.reactElement()})
+                exp.l('Change credits for other {entity} relationships on the page.', {entity: entity.reactElement()})
             );
         }
 
         sameEntityTypesLabel($parent, relationship, entity) {
             const entityType = relationship.target(entity).entityType;
-            return l('Only relationships to {entity_type} entities.', {
-                entity_type: ENTITY_NAMES[entityType].toLocaleLowerCase(),
+            return texp.l('Only relationships to {entity_type} entities.', {
+                entity_type: ENTITY_NAMES[entityType](),
             });
         }
 
         sameRelationshipTypeLabel($parent, relationship, entity) {
             const entityType = relationship.target(entity).entityType;
-            return l('Only “{relationship_type}” relationships to {entity_type} entities.', {
+            return texp.l('Only “{relationship_type}” relationships to {entity_type} entities.', {
                 relationship_type: $parent.linkTypeName(),
-                entity_type: ENTITY_NAMES[entityType].toLocaleLowerCase(),
+                entity_type: ENTITY_NAMES[entityType](),
             });
         }
     }
 
-    _.assign(Dialog.prototype, {
+    Object.assign(Dialog.prototype, {
         loading: ko.observable(false),
         showAttributesHelp: ko.observable(false),
         showLinkTypeHelp: ko.observable(false),
@@ -556,7 +616,7 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
             var widget = $dialog.data("ui-dialog");
             widget.uiDialog.find(".ui-dialog-titlebar").remove();
 
-            _.assign(Dialog.prototype, {$dialog, widget});
+            Object.assign(Dialog.prototype, {$dialog, widget});
             ko.applyBindings(this.viewModel, $dialog[0]);
         }),
     });
@@ -601,7 +661,7 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
         }
     }
 
-    _.assign(AddDialog.prototype, {
+    Object.assign(AddDialog.prototype, {
         dialogTemplate: "template.relationship-dialog",
         disableTypeSelection: false,
     });
@@ -609,9 +669,11 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
     export class EditDialog extends Dialog {
 
         constructor(options) {
-            // originalRelationship is a copy of the relationship when the dialog
-            // was opened, i.e. before the user edits it. if they cancel the
-            // dialog, this is what gets copied back to revert their changes.
+            /*
+             * originalRelationship is a copy of the relationship when the dialog
+             * was opened, i.e. before the user edits it. if they cancel the
+             * dialog, this is what gets copied back to revert their changes.
+             */
             const relationship = options.relationship;
             options.relationship = relationship.clone();
             super(options);
@@ -620,8 +682,8 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
         }
 
         _accept() {
-            var relationships = splitByCreditableAttributes(this.relationship()),
-                relationship = relationships.shift();
+            const relationships = splitByCreditableAttributes(this.relationship());
+            const relationship = relationships.shift();
 
             this.editing.fromJS(relationship.editData());
 
@@ -642,7 +704,7 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
         }
     }
 
-    _.assign(EditDialog.prototype, {
+    Object.assign(EditDialog.prototype, {
         dialogTemplate: "template.relationship-dialog",
         disableTypeSelection: true,
     });
@@ -675,7 +737,7 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
         }
     }
 
-    _.assign(BatchRelationshipDialog.prototype, {
+    Object.assign(BatchRelationshipDialog.prototype, {
         dialogTemplate: "template.batch-relationship-dialog",
         disableTypeSelection: false,
     });
@@ -683,13 +745,13 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
     export class BatchCreateWorksDialog extends BatchRelationshipDialog {
 
         constructor(options) {
-            super(_.assign(options, { target: new MB.entity.Work({}) }));
+            super(Object.assign(options, { target: new MB.entity.Work({}) }));
             this.error = ko.observable(false);
         }
 
         accept() {
-            var workType = this.workType(),
-                workLang = this.workLanguage();
+            const workType = this.workType();
+            const workLang = this.workLanguage();
 
             this.loading(true);
 
@@ -724,19 +786,23 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
             return MB.edit.create({ editNote: "", makeVotable: false, edits: edits });
         }
 
-        targetEntityError() { return "" }
+        targetEntityError() {
+            return '';
+        }
     }
 
-    _.assign(BatchCreateWorksDialog.prototype, {
+    Object.assign(BatchCreateWorksDialog.prototype, {
         dialogTemplate: "template.batch-create-works-dialog",
         workType: ko.observable(null),
         workLanguage: ko.observable(null),
     });
 
     function defaultLinkType(root) {
-        var child, id, i = 0;
+        let child;
+        let id;
+        let i = 0;
 
-        while (child = root.children[i++]) {
+        while ((child = root.children[i++])) {
             if (child.description && !child.deprecated) {
                 return child.id;
             }
@@ -744,6 +810,8 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
                 return id;
             }
         }
+
+        return null;
     }
 
     function isCreditable(attribute) {
@@ -755,9 +823,9 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
     }
 
     function splitByCreditableAttributes(relationship) {
-        var attributes = relationship.attributes(),
-            creditable = _.filter(attributes, isCreditable),
-            relationships = [relationship];
+        const attributes = relationship.attributes();
+        const creditable = _.filter(attributes, isCreditable);
+        const relationships = [relationship];
 
         if (!creditable.length) {
             return relationships;
@@ -786,4 +854,3 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
     UI.EditDialog = EditDialog;
     UI.BatchRelationshipDialog = BatchRelationshipDialog;
     UI.BatchCreateWorksDialog = BatchCreateWorksDialog;
-

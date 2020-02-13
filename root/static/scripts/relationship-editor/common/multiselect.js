@@ -1,13 +1,16 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import $ from 'jquery';
 import _ from 'lodash';
 import ko from 'knockout';
 
-import typeInfo from '../../common/typeInfo';
+import linkedEntities from '../../common/linkedEntities';
 import clean from '../../common/utility/clean';
 import deferFocus from '../../edit/utility/deferFocus';
 
@@ -47,8 +50,8 @@ import deferFocus from '../../edit/utility/deferFocus';
             var options = params.options;
             var optionNodes = [];
 
-            for (var i = 0, node, option; option = options[i]; i++) {
-                node = document.createElement("a")
+            for (var i = 0, node, option; (option = options[i]); i++) {
+                node = document.createElement("a");
                 node.href = "#";
                 node.style.paddingLeft = option.depth + "em";
                 node.appendChild(document.createTextNode(option.text));
@@ -81,7 +84,6 @@ import deferFocus from '../../edit/utility/deferFocus';
 
         updateOptions(term) {
             var selected = this.relationship.attributes.peek();
-            var self = this;
             var menu = this.$menu[0];
 
             var previousDisplay = menu.style.display;
@@ -92,8 +94,8 @@ import deferFocus from '../../edit/utility/deferFocus';
                 var typeGID = option.value;
 
                 var visible = matchIndex(option, term) >= 0 && (
-                    typeInfo.link_attribute_type[typeGID].creditable ||
-                    _.findIndex(selected, function (a) { return a.type.gid === typeGID }) < 0
+                    linkedEntities.link_attribute_type[typeGID].creditable ||
+                    _.findIndex(selected, a => a.type.gid === typeGID) < 0
                 );
 
                 node.style.display = visible ? "block" : "none";
@@ -122,12 +124,11 @@ import deferFocus from '../../edit/utility/deferFocus';
             this.menuVisible(false);
             this.updateOptions(this.term.peek());
 
-            var nodes = this.optionNodes, node;
-            var nextIndex = _.findIndex(nodes, function (node) {
-                return node.optionData.value === typeGID;
-            });
+            const nodes = this.optionNodes;
+            let node;
+            let nextIndex = _.findIndex(nodes, node => node.optionData.value === typeGID);
 
-            while (node = nodes[++nextIndex]) {
+            while ((node = nodes[++nextIndex])) {
                 if (node.style.display === "block") {
                     ++nextIndex;
                     break;
@@ -168,8 +169,7 @@ import deferFocus from '../../edit/utility/deferFocus';
                     if (menuVisible) {
                         this.firstVisibleOption().focus();
                         event.preventDefault();
-                    }
-                    else if (this.firstVisibleOption()) {
+                    } else if (this.firstVisibleOption()) {
                         this.menuVisible(true);
                         event.preventDefault();
                     }
@@ -192,7 +192,7 @@ import deferFocus from '../../edit/utility/deferFocus';
                     break;
                 case 38: // up arrow
                     if (menuItemActive) {
-                        var nextItem = activeElement.previousSibling;
+                        let nextItem = activeElement.previousSibling;
 
                         while (nextItem && nextItem.style.display === "none") {
                             nextItem = nextItem.previousSibling;
@@ -204,7 +204,7 @@ import deferFocus from '../../edit/utility/deferFocus';
                     break;
                 case 40: // down arrow
                     if (menuItemActive) {
-                        var nextItem = activeElement.nextSibling;
+                        let nextItem = activeElement.nextSibling;
 
                         while (nextItem && nextItem.style.display === "none") {
                             nextItem = nextItem.nextSibling;
@@ -223,10 +223,6 @@ import deferFocus from '../../edit/utility/deferFocus';
     }
 
     function matchIndex(option, term) {
-        if (option.data.unaccented) {
-            var index = option.data.unaccented.toLowerCase().indexOf(term.toLowerCase());
-            if (index >= 0) return index;
-        }
         return option.text.toLowerCase().indexOf(term.toLowerCase());
     }
 

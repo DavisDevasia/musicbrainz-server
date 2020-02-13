@@ -7,21 +7,21 @@
  * later version: http://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-import $ from 'jquery';
+import mutate from 'mutate-cow';
 import * as React from 'react';
 import ReactDOM from 'react-dom';
 
-import * as lens from '../static/scripts/common/utility/lens';
-
-export default function hydrate<Config: {}>(
-  rootClass: string,
+export default function hydrate<Config>(
+  containerSelector: string,
   Component: React.AbstractComponent<Config>,
   mungeProps?: (Config) => Config,
 ): React.AbstractComponent<Config, void> {
+  const [containerTag, ...classes] = containerSelector.split('.');
   if (typeof document !== 'undefined') {
     // This should only run on the client.
+    const $ = require('jquery');
     $(function () {
-      const roots = document.querySelectorAll('div.' + rootClass);
+      const roots = document.querySelectorAll(containerSelector);
       for (const root of roots) {
         const propString = root.getAttribute('data-props');
         root.removeAttribute('data-props');
@@ -37,20 +37,27 @@ export default function hydrate<Config: {}>(
     if (mungeProps) {
       dataProps = mungeProps(dataProps);
     }
-    return (
-      <div className={rootClass} data-props={JSON.stringify(dataProps)}>
-        <Component {...props} />
-      </div>
+    return React.createElement(
+      containerTag,
+      {
+        'className': classes.join(' '),
+        'data-props': JSON.stringify(dataProps),
+      },
+      <Component {...props} />,
     );
   };
 }
 
-const entityLens = lens.prop('entity');
+type PropsWithEntity = {entity: MinimalCoreEntityT, ...};
 
-export function minimalEntity(props: any) {
+export function minimalEntity<T: $ReadOnly<PropsWithEntity>>(
+  props: $Exact<T>,
+): $Exact<T> {
   const entity = props.entity;
-  return lens.set(entityLens, {
-    entityType: entity.entityType,
-    gid: entity.gid,
-  }, props);
+  return mutate<PropsWithEntity, _>(props, newProps => {
+    newProps.entity = {
+      entityType: entity.entityType,
+      gid: entity.gid,
+    };
+  });
 }

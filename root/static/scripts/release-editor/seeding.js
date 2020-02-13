@@ -1,12 +1,13 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import ko from 'knockout';
 import _ from 'lodash';
-
-import {artistCreditFromArray} from '../common/immutable-entities';
 
 import fields from './fields';
 import utils from './utils';
@@ -77,11 +78,15 @@ releaseEditor.seedRelease = function (release, data) {
     }
 
     if (data.barcode) {
-        release.barcode.value(data.barcode);
+        if (data.barcode === 'none') {
+            release.barcode.none(true);
+        } else {
+            release.barcode.value(data.barcode);
+        }
     }
 
     if (data.artistCredit) {
-        release.artistCredit(artistCreditFromArray(data.artistCredit));
+        release.artistCredit(data.artistCredit);
         release.artistCredit.saved = release.artistCredit.peek();
     }
 
@@ -94,9 +99,11 @@ releaseEditor.seedRelease = function (release, data) {
     }
 
     if (data.releaseGroup) {
-        // Need to convert secondary type IDs into strings because
-        // Knockout.js will do a strict comparison when rendering the
-        // input. See MBS-7828.
+        /*
+         * Need to convert secondary type IDs into strings because
+         * Knockout.js will do a strict comparison when rendering the
+         * input. See MBS-7828.
+         */
         data.releaseGroup.secondaryTypeIDs = data.releaseGroup.secondaryTypeIDs.map(String);
         release.releaseGroup(new fields.ReleaseGroup(data.releaseGroup));
     }

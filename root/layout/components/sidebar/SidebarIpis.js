@@ -9,11 +9,10 @@
 
 import * as React from 'react';
 
-import {l} from '../../../static/scripts/common/i18n';
 
 import {SidebarProperty} from './SidebarProperties';
 
-const buildSidebarIpi = (ipi, index) => (
+const buildSidebarIpi = (ipi) => (
   <SidebarProperty
     className="ipi-code"
     key={'ipi-code-' + ipi.ipi}
@@ -23,9 +22,9 @@ const buildSidebarIpi = (ipi, index) => (
   </SidebarProperty>
 );
 
-type Props = {|
-  +entity: {...IpiCodesRoleT},
-|};
+type Props = {
+  +entity: $ReadOnly<{...IpiCodesRoleT, ...}>,
+};
 
 const SidebarIpis = ({entity}: Props):
   React.ChildrenArray<React.Element<typeof SidebarProperty>> => (

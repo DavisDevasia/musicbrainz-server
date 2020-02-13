@@ -9,21 +9,21 @@
 
 import React from 'react';
 
-import {lp} from '../static/scripts/common/i18n';
-import {lp_attributes} from '../static/scripts/common/i18n/attributes';
 import EntityHeader from '../components/EntityHeader';
 
-type Props = {|
+type Props = {
   page: string,
   series: SeriesT,
-|};
+};
 
 const SeriesHeader = ({series, page}: Props) => (
   <EntityHeader
     entity={series}
     headerClass="seriesheader"
     page={page}
-    subHeading={series.typeName ? lp_attributes(series.typeName, 'series_type') : lp('Series', 'singular')}
+    subHeading={series.typeName
+      ? lp_attributes(series.typeName, 'series_type')
+      : lp('Series', 'singular')}
   />
 );
 

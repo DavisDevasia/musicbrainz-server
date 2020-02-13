@@ -9,7 +9,7 @@ BEGIN { extends 'Catalyst::Controller' }
 use DBDefs;
 use MusicBrainz::Server::Constants qw( $VARTIST_GID $CONTACT_URL );
 use MusicBrainz::Server::ControllerUtils::SSL qw( ensure_ssl );
-use MusicBrainz::Server::Data::Utils qw( boolean_to_json model_to_type );
+use MusicBrainz::Server::Data::Utils qw( type_to_model );
 use MusicBrainz::Server::Log qw( log_debug );
 use MusicBrainz::Server::Replication ':replication_type';
 use aliased 'MusicBrainz::Server::Translation';
@@ -55,7 +55,6 @@ sub index : Path Args(0)
         component_props => {
             blogEntries => $c->model('Blog')->get_latest_entries,
             newestReleases => \@newest_releases,
-            withSafeBrowsing => boolean_to_json(($c->req->user_agent // '') =~ /Chrome/),
         },
     );
 }
@@ -150,10 +149,11 @@ sub error_403 : Private
 }
 
 sub error_404 : Private {
-    my ($self, $c) = @_;
+    my ($self, $c, $message) = @_;
 
     $c->response->status(404);
     $c->stash->{current_view} = 'Node';
+    $c->stash->{component_props}{message} = $message;
 }
 
 sub error_500 : Private
@@ -328,23 +328,21 @@ sub begin : Private
 
     # Merging
     if (my $merger = $c->try_get_session('merger')) {
-        my $model = $c->model($merger->type);
+        my $model = $c->model(type_to_model($merger->type));
         my @merge = values %{
             $model->get_by_ids($merger->all_entities)
         };
         $c->model('ArtistCredit')->load(@merge);
 
         my @areas = ();
-        push @areas, @merge if $merger->type eq 'Area';
-        push @areas, $c->model('Area')->load(@merge) if $merger->type eq 'Place';
+        push @areas, @merge if $merger->type eq 'area';
+        push @areas, $c->model('Area')->load(@merge) if $merger->type eq 'place';
         $c->model('Area')->load_containment(@areas);
 
         $c->stash(
             to_merge => [ @merge ],
             merger => $merger,
-            merge_link => $c->uri_for_action(
-                model_to_type($merger->type) . '/merge',
-            )
+            merge_link => $c->uri_for_action($merger->type . '/merge'),
         );
     }
 

@@ -45,6 +45,7 @@ has 'writers' => (
     is => 'ro',
     isa => ArrayRef[
         Dict[
+            credit => Str,
             roles => ArrayRef[Str],
             entity => Object
         ]
@@ -78,8 +79,6 @@ has attributes => (
     }
 );
 
-sub _appearances_table_types { "recording" }
-
 sub sorted_attributes {
     my $self = shift;
     sort_by { $_->type->l_name } sort_by { $_->l_value } $self->all_attributes;
@@ -101,6 +100,7 @@ around TO_JSON => sub {
         iswcs => [map { $_->TO_JSON } $self->all_iswcs],
         artists => [map { $_->TO_JSON } $self->all_artists],
         writers => [map +{
+            credit => $_->{credit},
             entity => $_->{entity},
             roles => $_->{roles},
         }, $self->all_writers],

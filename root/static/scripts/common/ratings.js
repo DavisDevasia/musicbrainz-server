@@ -1,11 +1,14 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2013 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2013 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
-const $ = require('jquery');
+import $ from 'jquery';
 
-const ratingTooltip = require('../../../utility/ratingTooltip');
+import ratingTooltip from '../../../utility/ratingTooltip';
 
 $(document).on("click", "span.star-rating a", function () {
     var $ratingLink = $(this);
@@ -24,8 +27,7 @@ $(document).on("click", "span.star-rating a", function () {
             currentRatingSpan.removeClass('current-rating');
             currentRatingSpan.addClass('current-user-rating');
             rating = data.rating;
-        }
-        else {
+        } else {
             // Removed user rating, use the average rating instead
             currentRatingSpan.removeClass('current-user-rating');
             currentRatingSpan.addClass('current-rating');
@@ -35,8 +37,7 @@ $(document).on("click", "span.star-rating a", function () {
             // Update the width if we have some ratings
             currentRatingSpan.css('width', rating + '%');
             currentRatingSpan.text(5 * rating / 100);
-        }
-        else {
+        } else {
             // No ratings, remove it
             currentRatingSpan.remove();
         }
@@ -46,15 +47,19 @@ $(document).on("click", "span.star-rating a", function () {
 
         container.children('a').each(function (i) {
             var originalRating = 100 * (1 + i) / 5;
-            var newRating = data.rating == originalRating ? 0 : originalRating;
+            var newRating = data.rating == originalRating
+                ? 0
+                : originalRating;
             var oldRatingMatch = this.href.match(/rating=(\d+)/);
-            if (oldRatingMatch[1] != newRating)
-            {
-                this.href = this.href.replace(oldRatingMatch[0], 'rating=' + newRating);
+            if (oldRatingMatch[1] != newRating) {
+                this.href = this.href.replace(
+                    oldRatingMatch[0],
+                    'rating=' + newRating,
+                );
                 $(this).attr('title', ratingTooltip(5 * newRating / 100));
             }
         });
 
-    })
+    });
     return false;
 });

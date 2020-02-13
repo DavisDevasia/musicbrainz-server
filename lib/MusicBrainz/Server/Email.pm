@@ -18,6 +18,7 @@ use MusicBrainz::Server::Constants qw(
     :edit_status
     :email_addresses
     $CONTACT_URL
+    $EDITOR_MODBOT
     $MINIMUM_RESPONSE_PERIOD
 );
 use MusicBrainz::Server::Email::AutoEditorElection::Nomination;
@@ -27,6 +28,9 @@ use MusicBrainz::Server::Email::AutoEditorElection::Canceled;
 use MusicBrainz::Server::Email::AutoEditorElection::Accepted;
 use MusicBrainz::Server::Email::AutoEditorElection::Rejected;
 use MusicBrainz::Server::Email::Subscriptions;
+use MusicBrainz::Server::Translation;
+
+use aliased 'MusicBrainz::Server::Entity::EditNote';
 
 has 'c' => (
     is => 'rw',
@@ -311,6 +315,24 @@ sub _create_edit_note_email
     my $note_text = $opts{note_text} or die "Missing 'note_text' argument";
     my $own_edit = $opts{own_edit};
 
+    if ($from_editor->id == $EDITOR_MODBOT) {
+        # Messages from ModBot, while they may be translated on the website,
+        # are currently always mailed in English via
+        # `run_without_translations` below. This is because, for one, the
+        # current language set here is unrelated to the language of the
+        # recipient: the current process is either authenticated as the
+        # user who approved the edit, or no user at all (being applied by
+        # ModBot). Second, the UI language of the recipient is stored as a
+        # cookie in their browser, which we obviously don't have access
+        # to here.
+        MusicBrainz::Server::Translation->run_without_translations(sub {
+            $note_text = EditNote->new(
+                editor_id => $from_editor->id,
+                text => "$note_text",
+            )->localize;
+        });
+    }
+
     my @headers = (
         'To'          => _user_address($editor),
         'From'        => _user_address($from_editor, 1),
@@ -524,10 +546,8 @@ $message
 EOF
     }
 
-    my $admin_addresses = join ', ', map { _user_address($_) } @{ $opts{admins} };
-
     my @headers = (
-        'To'          => $admin_addresses,
+        'To'          => $EMAIL_ACCOUNT_ADMINS_ADDRESS,
         'Sender'      => $EMAIL_NOREPLY_ADDRESS,
         'Subject'     => _encode_header($subject),
         'Message-Id'  => _message_id('editor-report-%s-%s-%d', $reporter->id, $reported_user->id, time),
@@ -535,9 +555,9 @@ EOF
 
     push @headers, 'From', _user_address($reporter, 1);
     if ($opts{reveal_address}) {
-        push @headers, 'Reply-To', _user_address($reporter);
+        push @headers, 'Reply-To', _user_address($reporter) . ', ' . $EMAIL_ACCOUNT_ADMINS_ADDRESS;
     } else {
-        push @headers, 'Reply-To', $EMAIL_NOREPLY_ADDRESS;
+        push @headers, 'Reply-To', $EMAIL_ACCOUNT_ADMINS_ADDRESS;
     }
 
     my $email = $self->_create_email(\@headers, $body);

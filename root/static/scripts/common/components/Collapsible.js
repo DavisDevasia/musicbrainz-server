@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2018 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -10,17 +10,16 @@
 import React from 'react';
 import type {ElementRef} from 'react';
 
-import {l} from '../i18n';
 
-type Props = {|
+type Props = {
   +className: string,
   +html: string,
-|};
+};
 
-type State = {|
+type State = {
   isCollapsed: boolean,
   isCollapsible: boolean,
-|};
+};
 
 class Collapsible extends React.Component<Props, State> {
   constructor(props: Props) {

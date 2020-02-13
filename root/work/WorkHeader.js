@@ -9,21 +9,21 @@
 
 import React from 'react';
 
-import {l} from '../static/scripts/common/i18n';
-import {lp_attributes} from '../static/scripts/common/i18n/attributes';
 import EntityHeader from '../components/EntityHeader';
 
-type Props = {|
+type Props = {
   page: string,
   work: WorkT,
-|};
+};
 
 const WorkHeader = ({work, page}: Props) => (
   <EntityHeader
     entity={work}
     headerClass="workheader"
     page={page}
-    subHeading={work.typeName ? lp_attributes(work.typeName, 'work_type') : l('Work')}
+    subHeading={work.typeName
+      ? lp_attributes(work.typeName, 'work_type')
+      : l('Work')}
   />
 );
 

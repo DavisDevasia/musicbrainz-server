@@ -2,29 +2,12 @@
  * Copyright (C) 2011 Ian McEwen
  * Copyright (C) 2018 MetaBrainz Foundation
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
  */
 
 import padStart from 'lodash/padStart';
-
-import {l_attributes} from '../static/scripts/common/i18n/attributes';
-import {
-  l_statistics as l,
-  ln_statistics as ln,
-  lp_statistics as lp,
-} from '../static/scripts/common/i18n/statistics';
 
 const stats = {
   'category': {
@@ -35,7 +18,7 @@ const stats = {
     'edit-information': {hide: true, label: l('Edit Information')},
     'formats': {label: l('Formats')},
     'label-countries': {label: l('Label Countries')},
-    'other': {label: l('Other')},
+    'other': {label: lp('Other', 'stats category')},
     'ratings-tags': {label: l('Ratings and Tags')},
     'relationships': {hide: true, label: l('Relationships')},
     'release-countries': {label: l('Release Countries')},
@@ -277,7 +260,9 @@ const stats = {
   'count.editor.activelastweek': {
     category: 'edit-information',
     color: '#ff00cc',
-    description: l('Count of active editors (editing or voting) during the last week'),
+    description: l(
+      'Count of active editors (editing or voting) during the last week',
+    ),
     label: l('Active Users'),
   },
   'count.editor.deleted': {
@@ -290,7 +275,9 @@ const stats = {
   'count.editor.editlastweek': {
     category: 'edit-information',
     color: '#6600ff',
-    description: l('Count of editors who have submitted edits during the last 7 days'),
+    description: l(
+      'Count of editors who have submitted edits during the last 7 days',
+    ),
     label: l('Active Editors'),
   },
   'count.editor.valid': {
@@ -310,7 +297,9 @@ const stats = {
   'count.editor.votelastweek': {
     category: 'edit-information',
     color: '#cc00ff',
-    description: l('Count of editors who have voted on during the last 7 days'),
+    description: l(
+      'Count of editors who have voted on during the last 7 days',
+    ),
     label: l('Active Voters'),
   },
   'count.event': {
@@ -750,29 +739,49 @@ for (let n = 0; n < 11; n++) {
   stats[`count.release.${n}discids`] = {
     category: 'other',
     color: '#ff0000',
-    description: l('Count of all Releases with {n} Disc IDs', no),
-    label: ln('Releases with 1 Disc ID', 'Releases with {n} Disc IDs', n, no),
+    description: texp.l('Count of all Releases with {n} Disc IDs', no),
+    label: texp.ln(
+      'Releases with 1 Disc ID',
+      'Releases with {n} Disc IDs',
+      n,
+      no,
+    ),
   };
 
   stats[`count.medium.${n}discids`] = {
     category: 'other',
     color: '#ff0000',
-    description: l('Count of all Mediums with {n} Disc IDs', no),
-    label: ln('Mediums with 1 Disc ID', 'Mediums with {n} Disc IDs', n, no),
+    description: texp.l('Count of all Mediums with {n} Disc IDs', no),
+    label: texp.ln(
+      'Mediums with 1 Disc ID',
+      'Mediums with {n} Disc IDs',
+      n,
+      no,
+    ),
   };
 
   stats[`count.recording.${n}releases`] = {
     category: 'other',
     color: '#ff0000',
-    description: l('Count of all Recordings with {n} Releases', no),
-    label: ln('Recordings with 1 Release', 'Recordings with {n} Releases', n, no),
+    description: texp.l('Count of all Recordings with {n} Releases', no),
+    label: texp.ln(
+      'Recordings with 1 Release',
+      'Recordings with {n} Releases',
+      n,
+      no,
+    ),
   };
 
   stats[`count.releasegroup.${n}releases`] = {
     category: 'other',
     color: '#ff0000',
-    description: l('Count of all Release Groups with {n} Releases', no),
-    label: ln('Release Groups with 1 Release', 'Release Groups with {n} Releases', n, no),
+    description: texp.l('Count of all Release Groups with {n} Releases', no),
+    label: texp.ln(
+      'Release Groups with 1 Release',
+      'Release Groups with {n} Releases',
+      n,
+      no,
+    ),
   };
 }
 
@@ -810,21 +819,21 @@ export function buildTypeStats(typeData) {
       category: 'artist-countries',
       color: '#ff0000',
       description: countryName,
-      label: l('{country} artists', countryArg),
+      label: texp.l('{country} artists', countryArg),
     };
 
     stats[`count.label.country.${key}`] = {
       category: 'label-countries',
       color: '#ff0000',
       description: countryName,
-      label: l('{country} labels', countryArg),
+      label: texp.l('{country} labels', countryArg),
     };
 
     stats[`count.release.country.${key}`] = {
       category: 'release-countries',
       color: '#ff0000',
       description: countryName,
-      label: l('{country} releases', countryArg),
+      label: texp.l('{country} releases', countryArg),
     };
   }
 
@@ -836,14 +845,14 @@ export function buildTypeStats(typeData) {
       category: 'formats',
       color: '#ff0000',
       description: '',
-      label: l('{name} releases', formatArg),
+      label: texp.l('{name} releases', formatArg),
     };
 
     stats[`count.medium.format.${key}`] = {
       category: 'formats',
       color: '#ff0000',
       description: '',
-      label: l('{name} mediums', formatArg),
+      label: texp.l('{name} mediums', formatArg),
     };
   }
 
@@ -855,14 +864,14 @@ export function buildTypeStats(typeData) {
       category: 'release-languages',
       color: '#ff0000',
       description: languageName,
-      label: l('{language} releases', {language: languageName}),
+      label: texp.l('{language} releases', {language: languageName}),
     };
   }
 
   for (let i = 0; i < relationships.length; i++) {
     const pair = relationships[i];
     const hex = padStart(String((i + 1) * 3), 2, '0');
-    const label = l('l_{first}_{second} Relationships', {
+    const label = texp.l('l_{first}_{second} Relationships', {
       first: pair[0],
       second: pair[1],
     });
@@ -883,7 +892,7 @@ export function buildTypeStats(typeData) {
       category: 'release-scripts',
       color: '#ff0000',
       description: scriptName,
-      label: l('{script} releases', {script: scriptName}),
+      label: texp.l('{script} releases', {script: scriptName}),
     };
   }
 }

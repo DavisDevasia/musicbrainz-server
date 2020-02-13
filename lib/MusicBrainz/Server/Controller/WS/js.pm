@@ -9,7 +9,7 @@ use List::UtilsBy qw( uniq_by );
 use MusicBrainz::Server::WebService::Validator;
 use MusicBrainz::Server::Filters;
 use MusicBrainz::Server::Data::Search qw( escape_query );
-use MusicBrainz::Server::Constants qw( entities_with );
+use MusicBrainz::Server::Constants qw( entities_with %ENTITIES );
 use MusicBrainz::Server::Validation qw( is_guid );
 use Readonly;
 use Scalar::Util qw( blessed );
@@ -49,6 +49,12 @@ sub medium : Chained('root') PathPart Args(1) {
     my ($self, $c, $id) = @_;
 
     my $medium = $c->model('Medium')->get_by_id($id);
+
+    unless ($medium) {
+        $c->stash->{error} = 'No medium found with this ID.';
+        $c->detach('bad_req');
+    }
+
     $c->model('MediumFormat')->load($medium);
     $c->model('MediumCDTOC')->load_for_mediums($medium);
     $c->model('CDTOC')->load($medium->all_cdtocs);
@@ -115,16 +121,13 @@ sub tracklist_results {
     {
         next unless $release;
 
-        my $count = 0;
         for my $medium ($release->all_mediums)
         {
-            $count += 1;
-
             push @output, {
                 gid => $release->gid,
                 name => $release->name,
-                position => $count,
-                format => $medium->format_name,
+                position => $medium->position,
+                format => $medium->format ? $medium->format->TO_JSON : undef,
                 medium => $medium->name,
                 comment => $release->comment,
                 artist => $release->artist_credit->name,
@@ -255,7 +258,8 @@ sub entity : Chained('root') PathPart('entity') Args(1)
 
     my $entity;
     my $type;
-    for (entities_with(['mbid', 'relatable'], take => 'model')) {
+
+    for (entities_with(['mbid'], take => 'model')) {
         $type = $_;
         $entity = $c->model($type)->get_by_gid($gid);
         last if defined $entity;
@@ -268,8 +272,11 @@ sub entity : Chained('root') PathPart('entity') Args(1)
     }
 
     my $data = $c->stash->{serializer}->serialize_internal($c, $entity);
-    my $relationships = [map { $_->TO_JSON } $entity->all_relationships];
-    $data->{relationships} = $relationships if @$relationships;
+    my $entity_properties = $ENTITIES{$type};
+    if ($entity_properties->{mbid}{relatable}) {
+        my $relationships = [map {$_->TO_JSON} $entity->all_relationships];
+        $data->{relationships} = $relationships if @$relationships;
+    };
 
     $c->res->content_type($c->stash->{serializer}->mime_type . '; charset=utf-8');
     $c->res->body(encode_json($data));

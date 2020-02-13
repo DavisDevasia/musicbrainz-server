@@ -1,26 +1,29 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2015 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2015 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
-const $ = require('jquery');
-const _ = require('lodash');
-const ko = require('knockout');
+import $ from 'jquery';
+import _ from 'lodash';
+import ko from 'knockout';
 
-const i18n = require('../../../common/i18n');
-const MB = require('../../../common/MB');
-const getBooleanCookie = require('../../../common/utility/getBooleanCookie');
-const setCookie = require('../../../common/utility/setCookie');
-const gc = require('../GuessCase/Main');
+import getBooleanCookie from '../../../common/utility/getBooleanCookie';
+import setCookie from '../../../common/utility/setCookie';
+import gc from '../GuessCase/Main';
+import * as modes from '../../modes';
+import MB from '../../../common/MB';
 
-MB.Control.initialize_guess_case = function (type, formPrefix) {
+MB.Control.initializeGuessCase = function (type, formPrefix) {
     formPrefix = formPrefix ? (formPrefix + "\\.") : "";
 
     var $name = $("#" + formPrefix + "name");
     var $options = $("#guesscase-options");
 
     if ($options.length && !$options.data("ui-dialog")) {
-        $options.dialog({ title: i18n.l('Guess Case Options'), autoOpen: false });
+        $options.dialog({ title: l('Guess Case Options'), autoOpen: false });
         ko.applyBindingsToNode($options[0], { guessCase: _.noop });
     }
 
@@ -31,9 +34,15 @@ MB.Control.initialize_guess_case = function (type, formPrefix) {
     }
 
     $name.parent()
-        .find("button.guesscase-title").on("click", function () { setVal($name, guess.guess($name.val())) })
+        .find("button.guesscase-title")
+        .on("click", function () { 
+            setVal($name, guess.guess($name.val()));
+        })
         .end()
-        .find("button.guesscase-options").on("click", function () { $options.dialog("open") });
+        .find("button.guesscase-options")
+        .on("click", function () { 
+            $options.dialog("open"); 
+        });
 
     var $sortname = $("#" + formPrefix + "sort_name");
     var $artistType = $('#id-edit-artist\\.type_id');
@@ -49,7 +58,8 @@ MB.Control.initialize_guess_case = function (type, formPrefix) {
             setVal($sortname, guess.sortname.apply(guess, args));
         })
         .end()
-        .find("button.sortname-copy").on("click", function () {
+        .find("button.sortname-copy")
+        .on("click", function () {
             setVal($sortname, $name.val());
         });
 };
@@ -62,11 +72,11 @@ var guessCaseOptions = {
 
 var mode = ko.computed({
     read: function () {
-        var modeName = guessCaseOptions.modeName()
+        var modeName = guessCaseOptions.modeName();
 
         if (modeName !== gc.modeName) {
             gc.modeName = modeName;
-            gc.mode = require('../../modes')[modeName];
+            gc.mode = modes[modeName];
             setCookie("guesscase_mode", modeName);
         }
         return gc.mode;
@@ -105,7 +115,7 @@ ko.bindingHandlers.guessCase = {
             guessCaseOptions.upperCaseRoman(getBooleanCookie('guesscase_roman'));
         }
 
-        var bindings = _.assign({}, guessCaseOptions);
+        var bindings = {...guessCaseOptions};
         bindings.guessCase = _.bind(valueAccessor(), bindings);
 
         var context = bindingContext.createChildContext(bindings);
@@ -117,4 +127,4 @@ ko.bindingHandlers.guessCase = {
 
 ko.virtualElements.allowedBindings.guessCase = true;
 
-module.exports = MB.Control;
+export const initializeGuessCase = MB.Control.initializeGuessCase;

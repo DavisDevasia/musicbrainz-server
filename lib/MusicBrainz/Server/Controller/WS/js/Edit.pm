@@ -1,6 +1,7 @@
 package MusicBrainz::Server::Controller::WS::js::Edit;
 use DBDefs;
 use File::Spec::Functions qw( catdir );
+use HTML::Entities qw( encode_entities );
 use JSON qw( encode_json );
 use List::MoreUtils qw( any );
 use Moose;
@@ -36,10 +37,13 @@ use MusicBrainz::Server::Data::Utils qw(
     split_relationship_by_attributes
     sanitize
     trim
+    trim_comment
     non_empty
 );
-use MusicBrainz::Server::Translation qw( l );
+use MusicBrainz::Server::Renderer qw( render_component );
+use MusicBrainz::Server::Translation qw( comma_list comma_only_list l );
 use MusicBrainz::Server::Validation qw( is_guid is_valid_url is_valid_partial_date );
+use MusicBrainz::Server::View::Base;
 use Readonly;
 use Scalar::Util qw( looks_like_number );
 use Try::Tiny;
@@ -77,6 +81,11 @@ our $ALLOWED_EDIT_TYPES = [
 
 our $TT = Template->new(
     INCLUDE_PATH => catdir(DBDefs->MB_SERVER_ROOT, 'root'),
+
+    VARIABLES => {
+        comma_list => sub { my $items = shift; comma_list(@$items) },
+        comma_only_list => sub { my $items = shift; comma_only_list(@$items) },
+    },
 
     %{ MusicBrainz::Server->config->{'View::Default'} }
 );
@@ -202,10 +211,13 @@ sub trim_string {
 sub process_entity {
     my ($c, $loader, $data) = @_;
 
-    trim_string($data, 'name');
+    if (exists $data->{name}) {
+        trim_string($data, 'name');
+        die 'empty name' unless non_empty($data->{name});
+    }
 
     if ($data->{comment}) {
-        trim_string($data, 'comment');
+        $data->{comment} = trim_comment($data->{comment});
         # MBS-7963
         $data->{comment} = substr($data->{comment}, 0, 255);
     }
@@ -590,7 +602,7 @@ sub edit : Chained('/') PathPart('ws/js/edit') CaptureArgs(0) Edit {
     }]);
 
     unless ($c->user->has_confirmed_email_address) {
-        $c->forward('/ws/js/detach_with_error', ['a confirmed email address is required']);
+        $c->forward('/ws/js/detach_with_error', ['a verified email address is required']);
     }
     if ($c->user->is_editing_disabled) {
         $c->forward('/ws/js/detach_with_error', ['you are not allowed to enter edits']);
@@ -705,18 +717,41 @@ sub preview : Chained('edit') PathPart('preview') Edit {
 
     $c->model('Edit')->load_all(@edits);
 
+    MusicBrainz::Server::View::Base->process($c);
+
     my @previews = map {
         my $edit = $_;
 
-        my $edit_template = $edit->edit_template;
-        my $vars = { edit => $edit, c => $c, allow_new => 1 };
-        my $out = '';
+        my $edit_template_react = $edit->edit_template_react;
+        my $preview;
 
-        my $preview = $TT->process("edit/details/${edit_template}.tt", $vars, \$out, binmode => 1)
-            ? $out : '' . $TT->error();
+        if ($edit_template_react) {
+            my $response = render_component(
+                $c,
+                "edit/details/$edit_template_react",
+                {edit => $edit, allowNew => \1},
+            );
+            my $body = $response->{body} // '';
+            my $content_type = $response->{content_type} // '';
+            $preview = $content_type eq 'text/html'
+                ? $body
+                : encode_entities($body);
+        } else {
+            my $edit_template = $edit->edit_template;
+            my $out = '';
+
+            $preview = $TT->process(
+                "edit/details/${edit_template}.tt",
+                {edit => $edit, c => $c, allow_new => 1},
+                \$out,
+                binmode => 1,
+            ) ? $out : '' . $TT->error();
+        }
 
         { preview => $preview, editName => $edit->l_edit_name };
     } @edits;
+
+    MusicBrainz::Server::View::Base->_post_process($c);
 
     $c->res->body(encode_json({ previews => \@previews }));
 }

@@ -12,17 +12,16 @@ import type {Node as ReactNode} from 'react';
 
 import Layout from '../layout';
 import ArtistSidebar from '../layout/components/sidebar/ArtistSidebar';
-import {hyphenateTitle} from '../static/scripts/common/i18n';
 
 import ArtistHeader from './ArtistHeader';
 
-type Props = {|
+type Props = {
   +children: ReactNode,
   +entity: ArtistT,
   +fullWidth?: boolean,
   +page: string,
   +title?: string,
-|};
+};
 
 const ArtistLayout = ({
   children,

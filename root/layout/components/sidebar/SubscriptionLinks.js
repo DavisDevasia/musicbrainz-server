@@ -10,13 +10,12 @@
 import * as React from 'react';
 
 import {withCatalystContext} from '../../../context';
-import {l} from '../../../static/scripts/common/i18n';
 import EntityLink from '../../../static/scripts/common/components/EntityLink';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +entity: CoreEntityT,
-|};
+};
 
 const SubscriptionLinks = ({$c, entity}: Props) => {
   const entityType = entity.entityType;

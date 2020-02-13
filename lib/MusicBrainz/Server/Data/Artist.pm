@@ -13,6 +13,7 @@ use MusicBrainz::Server::Data::Utils qw(
     is_special_artist
     add_partial_date_to_row
     defined_hash
+    get_area_containment_query
     hash_to_row
     load_subobjects
     merge_table_attributes
@@ -101,14 +102,61 @@ sub find_by_subscribed_editor
 
 sub find_by_area {
     my ($self, $area_id, $limit, $offset) = @_;
+    my (
+        $containment_query,
+        @containment_query_args,
+    ) = get_area_containment_query('$2', 'any(array[area, begin_area, end_area])', check_all_levels => 1);
     my $query = "SELECT " . $self->_columns . "
                  FROM " . $self->_table . "
-                    LEFT JOIN area ON artist.area = area.id
-                    LEFT JOIN area begin_area ON artist.begin_area = begin_area.id
-                    LEFT JOIN area end_area ON artist.end_area = end_area.id
-                 WHERE ? IN (area.id, begin_area.id, end_area.id)
+                 WHERE \$1 IN (area, begin_area, end_area) OR EXISTS (
+                    SELECT 1 FROM ($containment_query) ac
+                     WHERE ac.descendant IN (area, begin_area, end_area) AND ac.parent = \$1
+                 )
                  ORDER BY musicbrainz_collate(artist.name), artist.id";
-    $self->query_to_list_limited($query, [$area_id], $limit, $offset);
+    $self->query_to_list_limited(
+        $query, [$area_id, @containment_query_args], $limit, $offset, undef,
+        dollar_placeholders => 1,
+    );
+}
+
+sub find_by_instrument {
+    my ($self, $instrument_id, $limit, $offset) = @_;
+
+    my $query =
+        "SELECT " . $self->_columns . ",
+                array_agg(json_build_object('typeName', link_type.name, 'credit', lac.credited_as)) AS instrument_credits_and_rel_types
+            FROM " . $self->_table . "
+                JOIN (
+                    SELECT * FROM l_artist_artist
+                    UNION ALL
+                    SELECT * FROM l_artist_recording
+                    UNION ALL
+                    SELECT * FROM l_artist_release
+                ) rels ON rels.entity0 = artist.id
+                JOIN link ON link.id = rels.link
+                JOIN link_type ON link_type.id = link.link_type
+                JOIN link_attribute ON link_attribute.link = link.id
+                JOIN link_attribute_type ON link_attribute_type.id = link_attribute.attribute_type
+                JOIN instrument ON instrument.gid = link_attribute_type.gid
+                LEFT JOIN link_attribute_credit lac ON (
+                    lac.link = link_attribute.link AND
+                    lac.attribute_type = link_attribute.attribute_type
+                )
+            WHERE instrument.id = ?
+            GROUP BY artist.id
+            ORDER BY musicbrainz_collate(artist.sort_name)";
+
+    $self->query_to_list_limited(
+        $query,
+        [$instrument_id],
+        $limit,
+        $offset,
+        sub {
+            my ($model, $row) = @_;
+            my $credits_and_rel_types = delete $row->{instrument_credits_and_rel_types};
+            { artist => $model->_new_from_row($row), instrument_credits_and_rel_types => $credits_and_rel_types };
+        },
+    );
 }
 
 sub find_by_recording
@@ -265,7 +313,6 @@ sub merge
     $self->isni->merge($new_id, @$old_ids) unless is_special_artist($new_id);
     $self->tags->merge($new_id, @$old_ids);
     $self->rating->merge($new_id, @$old_ids);
-    $self->subscription->merge_entities($new_id, @$old_ids);
     $self->annotation->merge($new_id, @$old_ids);
     $self->c->model('ArtistCredit')->merge_artists($new_id, $old_ids, %opts);
     $self->c->model('Edit')->merge_entities('artist', $new_id, @$old_ids);
@@ -390,23 +437,13 @@ __PACKAGE__->meta->make_immutable;
 no Moose;
 1;
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
 Copyright (C) 2009 Lukas Lalinsky
 Copyright (C) 2011 MetaBrainz Foundation
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+This file is part of MusicBrainz, the open internet music database,
+and is licensed under the GPL version 2, or (at your option) any
+later version: http://www.gnu.org/licenses/gpl-2.0.txt
 
 =cut

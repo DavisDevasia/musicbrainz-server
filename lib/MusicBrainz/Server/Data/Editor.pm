@@ -10,13 +10,16 @@ use Authen::Passphrase::RejectAll;
 use DateTime;
 use Digest::MD5 qw( md5_hex );
 use Encode;
+use List::MoreUtils qw( uniq );
 use MusicBrainz::Server::Constants qw( :edit_status entities_with );
 use MusicBrainz::Server::Entity::Preferences;
 use MusicBrainz::Server::Entity::Editor;
 use MusicBrainz::Server::Data::Utils qw(
     generate_token
+    get_area_containment_query
     hash_to_row
     load_subobjects
+    object_to_ids
     placeholders
     type_to_model
 );
@@ -62,7 +65,7 @@ sub _column_mapping
         area_id                 => 'area',
         birth_date              => 'birth_date',
         ha1                     => 'ha1',
-        deleted                 => 'deleted'
+        deleted                 => 'deleted',
     };
 }
 
@@ -169,7 +172,7 @@ sub find_by_area {
     my (
         $containment_query,
         @containment_query_args,
-    ) = $self->c->model('Area')->get_containment_query('$2', 'area');
+    ) = get_area_containment_query('$2', 'area', check_all_levels => 1);
     my $query = "SELECT " . $self->_columns . "
                  FROM " . $self->_table . "
                  WHERE area = \$1 OR EXISTS (
@@ -412,6 +415,31 @@ sub donation_check
     return { nag => $nag, days => $days };
 }
 
+sub load_for_collection {
+    my ($self, $collection) = @_;
+
+    my $id = $collection->{id};
+    return unless $id; # nothing to do
+
+    $self->load($collection);
+    my $query = "SELECT " . $self->_columns . ", ep.value AS show_gravatar
+                 FROM " . $self->_table . "
+                 JOIN editor_collection_collaborator ecc ON editor.id = ecc.editor
+                 LEFT JOIN editor_preference ep ON ep.editor = editor.id AND ep.name = 'show_gravatar'
+                 WHERE ecc.collection = $id
+                 ORDER BY editor.name, editor.id";
+    my @collaborators = $self->query_to_list($query, undef, sub {
+        my ($model, $row) = @_;
+
+        my $collaborator = $model->_new_from_row($row);
+        $collaborator->preferences->show_gravatar($row->{show_gravatar})
+            if defined $row->{show_gravatar};
+        $collaborator;
+    });
+
+    $collection->collaborators(\@collaborators);
+}
+
 sub editors_with_subscriptions {
     my ($self, $after, $limit) = @_;
 
@@ -486,15 +514,16 @@ sub delete {
         for (entities_with('ratings', take => 'model'));
 
     # Cancel any open edits the editor still has
-    my @edits = values %{ $self->c->model('Edit')->get_by_ids(
-        @{ $self->sql->select_single_column_array(
-            'SELECT id FROM edit WHERE editor = ? AND status = ?',
-            $editor_id, $STATUS_OPEN)
-       }
-    ) };
+    # We want to cancel the latest edits first, to make sure
+    # no conflicts happen that make some cancelling fail and all
+    # entities that should be autoremoved do get removed
+    my $ids = $self->sql->select_single_column_array(
+            'SELECT id FROM edit WHERE editor = ? AND status = ? ORDER BY open_time DESC',
+            $editor_id, $STATUS_OPEN);
+    my $edits = $self->c->model('Edit')->get_by_ids(@$ids);
 
-    for my $edit (@edits) {
-        $self->c->model('Edit')->cancel($edit);
+    for my $id (@$ids) {
+        $self->c->model('Edit')->cancel($edits->{$id});
     }
 
     # Delete completely if they're not actually referred to by anything
@@ -660,24 +689,13 @@ Editors
 
 Provides support for fetching editors from the database
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
 Copyright (C) 2009 Oliver Charles
 Copyright (C) 2010 MetaBrainz Foundation
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+This file is part of MusicBrainz, the open internet music database,
+and is licensed under the GPL version 2, or (at your option) any
+later version: http://www.gnu.org/licenses/gpl-2.0.txt
 
 =cut
-

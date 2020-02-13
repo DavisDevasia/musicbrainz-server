@@ -1,25 +1,28 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
-const $ = require('jquery');
+import $ from 'jquery';
 
-const i18n = require('../i18n');
-const getBooleanCookie = require('../utility/getBooleanCookie');
-const setCookie = require('../utility/setCookie');
+import getBooleanCookie from '../utility/getBooleanCookie';
+import setCookie from '../utility/setCookie';
 
 $(function () {
   var $bottomCredits = $('#bottom-credits');
   var bottomCreditsEnabled = getBooleanCookie('bottom-credits');
-  var hasReleaseCredits = !!$('#release-relationships, #release-group-relationships').length;
+  var hasReleaseCredits =
+    !!$('#release-relationships, #release-group-relationships').length;
 
   function switchToInlineCredits() {
     $('.bottom-credits').hide();
     $('table.tbl div.ars').show();
     $bottomCredits.toggle(hasReleaseCredits);
 
-    $toggle.text(i18n.l('Display Credits at Bottom'));
+    $toggle.text(l('Display Credits at Bottom'));
     setCookie('bottom-credits', 0);
   }
 
@@ -28,7 +31,7 @@ $(function () {
     $('.bottom-credits').show();
     $bottomCredits.show();
 
-    $toggle.text(i18n.l('Display Credits Inline'));
+    $toggle.text(l('Display Credits Inline'));
     setCookie('bottom-credits', 1);
   }
 
@@ -56,7 +59,7 @@ $(function () {
     var $message = $('<div>')
       .appendTo($tbody.find('td'))
       .addClass('loading-message')
-      .text(i18n.l('Loading...'));
+      .text(l('Loading...'));
 
     var mediumId = this.getAttribute('data-medium-id');
 
@@ -74,21 +77,26 @@ $(function () {
           var position = $credits.data('position');
           var insertAfter;
 
-          $bottomCredits.find('.bottom-credits').each(function (index, other) {
-            var $other = $(other);
+          $bottomCredits.find('.bottom-credits')
+            .each(function (index, other) {
+              var $other = $(other);
 
-            if (position > $other.data('position')) {
-              insertAfter = $other;
-            } else {
-              return false;
-            }
-          });
+              if (position > $other.data('position')) {
+                insertAfter = $other;
+                return true;
+              } else {
+                return false; // prematurely stop iterating
+              }
+            });
 
-          insertAfter ? $credits.insertAfter(insertAfter) : $bottomCredits.find('h2').after($credits);
+          insertAfter
+            ? $credits.insertAfter(insertAfter)
+            : $bottomCredits.find('h2').after($credits);
         }
       })
       .fail(function () {
-        $message.removeClass('loading-message').text(i18n.l('Failed to load the medium.'));
+        $message.removeClass('loading-message')
+          .text(l('Failed to load the medium.'));
       });
 
     // Prevent browser from following link

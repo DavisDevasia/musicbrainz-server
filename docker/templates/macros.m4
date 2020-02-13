@@ -3,15 +3,17 @@ m4_divert(-1)
 m4_define(
     `apt_install',
     `m4_dnl
-apt-get update && \
-    apt-get install --no-install-suggests --no-install-recommends -y $1 && \
+apt-get update && ( \
+    apt-get install --no-install-suggests --no-install-recommends -y $1 || ( \
+        apt-key adv --keyserver keyserver.ubuntu.com --refresh-keys && \
+        apt-get install --no-install-suggests --no-install-recommends -y $1 ) ) && \
     rm -rf /var/lib/apt/lists/*')
 
 m4_define(`apt_purge', `apt-get purge --auto-remove -y $1')
 
 m4_define(`sudo_mb', `sudo -E -H -u musicbrainz $1')
 
-m4_define(`NODEJS_DEB', `nodejs_10.10.0-1nodesource1_amd64.deb')
+m4_define(`NODEJS_DEB', `nodejs_10.17.0-1nodesource1_amd64.deb')
 
 m4_define(
     `install_javascript',
@@ -34,9 +36,10 @@ m4_define(
     `m4_dnl
 install_javascript(`$1')
 
-copy_mb(``gulpfile.js ./'')
 copy_mb(``root/ root/'')
 copy_mb(``script/compile_resources.sh script/dbdefs_to_js.pl script/start_renderer.pl script/xgettext.js script/'')
+copy_mb(``webpack.client.config.js webpack.server.config.js webpack.tests.config.js ./'')
+copy_mb(``webpack/ webpack/'')
 
 RUN chown_mb(``/tmp/ttc'')')
 
@@ -50,7 +53,8 @@ libicu-dev m4_dnl
 libperl-dev m4_dnl
 libpq-dev m4_dnl
 libssl-dev m4_dnl
-libxml2-dev')
+libxml2-dev m4_dnl
+pkg-config')
 
 # postgresql-server-dev-9.5 provides pg_config, which is needed by InitDb.pl
 # at run-time.
@@ -64,6 +68,7 @@ libexpat1 m4_dnl
 libicu55 m4_dnl
 libpq5 m4_dnl
 libssl1.0.0 m4_dnl
+libxml2 m4_dnl
 perl m4_dnl
 postgresql-client-9.5 m4_dnl
 postgresql-server-dev-9.5')
@@ -90,7 +95,7 @@ ENV PERL_CPANM_OPT --notest --no-interactive
 
 RUN apt_install(`mbs_build_deps mbs_run_deps') && \
     wget -q -O - https://cpanmin.us | perl - App::cpanminus && \
-    cpanm Carton && \
+    cpanm Carton JSON::XS && \
     chown_mb(``$PERL_CARTON_PATH'') && \
     sudo_mb(``carton install$1'') && \
     apt_purge(`mbs_build_deps')')
@@ -120,7 +125,7 @@ m4_define(
     `install_translations',
     `m4_dnl
 copy_mb(``po/ po/'')
-RUN apt_install(``gettext language-pack-de language-pack-el language-pack-es language-pack-et language-pack-fi language-pack-fr language-pack-it language-pack-ja language-pack-nl make'') && \
+RUN apt_install(``gettext language-pack-de language-pack-el language-pack-es language-pack-et language-pack-fi language-pack-fr language-pack-it language-pack-ja language-pack-nl language-pack-sq make'') && \
     sudo_mb(``make -C po all_quiet'') && \
     sudo_mb(``make -C po deploy'')')
 
@@ -130,8 +135,6 @@ m4_define(
 copy_mb(``admin/ admin/'')
 copy_mb(``app.psgi entities.json ./'')
 copy_mb(``bin/ bin/'')
-copy_mb(``docker/scripts/mbs_constants.sh /etc/'')
-copy_mb(``docker/scripts/consul-template-dedup-prefix /usr/local/bin/'')
 copy_mb(``lib/ lib/'')
 copy_mb(``script/functions.sh script/git_info script/'')')
 

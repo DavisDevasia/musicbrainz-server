@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2018 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -10,7 +10,7 @@
 import React from 'react';
 
 type Props = {
-  +field: FieldT<number | string>,
+  +field: ReadOnlyFieldT<number | string>,
 };
 
 const HiddenField = ({

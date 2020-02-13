@@ -9,6 +9,7 @@ use MusicBrainz::Server::Entity::Label;
 use MusicBrainz::Server::Entity::PartialDate;
 use MusicBrainz::Server::Data::Utils qw(
     add_partial_date_to_row
+    get_area_containment_query
     hash_to_row
     load_subobjects
     merge_table_attributes
@@ -87,12 +88,21 @@ sub find_by_subscribed_editor
 
 sub find_by_area {
     my ($self, $area_id, $limit, $offset) = @_;
+    my (
+        $containment_query,
+        @containment_query_args,
+    ) = get_area_containment_query('$2', 'area', check_all_levels => 1);
     my $query = "SELECT " . $self->_columns . "
                  FROM " . $self->_table . "
-                    JOIN area ON label.area = area.id
-                 WHERE area.id = ?
+                 WHERE area = \$1 OR EXISTS (
+                    SELECT 1 FROM ($containment_query) ac
+                     WHERE ac.descendant = area AND ac.parent = \$1
+                 )
                  ORDER BY musicbrainz_collate(label.name), label.id";
-    $self->query_to_list_limited($query, [$area_id], $limit, $offset);
+    $self->query_to_list_limited(
+        $query, [$area_id, @containment_query_args], $limit, $offset, undef,
+        dollar_placeholders => 1,
+    );
 }
 
 sub find_by_release
@@ -114,8 +124,11 @@ sub _order_by {
         "name" => sub {
             return "musicbrainz_collate(name)"
         },
-        "code" => sub {
+        "label_code" => sub {
             return "label_code, musicbrainz_collate(name)"
+        },
+        "area" => sub {
+            return "area, musicbrainz_collate(name)"
         },
         "begin_date" => sub {
             return "begin_date_year, begin_date_month, begin_date_day, musicbrainz_collate(name)"
@@ -197,7 +210,6 @@ sub _merge_impl
     $self->isni->merge($new_id, @old_ids);
     $self->tags->merge($new_id, @old_ids);
     $self->rating->merge($new_id, @old_ids);
-    $self->subscription->merge_entities($new_id, @old_ids);
     $self->annotation->merge($new_id, @old_ids);
     $self->c->model('Collection')->merge_entities('label', $new_id, @old_ids);
     $self->c->model('ReleaseLabel')->merge_labels($new_id, @old_ids);
@@ -279,22 +291,12 @@ __PACKAGE__->meta->make_immutable;
 no Moose;
 1;
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
 Copyright (C) 2009 Lukas Lalinsky
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+This file is part of MusicBrainz, the open internet music database,
+and is licensed under the GPL version 2, or (at your option) any
+later version: http://www.gnu.org/licenses/gpl-2.0.txt
 
 =cut

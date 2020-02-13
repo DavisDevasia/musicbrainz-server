@@ -10,14 +10,16 @@
 import * as React from 'react';
 
 import Layout from '../layout';
-import {l} from '../static/scripts/common/i18n';
 
 const ReportNotAvailable = () => (
   <Layout fullWidth title={l('Error')}>
     <div id="content">
       <h1>{l('Error')}</h1>
 
-      <p>{l('We are sorry, but data for this report is not available right now.')}</p>
+      <p>
+        {l(`We are sorry, but data for this report is not available
+            right now.`)}
+      </p>
     </div>
   </Layout>
 );

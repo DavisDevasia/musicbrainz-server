@@ -9,17 +9,17 @@
 
 import React from 'react';
 
-import {l} from '../../../static/scripts/common/i18n';
 import entityHref from '../../../static/scripts/common/utility/entityHref';
 
-type Props = {|
+type Props = {
   +entity:
     | AreaT
+    | GenreT
     | InstrumentT
     | LabelT
     | RecordingT
     | ReleaseT,
-|};
+};
 
 const RemoveLink = ({entity}: Props) => (
   <li>

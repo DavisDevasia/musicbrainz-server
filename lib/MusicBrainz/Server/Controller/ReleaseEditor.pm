@@ -22,7 +22,6 @@ use MusicBrainz::Server::Form::Utils qw(
     select_options_tree
     build_grouped_options
     build_type_info
-    build_attr_info
 );
 use aliased 'MusicBrainz::Server::Entity::CDTOC';
 use aliased 'MusicBrainz::Server::Entity::PartialDate';
@@ -40,25 +39,27 @@ sub _init_release_editor
     $options{seeded_data} = $c->json->encode($self->_seeded_data($c) // {});
 
     my $url_link_types = $c->model('LinkType')->get_tree('release', 'url');
-    my $attr_tree = $c->model('LinkAttributeType')->get_tree;
+    my @link_attribute_types = $c->model('LinkAttributeType')->get_all;
 
     my @medium_formats = $c->model('MediumFormat')->get_all;
     my $discid_formats = [ grep { $_ } map { $_->has_discids ? ($_->id) : () } @medium_formats ];
 
     $c->stash(
-        template        => 'release/edit/layout.tt',
+        template            => 'release/edit/layout.tt',
         # These need to be accessed by root/release/edit/information.tt.
-        primary_types   => select_options_tree($c, 'ReleaseGroupType'),
-        secondary_types => select_options_tree($c, 'ReleaseGroupSecondaryType'),
-        statuses        => select_options_tree($c, 'ReleaseStatus'),
-        languages       => build_grouped_options($c, language_options($c)),
-        scripts         => build_grouped_options($c, script_options($c)),
-        packagings      => select_options_tree($c, 'ReleasePackaging'),
-        countries       => select_options($c, 'CountryArea'),
-        formats         => select_options_tree($c, 'MediumFormat'),
-        type_info       => $c->json->encode(build_type_info($c, qr/release-url/, $url_link_types)),
-        attr_info       => $c->json->encode(build_attr_info($attr_tree)),
-        discid_formats  => $c->json->encode($discid_formats),
+        primary_types       => select_options_tree($c, 'ReleaseGroupType'),
+        secondary_types     => select_options_tree($c, 'ReleaseGroupSecondaryType'),
+        statuses            => select_options_tree($c, 'ReleaseStatus'),
+        languages           => build_grouped_options($c, language_options($c)),
+        scripts             => build_grouped_options($c, script_options($c)),
+        packagings          => select_options_tree($c, 'ReleasePackaging'),
+        countries           => select_options($c, 'CountryArea'),
+        formats             => select_options_tree($c, 'MediumFormat'),
+        type_info           => $c->json->encode(build_type_info($c, qr/release-url/, $url_link_types)),
+        attr_info           => $c->json->encode(\@link_attribute_types),
+        discid_formats      => $c->json->encode($discid_formats),
+        # The merge helper doesn't really work well together with the release editor process
+        hide_merge_helper   => 1,
         %options
     );
 }
@@ -69,9 +70,15 @@ sub edit : Chained('/release/load') PathPart('edit') Edit RequireAuth
 
     my $release = $c->stash->{release};
 
+    my @mediums = $release->all_mediums;
+    $c->model('MediumCDTOC')->load_for_mediums(@mediums);
+    $c->model('CDTOC')->load(map { $_->all_cdtocs } @mediums);
+    $c->model('Relationship')->load_cardinal($release->release_group, $release);
+
     $self->_init_release_editor(
         $c,
-        return_to => $c->uri_for_action('/release/show', [ $release->gid ])
+        return_to => $c->uri_for_action('/release/show', [ $release->gid ]),
+        release_json => $c->json->encode($release),
     );
 }
 
@@ -401,7 +408,7 @@ sub _seeded_medium
         my $format = $c->model('MediumFormat')->find_by_name($name);
 
         if ($format) {
-            $result->{formatID} = $format->id;
+            $result->{format_id} = $format->id;
         } else {
             push @$errors, "Invalid $field_name.format: “$name”.";
         }
@@ -516,8 +523,11 @@ sub _seeded_artist_credit
 
     _report_unknown_fields($field_name, $params, $errors, 'names');
 
-    return _seeded_array($c, \&_seeded_artist_credit_name, $params->{names},
-            "$field_name.names", $errors);
+    return {
+        names => _seeded_array(
+            $c, \&_seeded_artist_credit_name, $params->{names},
+            "$field_name.names", $errors),
+    };
 }
 
 sub _seeded_artist_credit_name
@@ -529,9 +539,8 @@ sub _seeded_artist_credit_name
 
     my $result = {};
 
-    if (my $name = _seeded_string($params->{name}, "$field_name.name", $errors)) {
-        $result->{name} = trim($name);
-    }
+    my $name = _seeded_string($params->{name}, "$field_name.name", $errors);
+    $result->{name} = trim($name // '');
 
     if (my $gid = $params->{mbid}) {
         my $entity = $c->model('Artist')->get_by_gid($gid);
@@ -544,12 +553,12 @@ sub _seeded_artist_credit_name
         }
     }
 
-    if (my $join = _seeded_string($params->{join_phrase}, "$field_name.join_phrase", $errors)) {
-        $result->{joinPhrase} = sanitize($join);
-    }
+    my $join = _seeded_string($params->{join_phrase}, "$field_name.join_phrase", $errors);
+    $result->{joinPhrase} = sanitize($join // '');
 
     $result->{artist} //= _seeded_hash($c, \&_seeded_artist, $params->{artist},
         "$field_name.artist", $errors);
+    $result->{name} ||= ($result->{artist}{name} // '');
 
     return $result;
 }

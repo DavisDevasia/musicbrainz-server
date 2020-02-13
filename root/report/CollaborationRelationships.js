@@ -12,7 +12,6 @@ import * as React from 'react';
 import {withCatalystContext} from '../context';
 import Layout from '../layout';
 import formatUserDate from '../utility/formatUserDate';
-import {l} from '../static/scripts/common/i18n';
 import PaginatedResults from '../components/PaginatedResults';
 import EntityLink from '../static/scripts/common/components/EntityLink';
 
@@ -36,13 +35,23 @@ const CollaborationRelationships = ({
 
       <ul>
         <li>
-          {l('This report lists artists which have collaboration relationships but no URL relationships. \
-              If the collaboration has its own independent name, do nothing. If it is in a format like \
-              "X with Y" or "X & Y", you should probably split it. See {how_to_split_artists|How to Split Artists}.',
-          {how_to_split_artists: '/doc/How_to_Split_Artists'})}
+          {exp.l(
+            `This report lists artists which have collaboration relationships
+             but no URL relationships. If the collaboration has its own
+             independent name, do nothing. If it is in a format like
+             "X with Y" or "X & Y", you should probably split it.
+             See {how_to_split_artists|How to Split Artists}.`,
+            {how_to_split_artists: '/doc/How_to_Split_Artists'},
+          )}
         </li>
-        <li>{l('Total artists found: {count}', {count: pager.total_entries})}</li>
-        <li>{l('Generated on {date}', {date: formatUserDate($c.user, generated)})}</li>
+        <li>
+          {texp.l('Total artists found: {count}',
+                  {count: pager.total_entries})}
+        </li>
+        <li>
+          {texp.l('Generated on {date}',
+                  {date: formatUserDate($c, generated)})}
+        </li>
 
         {canBeFiltered ? <FilterLink filtered={filtered} /> : null}
       </ul>
@@ -56,26 +65,36 @@ const CollaborationRelationships = ({
             </tr>
           </thead>
           <tbody>
-            {items.map((item, index) => {
+            {items.map((item) => {
               lastID = currentID;
               currentID = item.id1;
 
               return (
-                <>
-                  {lastID !== item.id1 ? (
-                    <tr className="even" key={item.artist1.gid}>
+                <React.Fragment
+                  key={item.id1 + '-' + item.id0}
+                >
+                  {lastID === item.id1 ? null : (
+                    <tr className="even">
                       <td colSpan="2">
-                        <EntityLink entity={item.artist1} />
+                        {item.artist1 ? (
+                          <EntityLink entity={item.artist1} />
+                        ) : (
+                          l('This artist no longer exists.')
+                        )}
                       </td>
                     </tr>
-                  ) : null}
-                  <tr key={item.artist0.gid}>
+                  )}
+                  <tr>
                     <td />
                     <td>
-                      <EntityLink entity={item.artist0} />
+                      {item.artist0 ? (
+                        <EntityLink entity={item.artist0} />
+                      ) : (
+                        l('This artist no longer exists.')
+                      )}
                     </td>
                   </tr>
-                </>
+                </React.Fragment>
               );
             })}
           </tbody>

@@ -1,15 +1,16 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import $ from 'jquery';
 import ko from 'knockout';
 import _ from 'lodash';
 
-import * as i18n from '../common/i18n';
 import {
-  artistCreditFromArray,
   hasVariousArtists,
   isComplexArtistCredit,
   reduceArtistCredit,
@@ -23,11 +24,23 @@ import releaseEditor from './viewModel';
 
 const actions = {
 
-    cancelPage: function () { window.location = this.returnTo },
+    cancelPage: function () {
+        window.location = this.returnTo;
+    },
 
-    nextTab: function () { this.adjacentTab(1) },
+    nextTab: function () {
+        this.adjacentTab(1);
+    },
 
-    previousTab: function () { this.adjacentTab(-1) },
+    previousTab: function () {
+        this.adjacentTab(-1);
+    },
+
+    lastTab: function () {
+        this.uiTabs._setOption("active", this.tabCount - 1);
+        this.uiTabs.tabs.eq(this.tabCount - 1).focus();
+        return;
+    },
 
     adjacentTab: function (direction) {
         var index = this.activeTabIndex();
@@ -79,7 +92,9 @@ const actions = {
         var oldPosition = medium.position.peek();
         var newPosition = oldPosition + offset;
 
-        if (newPosition <= 0) return;
+        if (newPosition <= 0) {
+            return;
+        }
 
         medium.position(newPosition);
 
@@ -105,7 +120,7 @@ const actions = {
         mediums.remove(medium);
         mediums = mediums.peek();
 
-        for (var i = index; medium = mediums[i]; i++) {
+        for (var i = index; (medium = mediums[i]); i++) {
             if (medium.position() === position + 1) {
                 medium.position(position);
             }
@@ -128,7 +143,7 @@ const actions = {
         }
     },
 
-    moveTrackUp: function (track, event) {
+    moveTrackUp: function (track) {
         var previous = track.previous();
 
         if (track.isDataTrack() && (!previous || !previous.isDataTrack())) {
@@ -163,21 +178,23 @@ const actions = {
         // If the medium had a TOC attached, it's no longer valid.
         track.medium.toc(null);
 
-        return true
+        return true;
     },
 
     swapTracks: function (track1, track2, medium) {
-        var tracks = medium.tracks,
-            underlyingTracks = tracks.peek(),
-            offset = medium.hasPregap() ? 0 : 1,
-            // Use _.indexOf instead of .position()
-            // http://tickets.metabrainz.org/browse/MBS-7227
-            position1 = _.indexOf(underlyingTracks, track1) + offset,
-            position2 = _.indexOf(underlyingTracks, track2) + offset,
-            number1 = track1.number(),
-            number2 = track2.number(),
-            dataTrack1 = track1.isDataTrack(),
-            dataTrack2 = track2.isDataTrack();
+        const tracks = medium.tracks;
+        const underlyingTracks = tracks.peek();
+        const offset = medium.hasPregap() ? 0 : 1;
+        /*
+         * Use _.indexOf instead of .position()
+         * http://tickets.metabrainz.org/browse/MBS-7227
+         */
+        const position1 = _.indexOf(underlyingTracks, track1) + offset;
+        const position2 = _.indexOf(underlyingTracks, track2) + offset;
+        const number1 = track1.number();
+        const number2 = track2.number();
+        const dataTrack1 = track1.isDataTrack();
+        const dataTrack2 = track2.isDataTrack();
 
         track1.position(position2);
         track1.number(number2);
@@ -194,7 +211,7 @@ const actions = {
 
     resetTrackPositions: function (tracks, start, offset, removed) {
         let track;
-        for (let i = start; track = tracks[i]; i++) {
+        for (let i = start; (track = tracks[i]); i++) {
             track.position(i + offset);
 
             if (track.number.peek() == (i + offset + removed)) {
@@ -211,7 +228,7 @@ const actions = {
         var index = tracks.indexOf(track);
         var offset = medium.hasPregap() ? 0 : 1;
 
-        tracks.remove(track)
+        tracks.remove(track);
         releaseEditor.resetTrackPositions(tracks.peek(), index, offset, 1);
 
         if (focus) {
@@ -233,9 +250,13 @@ const actions = {
         });
     },
 
-    toggleMedium: function (medium) { medium.collapsed(!medium.collapsed()) },
+    toggleMedium: function (medium) {
+        medium.collapsed(!medium.collapsed());
+    },
 
-    openTrackParser: function (medium) { this.trackParserDialog.open(medium) },
+    openTrackParser: function (medium) {
+        this.trackParserDialog.open(medium);
+    },
 
     resetTrackNumbers: function (medium) {
         var offset = medium.hasPregap() ? 0 : 1;
@@ -253,7 +274,7 @@ const actions = {
             return isComplexArtistCredit(track.artistCredit());
         });
 
-        var question = i18n.l(
+        var question = l(
             "This tracklist has artist credits with information that " +
             "will be lost if you swap artist credits with track titles. " +
             "This cannot be undone. Do you wish to continue?"
@@ -264,7 +285,10 @@ const actions = {
                 var oldTitle = track.name();
 
                 track.name(reduceArtistCredit(track.artistCredit()));
-                track.artistCredit(artistCreditFromArray([{ name: oldTitle }]));
+                track.artistCredit({names: [{ name: oldTitle }]});
+                track.artistCreditEditorInst.setState({
+                    artistCredit: track.artistCredit.peek(),
+                });
             });
         }
     },
@@ -309,6 +333,6 @@ const actions = {
     copyTrackArtistsToRecordings: ko.observable(false)
 };
 
-_.extend(releaseEditor, actions);
+Object.assign(releaseEditor, actions);
 
 export default actions;

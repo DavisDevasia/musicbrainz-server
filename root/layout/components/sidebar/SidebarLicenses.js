@@ -7,65 +7,59 @@
  * later version: http://www.gnu.org/licenses/gpl-2.0.txt
  */
 
+import map from 'lodash/map';
 import * as React from 'react';
-import compose from 'terable/compose';
-import filter from 'terable/filter';
-import map from 'terable/map';
-import sortBy from 'terable/sortBy';
-import toArray from 'terable/toArray';
 
-import {withCatalystContext} from '../../../context';
-import * as manifest from '../../../static/manifest';
-import {l} from '../../../static/scripts/common/i18n';
-import {l_relationships} from '../../../static/scripts/common/i18n/relationships';
+import {compare} from '../../../static/scripts/common/i18n';
+import linkedEntities from '../../../static/scripts/common/linkedEntities';
 
 const LICENSE_CLASSES = {
   ArtLibre: {
-    icon: manifest.pathTo('/images/licenses/ArtLibre.png'),
+    icon: require('../../../static/images/licenses/ArtLibre.png'),
     pattern: /artlibre\.org\/licence\/lal/,
   },
   CC0: {
-    icon: manifest.pathTo('/images/licenses/CC0.png'),
+    icon: require('../../../static/images/licenses/CC0.png'),
     pattern: /creativecommons\.org\/publicdomain\/zero\//,
   },
   CCBY: {
-    icon: manifest.pathTo('/images/licenses/CCBY.png'),
+    icon: require('../../../static/images/licenses/CCBY.png'),
     pattern: /creativecommons\.org\/licenses\/by\//,
   },
   CCBYNC: {
-    icon: manifest.pathTo('/images/licenses/CCBYNC.png'),
+    icon: require('../../../static/images/licenses/CCBYNC.png'),
     pattern: /creativecommons\.org\/licenses\/by-nc\//,
   },
   CCBYNCND: {
-    icon: manifest.pathTo('/images/licenses/CCBYNCND.png'),
+    icon: require('../../../static/images/licenses/CCBYNCND.png'),
     pattern: /creativecommons\.org\/licenses\/by-nc-nd\//,
   },
   CCBYNCSA: {
-    icon: manifest.pathTo('/images/licenses/CCBYNCSA.png'),
+    icon: require('../../../static/images/licenses/CCBYNCSA.png'),
     pattern: /creativecommons\.org\/licenses\/by-nc-sa\//,
   },
   CCBYND: {
-    icon: manifest.pathTo('/images/licenses/CCBYND.png'),
+    icon: require('../../../static/images/licenses/CCBYND.png'),
     pattern: /creativecommons\.org\/licenses\/by-nd\//,
   },
   CCBYSA: {
-    icon: manifest.pathTo('/images/licenses/CCBYSA.png'),
+    icon: require('../../../static/images/licenses/CCBYSA.png'),
     pattern: /creativecommons\.org\/licenses\/by-sa\//,
   },
   CCNCSamplingPlus: {
-    icon: manifest.pathTo('/images/licenses/CCNCSamplingPlus.png'),
+    icon: require('../../../static/images/licenses/CCNCSamplingPlus.png'),
     pattern: /creativecommons\.org\/licenses\/nc-sampling\+\//,
   },
   CCPD: {
-    icon: manifest.pathTo('/images/licenses/CCPD.png'),
+    icon: require('../../../static/images/licenses/CCPD.png'),
     pattern: /creativecommons\.org\/licenses\/publicdomain\//,
   },
   CCSampling: {
-    icon: manifest.pathTo('/images/licenses/CCSampling.png'),
+    icon: require('../../../static/images/licenses/CCSampling.png'),
     pattern: /creativecommons\.org\/licenses\/sampling\//,
   },
   CCSamplingPlus: {
-    icon: manifest.pathTo('/images/licenses/CCSamplingPlus.png'),
+    icon: require('../../../static/images/licenses/CCSamplingPlus.png'),
     pattern: /creativecommons\.org\/licenses\/sampling\+\//,
   },
 };
@@ -79,7 +73,7 @@ function licenseClass(url: UrlT): string {
   return '';
 }
 
-const LicenseDisplay = ({url}: {|+url: UrlT|}) => {
+const LicenseDisplay = ({url}: {+url: UrlT}) => {
   const className = licenseClass(url);
   return (
     <li className={className}>
@@ -90,40 +84,40 @@ const LicenseDisplay = ({url}: {|+url: UrlT|}) => {
   );
 };
 
-const getLicenses = filter(r => (
-  r.target.entityType === 'url' &&
-  r.target.show_license_in_sidebar
-));
+const cmpLinkPhrase = (a, b) => compare(a[0], b[0]);
 
-const buildLicenses = map(r => <LicenseDisplay key={r.id} url={r.target} />);
-
-type Props = {|
-  +$c: CatalystContextT,
+type Props = {
   +entity: CoreEntityT,
-|};
+};
 
-const SidebarLicenses = ({$c, entity}: Props) => {
-  let licenses = entity.relationships;
+const SidebarLicenses = ({entity}: Props) => {
+  const relationships = entity.relationships;
 
-  if (!licenses) {
+  if (!relationships) {
     return null;
   }
 
-  licenses = compose(
-    toArray,
-    buildLicenses,
-    sortBy(r => (
-      l_relationships($c.linked_entities.link_type[r.linkTypeID].link_phrase)
-    )),
-    getLicenses,
-  )(licenses);
+  const licenses = [];
+  for (const r of relationships) {
+    const target = r.target;
+    if (target.entityType === 'url' && target.show_license_in_sidebar) {
+      licenses.push([
+        l_relationships(linkedEntities.link_type[r.linkTypeID].link_phrase),
+        <LicenseDisplay key={r.id} url={target} />,
+      ]);
+    }
+  }
+
+  licenses.sort(cmpLinkPhrase);
 
   return licenses.length ? (
     <>
       <h2 className="licenses">{l('License')}</h2>
-      <ul className="licenses">{licenses}</ul>
+      <ul className="licenses">
+        {map(licenses, '1')}
+      </ul>
     </>
   ) : null;
 };
 
-export default withCatalystContext(SidebarLicenses);
+export default SidebarLicenses;

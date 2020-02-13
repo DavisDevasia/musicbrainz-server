@@ -10,14 +10,14 @@
 import * as React from 'react';
 
 import {withCatalystContext} from '../../../context';
-import CommonsImage from '../../../static/scripts/common/components/CommonsImage';
-import {l} from '../../../static/scripts/common/i18n';
+import CommonsImage
+  from '../../../static/scripts/common/components/CommonsImage';
 import isDateEmpty from '../../../static/scripts/common/utility/isDateEmpty';
 import areDatesEqual from '../../../utility/areDatesEqual';
 import ExternalLinks from '../ExternalLinks';
 
 import AnnotationLinks from './AnnotationLinks';
-import AttendanceLinks from './AttendanceLinks';
+import CollectionLinks from './CollectionLinks';
 import EditLinks from './EditLinks';
 import LastUpdated from './LastUpdated';
 import MergeLink from './MergeLink';
@@ -29,10 +29,10 @@ import SidebarRating from './SidebarRating';
 import SidebarTags from './SidebarTags';
 import SidebarType from './SidebarType';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +event: EventT,
-|};
+};
 
 const EventSidebar = ({$c, event}: Props) => {
   const hasBegin = !isDateEmpty(event.begin_date);
@@ -93,7 +93,7 @@ const EventSidebar = ({$c, event}: Props) => {
         ) : null}
       </EditLinks>
 
-      <AttendanceLinks event={event} />
+      <CollectionLinks entity={event} />
 
       <SidebarLicenses entity={event} />
 

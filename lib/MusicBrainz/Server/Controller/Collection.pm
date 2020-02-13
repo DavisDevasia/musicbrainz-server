@@ -11,6 +11,7 @@ with 'MusicBrainz::Server::Controller::Role::Load' => {
 };
 with 'MusicBrainz::Server::Controller::Role::Subscribe';
 
+use MusicBrainz::Server::ControllerUtils::JSON qw( serialize_pager );
 use MusicBrainz::Server::Data::Utils qw( model_to_type type_to_model load_everything_for_edits );
 use MusicBrainz::Server::Constants qw( :edit_status entities_with %ENTITIES );
 
@@ -25,12 +26,15 @@ after 'load' => sub {
             $c->user->id, $collection->id);
     }
 
-    # Load editor
-    $c->model('Editor')->load($collection);
+    # Load editor and collaborators
+    $c->model('Editor')->load_for_collection($collection);
     $c->model('CollectionType')->load($collection);
 
+    my $is_collection_collaborator = $c->user_exists &&
+        $c->model('Collection')->is_collection_collaborator($c->user->id, $collection->id);
+
     $c->stash(
-        my_collection => $c->user_exists && $c->user->id == $collection->editor_id
+        is_collection_collaborator => $is_collection_collaborator,
     )
 };
 
@@ -40,6 +44,15 @@ sub own_collection : Chained('load') CaptureArgs(0) {
     my $collection = $c->stash->{collection};
     $c->forward('/user/do_login') if !$c->user_exists;
     $c->detach('/error_403') if $c->user->id != $collection->editor_id;
+}
+
+sub collection_collaborator : Chained('load') CaptureArgs(0) {
+    my ($self, $c) = @_;
+
+    my $collection = $c->stash->{collection};
+    $c->forward('/user/do_login') if !$c->user_exists;
+
+    $c->detach('/error_403') if !$c->stash->{is_collection_collaborator};
 }
 
 sub _do_add_or_remove {
@@ -61,12 +74,12 @@ sub _do_add_or_remove {
     }
 }
 
-sub add : Chained('own_collection') RequireAuth {
+sub add : Chained('collection_collaborator') RequireAuth {
     my ($self, $c) = @_;
     $self->_do_add_or_remove($c, 'add_entities_to_collection');
 }
 
-sub remove : Chained('own_collection') RequireAuth {
+sub remove : Chained('collection_collaborator') RequireAuth {
     my ($self, $c) = @_;
     $self->_do_add_or_remove($c, 'remove_entities_from_collection');
 }
@@ -77,7 +90,7 @@ sub show : Chained('load') PathPart('') {
     my $collection = $c->stash->{collection};
     my $entity_type = $collection->type->item_entity_type;
 
-    if ($c->form_posted && $c->stash->{my_collection}) {
+    if ($c->form_posted && $c->stash->{is_collection_collaborator}) {
         my $remove_params = $c->req->params->{remove};
         $c->model('Collection')->remove_entities_from_collection($entity_type,
             $collection->id,
@@ -86,7 +99,7 @@ sub show : Chained('load') PathPart('') {
         );
     }
 
-    $self->own_collection($c) if !$collection->public;
+    $self->collection_collaborator($c) if !$collection->public;
 
     my $order = $c->req->params->{order};
 
@@ -105,14 +118,18 @@ sub show : Chained('load') PathPart('') {
 
     if ($entity_type eq 'area') {
         $c->model('AreaType')->load(@$entities);
+        $c->model('Area')->load_containment(@$entities);
     } elsif ($entity_type eq 'artist') {
         $c->model('ArtistType')->load(@$entities);
         $c->model('Gender')->load(@$entities);
+        $c->model('Area')->load(@$entities);
+        $c->model('Area')->load_containment(map { $_->area } @$entities);
     } elsif ($entity_type eq 'instrument') {
         $c->model('InstrumentType')->load(@$entities);
     } elsif ($entity_type eq 'label') {
         $c->model('LabelType')->load(@$entities);
         $c->model('Area')->load(@$entities);
+        $c->model('Area')->load_containment(map { $_->{area} } @$entities);
     } elsif ($entity_type eq 'release') {
         $c->model('ArtistCredit')->load(@$entities);
         $c->model('ReleaseGroup')->load(@$entities);
@@ -133,6 +150,8 @@ sub show : Chained('load') PathPart('') {
         }
     } elsif ($entity_type eq 'place') {
         $c->model('PlaceType')->load(@$entities);
+        $c->model('Area')->load(@$entities);
+        $c->model('Area')->load_containment(map { $_->area } @$entities);
     } elsif ($entity_type eq 'recording') {
         $c->model('ArtistCredit')->load(@$entities);
         $c->model('ISRC')->load_for_recordings(@$entities);
@@ -144,12 +163,18 @@ sub show : Chained('load') PathPart('') {
         $c->model('SeriesOrderingType')->load(@$entities);
     }
 
+    my %props = (
+        collection           => $collection,
+        collectionEntityType => $entity_type,
+        entities             => $entities,
+        order                => $order,
+        pager                => serialize_pager($c->stash->{pager}),
+    );
+
     $c->stash(
-        entities => $entities,
-        collection => $collection,
-        order => $order,
-        entity_list_template => 'components/' . $ENTITIES{$entity_type}->{plural} . '-list.tt',
-        template => 'collection/index.tt'
+        current_view => 'Node',
+        component_path => 'collection/CollectionIndex.js',
+        component_props => \%props,
     );
 }
 
@@ -166,7 +191,7 @@ sub open_edits : Chained('load') PathPart RequireAuth {
 sub _list_edits {
     my ($self, $c, $status) = @_;
 
-    $self->own_collection($c) if !$c->stash->{collection}->public;
+    $self->collection_collaborator($c) if !$c->stash->{collection}->public;
 
     my $edits  = $self->_load_paged($c, sub {
         my ($limit, $offset) = @_;
@@ -232,6 +257,17 @@ sub create : Local RequireAuth {
 
         $self->_redirect_to_collection($c, $collection->{gid});
     }
+
+    my %props = (
+        collectionTypes => $form->options_type_id,
+        form => $form,
+    );
+
+    $c->stash(
+        component_path => 'collection/CreateCollection',
+        component_props => \%props,
+        current_view => 'Node',
+    );
 }
 
 sub edit : Chained('own_collection') RequireAuth {
@@ -249,6 +285,18 @@ sub edit : Chained('own_collection') RequireAuth {
         $c->model('Collection')->update($collection->id, \%update);
         $self->_redirect_to_collection($c, $collection->gid);
     }
+
+    my %props = (
+        collection => $collection,
+        collectionTypes => $form->options_type_id,
+        form => $form,
+    );
+
+    $c->stash(
+        component_path => 'collection/EditCollection',
+        component_props => \%props,
+        current_view => 'Node',
+    );
 }
 
 sub delete : Chained('own_collection') RequireAuth {
@@ -262,6 +310,15 @@ sub delete : Chained('own_collection') RequireAuth {
         $c->response->redirect(
             $c->uri_for_action('/user/collections', [ $c->user->name ]));
     }
+    my %props = (
+        collection => $collection,
+    );
+
+    $c->stash(
+        component_path => 'collection/DeleteCollection',
+        component_props => \%props,
+        current_view => 'Node',
+    );
 }
 
 1;

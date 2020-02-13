@@ -1,4 +1,5 @@
 package MusicBrainz::Server::WebService::Validator;
+use List::AllUtils qw( uniq );
 use MooseX::Role::Parameterized;
 use aliased 'MusicBrainz::Server::WebService::WebServiceInc';
 use MusicBrainz::Server::Constants qw(
@@ -253,7 +254,7 @@ role {
     {
         my ($self, $c) = @_;
 
-        $c->stash->{serializer} = $self->get_serialization($c);
+        return 1 if $c->req->method eq 'OPTIONS';
 
         my $resource = $c->req->path;
         my $version = quotemeta($r->version);
@@ -264,6 +265,10 @@ role {
             # Match the call type
             next if ($resource ne $def->[0]);
             next if ($c->req->method ne $def->[1]->{method});
+
+            next if
+                defined $def->[1]->{action} &&
+                $c->req->action ne $def->[1]->{action};
 
             # Check to make sure that required arguments are present
             next unless validate_required($c, $def->[1]->{required});
@@ -332,6 +337,10 @@ role {
         }
         $c->stash->{error} = "The given parameters do not match any available query type for the $resource resource.";
         return 0;
+    };
+
+    method 'allowed_http_methods' => sub {
+        uniq map { $_->[1]->{method} } @{ $r->defs };
     };
 };
 

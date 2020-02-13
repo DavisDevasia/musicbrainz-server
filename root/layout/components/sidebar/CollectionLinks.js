@@ -11,42 +11,45 @@ import * as React from 'react';
 
 import {withCatalystContext} from '../../../context';
 import EntityLink from '../../../static/scripts/common/components/EntityLink';
-import {l, ln} from '../../../static/scripts/common/i18n';
 
 import CollectionList from './CollectionList';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +entity: CoreEntityT,
-|};
+};
 
-const CollectionLinks = ({$c, entity}: Props) => (
-  ($c.user_exists && $c.stash.all_collections) ? (
-    <>
-      <h2 className="collections">
-        {l('Collections')}
-      </h2>
-      <CollectionList
-        addText={l('Add to a new collection')}
-        entity={entity}
-        noneText={l('You have no collections!')}
-        usersLink={
-          <EntityLink
-            content={ln(
-              'Found in {num} user collection',
-              'Found in {num} user collections',
-              // $FlowFixMe
-              $c.stash.all_collections.length,
-              // $FlowFixMe
-              {num: $c.stash.all_collections.length},
-            )}
-            entity={entity}
-            subPath="collections"
-          />
-        }
-      />
-    </>
-  ) : null
-);
+const CollectionLinks = ({$c, entity}: Props) => {
+  const numberOfCollections = $c.stash.number_of_collections || 0;
+  if (!$c.user_exists) {
+    return null;
+  }
+  return (
+    <CollectionList
+      addCollectionText={l('Add to a new collection')}
+      collaborativeCollections={$c.stash.collaborative_collections}
+      collaborativeCollectionsHeader={l('Collaborative collections')}
+      entity={entity}
+      header={l('Collections')}
+      ownCollections={$c.stash.own_collections}
+      ownCollectionsHeader={l('My collections')}
+      ownCollectionsNoneText={l('You have no collections!')}
+      sectionClass="collections"
+      usersLink={
+        <EntityLink
+          content={texp.ln(
+            'Found in {num} user collection',
+            'Found in {num} user collections',
+            numberOfCollections,
+            {num: numberOfCollections},
+          )}
+          entity={entity}
+          subPath="collections"
+        />
+      }
+      usersLinkHeader={l('Other collections')}
+    />
+  );
+};
 
 export default withCatalystContext(CollectionLinks);

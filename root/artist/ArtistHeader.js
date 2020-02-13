@@ -9,14 +9,12 @@
 
 import React from 'react';
 
-import {l} from '../static/scripts/common/i18n';
-import {lp_attributes} from '../static/scripts/common/i18n/attributes';
 import EntityHeader from '../components/EntityHeader';
 
-type Props = {|
+type Props = {
   +artist: ArtistT,
   +page: string,
-|};
+};
 
 const ArtistHeader = ({artist, page}: Props) => {
   let headerClass = 'artistheader';
@@ -28,7 +26,9 @@ const ArtistHeader = ({artist, page}: Props) => {
       entity={artist}
       headerClass={headerClass}
       page={page}
-      subHeading={artist.typeName ? lp_attributes(artist.typeName, 'artist_type') : l('Artist')}
+      subHeading={artist.typeName
+        ? lp_attributes(artist.typeName, 'artist_type')
+        : l('Artist')}
     />
   );
 };

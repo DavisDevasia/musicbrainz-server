@@ -15,29 +15,35 @@ import FormLabel from './FormLabel';
 import HiddenField from './HiddenField';
 import SelectField from './SelectField';
 
-type Props = {|
+type Props = {
   // `allowEmpty` prepends an empty default option to the list.
   +allowEmpty?: boolean,
+  +field: ReadOnlyFieldT<number | string>,
   +frozen?: boolean,
-  +field: FieldT<number | string>,
+  +hasHtmlErrors?: boolean,
   +helpers?: React.Node,
   +label: string,
   +onChange?: (event: SyntheticEvent<HTMLSelectElement>) => void,
   +options: MaybeGroupedOptionsT,
-  // `required` makes the field text bold to indicate a selection is required.
-  // Only useful when `allowEmpty` is true.
+  /*
+   * `required` makes the field text bold to indicate a selection is required.
+   * Only useful when `allowEmpty` is true.
+   */
   +required?: boolean,
-|};
+  +uncontrolled?: boolean,
+};
 
 const FormRowSelect = ({
   allowEmpty = false,
   frozen = false,
   field,
+  hasHtmlErrors,
   helpers,
   label,
   onChange,
   options,
   required = false,
+  uncontrolled = false,
 }: Props) => {
   if (!allowEmpty) {
     // If the field can't be unset, there's nothing required from the user.
@@ -53,10 +59,11 @@ const FormRowSelect = ({
         onChange={onChange}
         options={options}
         required={required}
+        uncontrolled={uncontrolled}
       />
       {frozen ? <HiddenField field={field} /> : null}
       {helpers}
-      <FieldErrors field={field} />
+      <FieldErrors field={field} hasHtmlErrors={hasHtmlErrors} />
     </FormRow>
   );
 };

@@ -1,6 +1,7 @@
 package MusicBrainz::Server::Entity::Language;
 
 use Moose;
+use MooseX::Types::Moose qw( Int Maybe Str );
 use MusicBrainz::Server::Translation::Languages qw( l );
 
 extends 'MusicBrainz::Server::Entity';
@@ -17,17 +18,17 @@ sub l_name {
 
 has 'iso_code_2t' => (
     is => 'rw',
-    isa => 'Str'
+    isa => 'Maybe[Str]'
 );
 
 has 'iso_code_2b' => (
     is => 'rw',
-    isa => 'Str'
+    isa => 'Maybe[Str]'
 );
 
 has 'iso_code_1' => (
     is => 'rw',
-    isa => 'Str'
+    isa => 'Maybe[Str]'
 );
 
 has 'iso_code_3' => (
@@ -63,7 +64,11 @@ around TO_JSON => sub {
 
     my $json = $self->$orig;
     $json->{name} = $self->name;
+    $json->{iso_code_1} = $self->iso_code_1;
+    $json->{iso_code_2b} = $self->iso_code_2b;
+    $json->{iso_code_2t} = $self->iso_code_2t;
     $json->{iso_code_3} = $self->iso_code_3;
+    $json->{frequency} = $self->frequency;
     return $json;
 };
 

@@ -12,7 +12,6 @@
 </div>
 
 [% script_manifest('edit.js') %]
-[% script_manifest('guess-case.js') %]
 
 <p>[%- l('For more information, check the {doc_doc|documentation} and {doc_styleguide|style guidelines}.', {doc_doc => doc_link('Recording'), doc_styleguide => doc_link('Style/Recording')}) -%]</p>
 
@@ -24,10 +23,17 @@
       <legend>[% l('Recording Details') %]</legend>
       [%- form_row_name_with_guesscase(r, { guessfeat => 1 }) -%]
       <div id="artist-credit-editor"></div>
-      [%- form_row_text_long(r, 'comment', l('Disambiguation:')) -%]
-      [%- IF !form.used_by_tracks || form.field('length').has_errors;
-            form_row_text_long(r, 'length', l('Length:'));
-          END -%]
+      [%- form_row_text_long(r, 'comment', add_colon(l('Disambiguation'))) -%]
+      [%- IF !form.used_by_tracks || form.field('length').has_errors -%]
+        [%- form_row_text_long(r, 'length', l('Length:')) -%]
+      [%- ELSE -%]
+        [% WRAPPER form_row %]
+          <label>[% l('Length:') %]</label>
+          [% l('{recording_length} ({length_info|derived} from the associated track lengths)',
+                recording_length => format_length(form.field('length').value),
+                length_info => { href => doc_link('Recording'), target => '_blank' } ) %]
+        [%- END -%]
+      [%- END -%]
       [%- form_row_checkbox(r, 'video', l('Video')) -%]
       [%- form_row_text_list(r, 'isrcs', l('ISRCs:'), l('ISRC')) -%]
     </fieldset>
@@ -58,7 +64,7 @@
       [% closing_tag_escape(form.to_encoded_json) %],
       [% closing_tag_escape(form.field('artist_credit').json) %]
     );
-    MB.Control.initialize_guess_case("recording", "id-edit-recording");
+    MB.Control.initializeGuessCase("recording", "id-edit-recording");
     MB.Control.initGuessFeatButton('edit-recording');
     MB.Control.initializeBubble("#isrcs-bubble", "input[name=edit-recording\\.isrcs\\.0]");
   });

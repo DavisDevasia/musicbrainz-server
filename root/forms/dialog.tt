@@ -8,13 +8,9 @@
       </script>
     </head>
   [% ELSE %]
-    [%- IF !gettext_domains;
-          SET gettext_domains = ['attributes', 'countries', 'languages', 'relationships'];
-        END;
-        React.embed(c, 'layout/components/Head', {
-            gettext_domains => gettext_domains,
+    [%- React.embed(c, 'layout/components/Head', {
             homepage => homepage,
-            no_icons => no_icons,
+            noIcons => boolean_to_json(no_icons),
             pager => pager,
             title => title,
         })

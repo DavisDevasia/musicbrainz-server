@@ -10,25 +10,22 @@
 import React from 'react';
 
 import chooseLayoutComponent from '../utility/chooseLayoutComponent';
-import {l} from '../static/scripts/common/i18n';
 import {withCatalystContext} from '../context';
 import {MainTagEditor} from '../static/scripts/common/components/TagEditor';
 
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +allTags: $ReadOnlyArray<AggregatedTagT>,
   +entity: CoreEntityT,
-  +lastUpdated: string,
   +moreTags: boolean,
   +userTags: $ReadOnlyArray<UserTagT>,
-|};
+};
 
 const Tags = ({
   $c,
   allTags,
   entity,
-  lastUpdated,
   moreTags,
   userTags,
 }: Props) => {

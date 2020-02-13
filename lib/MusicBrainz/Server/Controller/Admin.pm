@@ -13,6 +13,10 @@ sub edit_user : Path('/admin/user/edit') Args(1) RequireAuth HiddenOnSlaves
         unless $c->user->is_account_admin or DBDefs->DB_STAGING_TESTING_FEATURES;
 
     my $user = $c->model('Editor')->get_by_name($user_name);
+
+    if (not defined $user) {
+        $c->detach('/user/not_found')
+    }
     $c->stash->{viewing_own_profile} = $c->user_exists && $c->user->id == $user->id;
 
     my $form = $c->form(
@@ -146,6 +150,12 @@ sub edit_banner : Path('/admin/banner/edit') Args(0) RequireAuth(banner_editor) 
         $c->flash->{message} = l('Banner updated. Remember that each server has its own, independent banner.');
         $c->response->redirect($c->uri_for('/'));
         $c->detach;
+    } else {
+        $c->stash(
+            current_view => 'Node',
+            component_path => 'admin/EditBanner',
+            component_props => {form => $form},
+        );
     }
 }
 

@@ -15,8 +15,6 @@ import formatEndDate from '../../static/scripts/common/utility/formatEndDate';
 import entityHref from '../../static/scripts/common/utility/entityHref';
 import bracketed from '../../static/scripts/common/utility/bracketed';
 import locales from '../../static/scripts/common/constants/locales';
-import {l} from '../../static/scripts/common/i18n';
-import {lp_attributes} from '../../static/scripts/common/i18n/attributes';
 
 type Props = {
   +alias: AliasT,
@@ -37,7 +35,9 @@ const AliasTableRow = ({alias, allowEditing, entity, row}: Props) => (
       : <td>{isolateText(alias.sort_name)}</td>}
     <td>{formatDate(alias.begin_date)}</td>
     <td>{formatEndDate(alias)}</td>
-    <td>{alias.typeName ? lp_attributes(alias.typeName, 'alias_type') : ''}</td>
+    <td>
+      {alias.typeName ? lp_attributes(alias.typeName, 'alias_type') : ''}
+    </td>
     <td>
       {alias.locale ? locales[alias.locale] : null}
       {alias.primary_for_locale
@@ -49,7 +49,7 @@ const AliasTableRow = ({alias, allowEditing, entity, row}: Props) => (
         )
         : null}
     </td>
-    <td>
+    <td className="actions">
       {allowEditing
         ? (
           <>

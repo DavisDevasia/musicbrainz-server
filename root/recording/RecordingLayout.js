@@ -12,21 +12,19 @@ import type {Node as ReactNode} from 'react';
 
 import Layout from '../layout';
 import RecordingSidebar from '../layout/components/sidebar/RecordingSidebar';
-import {hyphenateTitle, l} from '../static/scripts/common/i18n';
 import {
-  artistCreditFromArray,
   reduceArtistCredit,
 } from '../static/scripts/common/immutable-entities';
 
 import RecordingHeader from './RecordingHeader';
 
-type Props = {|
+type Props = {
   +children: ReactNode,
   +entity: RecordingT,
   +fullWidth?: boolean,
   +page: string,
   +title?: string,
-|};
+};
 
 const RecordingLayout = ({
   children,
@@ -36,14 +34,12 @@ const RecordingLayout = ({
   title,
 }: Props) => {
   const titleArgs = {
-    artist: reduceArtistCredit(
-      artistCreditFromArray(recording.artistCredit),
-    ),
+    artist: reduceArtistCredit(recording.artistCredit),
     name: recording.name,
   };
   const mainTitle = recording.video
-    ? l('Video “{name}” by {artist}', titleArgs)
-    : l('Recording “{name}” by {artist}', titleArgs);
+    ? texp.l('Video “{name}” by {artist}', titleArgs)
+    : texp.l('Recording “{name}” by {artist}', titleArgs);
   return (
     <Layout
       title={title ? hyphenateTitle(mainTitle, title) : mainTitle}

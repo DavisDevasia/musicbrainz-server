@@ -9,15 +9,10 @@
 
 import React from 'react';
 
+import type {Props as FormRowTextProps} from './FormRowText';
 import FormRowTextLong from './FormRowTextLong';
 
-type Props = {
-  +field: FieldT<string>,
-  +label: string,
-  +required?: boolean,
-};
-
-const FormRowURLLong = (props: Props) => (
+const FormRowURLLong = (props: FormRowTextProps) => (
   <FormRowTextLong type="url" {...props} />
 );
 

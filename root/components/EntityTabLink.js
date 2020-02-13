@@ -11,15 +11,24 @@ import React from 'react';
 
 import EntityLink from '../static/scripts/common/components/EntityLink';
 
-type Props = {|
+type Props = {
   +content: string,
-  +entity: CoreEntityT,
+  +disabled?: boolean,
+  +entity: CoreEntityT | CollectionT,
   +selected: boolean,
   +subPath: string,
-|};
+};
 
-const EntityTabLink = ({selected, ...linkProps}: Props) => (
-  <li className={selected ? 'sel' : null}>
+const EntityTabLink = ({disabled, selected, ...linkProps}: Props) => (
+  <li
+    className={
+      selected || disabled
+        ? (selected ? 'sel' : '') +
+          (selected && disabled ? ' ' : '') +
+          (disabled ? 'disabled' : '')
+        : null
+    }
+  >
     <EntityLink {...linkProps} />
   </li>
 );

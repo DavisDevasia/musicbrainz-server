@@ -1,4 +1,4 @@
-const $ = require('jquery');
+import $ from 'jquery';
 
 $(function () {
     $('a.tagger-icon').click(function (event) {
@@ -8,8 +8,7 @@ $(function () {
             iframe.src = this.href;
             iframe.style.display = "none";
             $('body').append(iframe);
-        }
-        else {
+        } else {
             var tagger = new Image();
             tagger.src = this.href;
         }

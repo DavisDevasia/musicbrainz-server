@@ -8,39 +8,44 @@
  */
 
 import React from 'react';
+import mutate from 'mutate-cow';
 
 import {withCatalystContext} from '../../../../context';
 import formatUserDate from '../../../../utility/formatUserDate';
 import hydrate from '../../../../utility/hydrate';
 import sanitizedEditor from '../../../../utility/sanitizedEditor';
-import {l} from '../i18n';
 import entityHref from '../utility/entityHref';
-import * as lens from '../utility/lens';
 
 import Collapsible from './Collapsible';
 import EditorLink from './EditorLink';
 
-type AnnotatedEntityT =
-  | AreaT
-  | ArtistT
-  | EventT
-  | InstrumentT
-  | LabelT
-  | PlaceT
-  | RecordingT
-  | ReleaseGroupT
-  | ReleaseT
-  | SeriesT
-  | WorkT;
+type MinimalAnnotatedEntityT = $ReadOnly<{
+  ...MinimalCoreEntityT,
+  +latest_annotation: ?AnnotationT,
+}>;
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT | SanitizedCatalystContextT,
-  +annotation: ?AnnotationT,
+  +annotation: ?$ReadOnly<{
+    ...AnnotationT,
+    +editor: EditorT | SanitizedEditorT | null,
+    ...
+  }>,
   +collapse?: boolean,
-  +entity: AnnotatedEntityT,
+  +entity: AnnotatedEntityT | MinimalAnnotatedEntityT,
   +numberOfRevisions: number,
   +showChangeLog?: boolean,
-|};
+};
+
+type WritableProps = {
+  annotation: ?{
+    ...AnnotationT,
+    editor: EditorT | SanitizedEditorT | null,
+    ...
+  },
+  entity: MinimalAnnotatedEntityT,
+  ...
+};
 
 const Annotation = ({
   $c,
@@ -59,15 +64,17 @@ const Annotation = ({
       <h2 className="annotation">{l('Annotation')}</h2>
 
       {collapse
-        ? <Collapsible
+        ? (
+          <Collapsible
             className="annotation"
             html={annotation.html}
           />
-        : <div
+        ) : (
+          <div
             className="annotation-body"
             dangerouslySetInnerHTML={{__html: annotation.html}}
           />
-      }
+        )}
 
       {showChangeLog ? (
         <p>
@@ -81,8 +88,8 @@ const Annotation = ({
         {$c.user_exists ? (
           latestAnnotation && (annotation.id === latestAnnotation.id) ? (
             <>
-              {l('Annotation last modified by {user} on {date}.', {
-                date: formatUserDate($c.user, annotation.creation_date),
+              {exp.l('Annotation last modified by {user} on {date}.', {
+                date: formatUserDate($c, annotation.creation_date),
                 user: <EditorLink editor={annotation.editor} />,
               })}
               {numberOfRevisions && numberOfRevisions > 1 ? (
@@ -95,16 +102,21 @@ const Annotation = ({
               ) : null}
             </>
           ) : (
-            l('This is an {history|old revision} of this annotation, as edited by {user} on {date}. {current|View current revision}.', {
-              current: entityHref(entity, '/annotation'),
-              date: formatUserDate($c.user, annotation.creation_date),
-              history: entityHref(entity, '/annotations'),
-              user: <EditorLink editor={annotation.editor} />,
-            })
+            exp.l(
+              `This is an {history|old revision} of this annotation,
+               as edited by {user} on {date}.
+               {current|View current revision}.`,
+              {
+                current: entityHref(entity, '/annotation'),
+                date: formatUserDate($c, annotation.creation_date),
+                history: entityHref(entity, '/annotations'),
+                user: <EditorLink editor={annotation.editor} />,
+              },
+            )
           )
         ) : (
-          l('Annotation last modified on {date}.', {
-            date: formatUserDate($c.user, annotation.creation_date),
+          texp.l('Annotation last modified on {date}.', {
+            date: formatUserDate($c, annotation.creation_date),
           })
         )}
       </div>
@@ -112,29 +124,23 @@ const Annotation = ({
   );
 };
 
-const annotationLens = lens.compose2(
-  lens.prop('annotation'),
-  lens.prop('editor'),
-);
-
-const entityLens = lens.prop('entity');
-
 export default withCatalystContext(
-  hydrate('annotation', Annotation, function (props) {
-    // editor data is usually missing on mirror server
-    if (props.annotation && props.annotation.editor) {
-      props = lens.set(
-        annotationLens,
-        sanitizedEditor(props.annotation.editor),
-        props,
-      );
-    }
+  hydrate<Props>('div.annotation', Annotation, function (props) {
     const entity = props.entity;
-    props = lens.set(entityLens, {
-      entityType: entity.entityType,
-      gid: entity.gid,
-      latest_annotation: entity.latest_annotation,
-    }, props);
-    return props;
-  })
+
+    return mutate<WritableProps, Props>(props, newProps => {
+      const annotation = newProps.annotation;
+
+      // editor data is usually missing on mirror server
+      if (annotation && annotation.editor) {
+        annotation.editor = sanitizedEditor(annotation.editor);
+      }
+
+      newProps.entity = {
+        entityType: entity.entityType,
+        gid: entity.gid,
+        latest_annotation: entity.latest_annotation,
+      };
+    });
+  }),
 );

@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2018 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -7,7 +7,12 @@
  * later version: http://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-export default function sanitizedEditor(editor: EditorT): SanitizedEditorT {
+// NOTE: Don't convert to an ES module; this is used by root/server.js.
+/* eslint-disable import/no-commonjs */
+
+function sanitizedEditor(
+  editor /*: EditorT | SanitizedEditorT */
+) /*: SanitizedEditorT */ {
   return {
     entityType: 'editor',
     gravatar: editor.gravatar,
@@ -19,3 +24,5 @@ export default function sanitizedEditor(editor: EditorT): SanitizedEditorT {
     },
   };
 }
+
+module.exports = sanitizedEditor;

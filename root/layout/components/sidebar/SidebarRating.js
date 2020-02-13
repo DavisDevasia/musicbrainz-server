@@ -10,13 +10,12 @@
 import React from 'react';
 
 import RatingStars from '../../../components/RatingStars';
-import {l} from '../../../static/scripts/common/i18n';
 import EntityLink from '../../../static/scripts/common/components/EntityLink';
 
-type Props = {|
+type Props = {
   +entity: RatableT,
   +heading?: string,
-|};
+};
 
 const SidebarRating = ({entity, heading}: Props) => (
   <>

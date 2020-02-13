@@ -35,6 +35,7 @@ use Data::Page;
 use HTTP::Status qw( :constants );
 use MusicBrainz::Server::Translation qw( l );
 use MusicBrainz::Server::Constants qw( $EDIT_PLACE_CREATE $EDIT_PLACE_EDIT $EDIT_PLACE_MERGE );
+use MusicBrainz::Server::ControllerUtils::JSON qw( serialize_pager );
 use Sql;
 
 =head1 NAME
@@ -87,7 +88,17 @@ Shows a place's main landing page.
 sub show : PathPart('') Chained('load') {
     my ($self, $c) = @_;
 
-    $c->stash(template => 'place/index.tt');
+    my %props = (
+        numberOfRevisions => $c->stash->{number_of_revisions},
+        place             => $c->stash->{place},
+        wikipediaExtract  => $c->stash->{wikipedia_extract},
+    );
+
+    $c->stash(
+        component_path => 'place/PlaceIndex.js',
+        component_props => \%props,
+        current_view => 'Node',
+    );
 }
 
 =head2 events
@@ -104,7 +115,18 @@ sub events : Chained('load')
     });
     $c->model('Event')->load_related_info(@$events);
     $c->model('Event')->rating->load_user_ratings($c->user->id, @$events) if $c->user_exists;
-    $c->stash( events => $events );
+
+    my %props = (
+        events      => $events,
+        place       => $c->stash->{place},
+        pager       => serialize_pager($c->stash->{pager}),
+    );
+
+    $c->stash(
+        component_path  => 'place/PlaceEvents.js',
+        component_props => \%props,
+        current_view    => 'Node',
+    );
 }
 
 =head2 performances
@@ -113,7 +135,15 @@ Shows performances linked to a place.
 
 =cut
 
-sub performances : Chained('load') { }
+sub performances : Chained('load') { 
+    my ($self, $c) = @_;
+
+    $c->stash(
+        component_path  => 'place/PlacePerformances',
+        component_props => {place => $c->stash->{place}},
+        current_view    => 'Node',
+    );
+}
 
 =head2 map
 
@@ -125,13 +155,25 @@ sub map : Chained('load') {
     my ($self, $c) = @_;
 
     my $place = $c->stash->{place};
-    $c->stash->{map_data_args} = $c->json->encode({
+    my $map_data_args = $c->json->encode({
         draggable => \0,
         place => {
             coordinates => $place->coordinates,
             name => $place->name,
         },
     });
+
+    my %props = (
+        mapDataArgs => $map_data_args,
+        place       => $place,
+    );
+
+    $c->stash(
+        component_path  => 'place/PlaceMap',
+        component_props => \%props,
+        current_view    => 'Node',
+    );
+
 }
 
 after [qw( show collections details tags aliases events performances map )] => sub {

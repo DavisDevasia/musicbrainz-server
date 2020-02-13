@@ -10,7 +10,9 @@ use MusicBrainz::Server::Constants qw(
     $EDIT_INSTRUMENT_DELETE
 );
 use MusicBrainz::Server::Translation qw( l );
+use List::MoreUtils qw( uniq );
 use List::UtilsBy qw( sort_by );
+use MusicBrainz::Server::ControllerUtils::JSON qw( serialize_pager );
 
 with 'MusicBrainz::Server::Controller::Role::Load' => {
     model           => 'Instrument',
@@ -35,7 +37,17 @@ sub base : Chained('/') PathPart('instrument') CaptureArgs(0) { }
 sub show : PathPart('') Chained('load') {
     my ($self, $c) = @_;
 
-    $c->stash->{template} = 'instrument/index.tt';
+    my %props = (
+        instrument        => $c->stash->{instrument},
+        numberOfRevisions => $c->stash->{number_of_revisions},
+        wikipediaExtract  => $c->stash->{wikipedia_extract},
+    );
+
+    $c->stash(
+        component_path => 'instrument/InstrumentIndex',
+        component_props => \%props,
+        current_view => 'Node',
+    );
 }
 
 after 'load' => sub {
@@ -44,11 +56,50 @@ after 'load' => sub {
     $c->model('InstrumentType')->load($instrument);
 };
 
+sub artists : Chained('load') {
+    my ($self, $c) = @_;
+
+    my $instrument = $c->stash->{instrument};
+    my ($results, @artists, %instrument_credits_and_rel_types);
+
+    $results = $self->_load_paged($c, sub {
+        $c->model('Artist')->find_by_instrument($instrument->id, shift, shift);
+    });
+
+    for my $item (@$results) {
+        push @artists, $item->{artist};
+        my @credits_and_rel_types = uniq grep { $_ } @{ $item->{instrument_credits_and_rel_types} // [] };
+        $instrument_credits_and_rel_types{$item->{artist}->gid} = \@credits_and_rel_types if @credits_and_rel_types;
+    }
+
+    $c->model('Artist')->load_meta(@artists);
+    $c->model('ArtistType')->load(@artists);
+    $c->model('Gender')->load(@artists);
+    $c->model('Area')->load(@artists);
+
+    if ($c->user_exists) {
+        $c->model('Artist')->rating->load_user_ratings($c->user->id, @artists);
+    }
+
+    my %props = (
+        artists => \@artists,
+        instrument => $c->stash->{instrument},
+        instrumentCreditsAndRelTypes => \%instrument_credits_and_rel_types,
+        pager => serialize_pager($c->stash->{pager}),
+    );
+
+    $c->stash(
+        component_path => 'instrument/InstrumentArtists',
+        component_props => \%props,
+        current_view => 'Node',
+    );
+}
+
 sub recordings : Chained('load') {
     my ($self, $c) = @_;
 
     my $instrument = $c->stash->{instrument};
-    my ($results, @recordings, %instrument_credits);
+    my ($results, @recordings, %instrument_credits_and_rel_types);
 
     $results = $self->_load_paged($c, sub {
         $c->model('Recording')->find_by_instrument($instrument->id, shift, shift);
@@ -56,8 +107,8 @@ sub recordings : Chained('load') {
 
     for my $item (@$results) {
         push @recordings, $item->{recording};
-        my @credits = grep { $_ } @{ $item->{instrument_credits} // [] };
-        $instrument_credits{$item->{recording}->gid} = \@credits if @credits;
+        my @credits_and_rel_types = uniq grep { $_ } @{ $item->{instrument_credits_and_rel_types} // [] };
+        $instrument_credits_and_rel_types{$item->{recording}->gid} = \@credits_and_rel_types if @credits_and_rel_types;
     }
 
     $c->model('Recording')->load_meta(@recordings);
@@ -66,14 +117,20 @@ sub recordings : Chained('load') {
         $c->model('Recording')->rating->load_user_ratings($c->user->id, @recordings);
     }
 
-    $c->stash( template => 'instrument/recordings.tt' );
-
     $c->model('ISRC')->load_for_recordings(@recordings);
     $c->model('ArtistCredit')->load(@recordings);
 
-    $c->stash(
+    my %props = (
+        instrument => $c->stash->{instrument},
+        instrumentCreditsAndRelTypes => \%instrument_credits_and_rel_types,
+        pager => serialize_pager($c->stash->{pager}),
         recordings => \@recordings,
-        instrument_credits => \%instrument_credits,
+    );
+
+    $c->stash(
+        component_path => 'instrument/InstrumentRecordings',
+        component_props => \%props,
+        current_view => 'Node',
     );
 }
 
@@ -81,7 +138,7 @@ sub releases : Chained('load') {
     my ($self, $c) = @_;
 
     my $instrument = $c->stash->{instrument};
-    my ($results, @releases, %instrument_credits);
+    my ($results, @releases, %instrument_credits_and_rel_types);
 
     $results = $self->_load_paged($c, sub {
         $c->model('Release')->find_by_instrument($instrument->id, shift, shift);
@@ -89,17 +146,24 @@ sub releases : Chained('load') {
 
     for my $item (@$results) {
         push @releases, $item->{release};
-        my @credits = grep { $_ } @{ $item->{instrument_credits} // [] };
-        $instrument_credits{$item->{release}->gid} = \@credits if @credits;
+        my @credits_and_rel_types = uniq grep { $_ } @{ $item->{instrument_credits_and_rel_types} // [] };
+        $instrument_credits_and_rel_types{$item->{release}->gid} = \@credits_and_rel_types if @credits_and_rel_types;
     }
-
-    $c->stash( template => 'instrument/releases.tt' );
 
     $c->model('ArtistCredit')->load(@releases);
     $c->model('Release')->load_related_info(@releases);
-    $c->stash(
+
+    my %props = (
+        instrument => $c->stash->{instrument},
+        instrumentCreditsAndRelTypes => \%instrument_credits_and_rel_types,
+        pager => serialize_pager($c->stash->{pager}),
         releases => \@releases,
-        instrument_credits => \%instrument_credits,
+    );
+
+    $c->stash(
+        component_path => 'instrument/InstrumentReleases',
+        component_props => \%props,
+        current_view => 'Node',
     );
 }
 

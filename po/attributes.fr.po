@@ -11,7 +11,7 @@
 #   <email address hidden>, 2012
 # AO <email address hidden>, 2013,2015
 # kmartin <email address hidden>, 2013
-# Laurent Monin <email address hidden>, 2014,2018
+# Laurent Monin <email address hidden>, 2014,2018,2020
 # Lotheric <email address hidden>, 2011-2012
 # murdos <email address hidden>, 2011-2012,2015
 # murdos <email address hidden>, 2011
@@ -19,6 +19,7 @@
 # Nicolas HOUDELOT <email address hidden>, 2015
 # Paul TREHIOU <email address hidden>, 2015
 # Paul Tremberth <email address hidden>, 2013
+# Raphaël Fery <email address hidden>, 2019
 # Paul Tremberth <email address hidden>, 2013
 # AO <email address hidden>, 2015
 # AO <email address hidden>, 2013-2015
@@ -28,8 +29,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: MusicBrainz\n"
-"PO-Revision-Date: 2019-01-22 21:02+0000\n"
-"Last-Translator: yvanz\n"
+"PO-Revision-Date: 2020-01-29 10:28+0000\n"
+"Last-Translator: Laurent Monin <email address hidden>\n"
 "Language-Team: French (http://www.transifex.com/musicbrainz/musicbrainz/language/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -122,7 +123,7 @@ msgctxt "medium_format"
 msgid ""
 "90 rpm, vertical-cut shellac discs, produced by the Pathé label from 1906 to"
 " 1932."
-msgstr "Disque 78 tours, disques en gomme laque à gravure verticale, produits par Pathé de 1906 à 1932."
+msgstr "Disque 90 tours par minute, disques en gomme laque à gravure verticale, produits par Pathé de 1906 à 1932."
 
 #: DB:work_attribute_type_allowed_value/value:794
 msgctxt "work_attribute_type_allowed_value"
@@ -1244,6 +1245,11 @@ msgctxt "label_type"
 msgid "Bootleg Production"
 msgstr "Production pirate"
 
+#: DB:release_packaging/name:19
+msgctxt "release_packaging"
+msgid "Box"
+msgstr "Boîte"
+
 #: DB:work_attribute_type_allowed_value/value:607
 msgctxt "work_attribute_type_allowed_value"
 msgid "Bozlak"
@@ -1439,7 +1445,7 @@ msgstr "Cantate"
 #: DB:release_packaging/name:4
 msgctxt "release_packaging"
 msgid "Cardboard/Paper Sleeve"
-msgstr "Emballage carton ou papier"
+msgstr "Pochette en carton ou papier"
 
 #: DB:medium_format/name:9
 msgctxt "medium_format"
@@ -2416,7 +2422,7 @@ msgctxt "medium_format"
 msgid ""
 "Flat discs with grooves used in phonographs/gramophones. For shellac and "
 "vinyl records, use that specifically"
-msgstr "Disques plats à sillon pouvant être lus par un gramophone ou un tourne-disque, plus spécifiquement fabriqués en gomme-laque shellac ou en vinyle."
+msgstr "Disques plats à sillon pouvant être lus par un gramophone ou un tourne-disque. À utiliser en particulier pour les disques fabriqués en gomme-laque shellac ou en vinyle."
 
 #: DB:medium_format/name:51
 msgctxt "medium_format"
@@ -2441,7 +2447,7 @@ msgctxt "gender"
 msgid ""
 "For cases where gender just doesn't apply at all (like companies entered as "
 "artists)."
-msgstr "Pour les cas où le genre ne s’applique pas (par exemple pour une compagnie)."
+msgstr "Pour les cas où le genre ne s’applique pas (par exemple pour des compagnies entrées en tant qu’artistes)."
 
 #: DB:work_attribute_type/name:16
 msgctxt "work_attribute_type"
@@ -3087,6 +3093,16 @@ msgstr "ID pour la SABAM, société belge de gestion des droits d'auteur"
 msgctxt "work_attribute_type"
 msgid "ID for the International Copyright Enterprise"
 msgstr "ID pour l’ICE, entreprise internationale de gestion des droits d'auteur"
+
+#: DB:work_attribute_type/description:3
+msgctxt "work_attribute_type"
+msgid "ID for the Japanese rights society JASRAC"
+msgstr "ID pour la société japonaise de gestion des droits JASRAC"
+
+#: DB:work_attribute_type/description:33
+msgctxt "work_attribute_type"
+msgid "ID for the Japanese rights society NexTone"
+msgstr "ID pour la société japonaise de gestion des droits NexTone"
 
 #: DB:work_attribute_type/description:27
 msgctxt "work_attribute_type"
@@ -4062,6 +4078,11 @@ msgctxt "work_attribute_type_allowed_value"
 msgid "Mevlidişerif"
 msgstr "Mevlidişerif"
 
+#: DB:medium_format/name:83
+msgctxt "medium_format"
+msgid "Microcassette"
+msgstr "Microcassette"
+
 #: DB:medium_format/name:6
 msgctxt "medium_format"
 msgid "MiniDisc"
@@ -4582,6 +4603,11 @@ msgctxt "work_attribute_type_allowed_value"
 msgid "Nevruzi Rumi"
 msgstr "Nevruzi Rumi"
 
+#: DB:work_attribute_type/name:33
+msgctxt "work_attribute_type"
+msgid "NexTone ID"
+msgstr "NexTone ID"
+
 #: DB:work_attribute_type_allowed_value/value:471
 msgctxt "work_attribute_type_allowed_value"
 msgid "Neşataver"
@@ -4973,6 +4999,16 @@ msgctxt "alias_type"
 msgid "Place name"
 msgstr "Nom du lieu"
 
+#: DB:release_packaging/description:20
+msgctxt "release_packaging"
+msgid "Plastic CD tray inside a cardboard slipcover"
+msgstr "Étui en carton à l’intérieur duquel coulisse un plateau en plastique pour CD"
+
+#: DB:release_packaging/name:18
+msgctxt "release_packaging"
+msgid "Plastic Sleeve"
+msgstr "Pochette plastique"
+
 #: DB:work_type/name:28
 msgctxt "work_type"
 msgid "Play"
@@ -5217,7 +5253,7 @@ msgstr "Nom de l’enregistrement"
 #: DB:series_type/name:3
 msgctxt "series_type"
 msgid "Recording series"
-msgstr "Séries d’enregistrements"
+msgstr "Série d’enregistrements"
 
 #: DB:medium_format/name:10
 msgctxt "medium_format"
@@ -5664,7 +5700,7 @@ msgstr "Serbest"
 #: DB:editor_collection_type/name:14
 msgctxt "collection_type"
 msgid "Series"
-msgstr "Series"
+msgstr "Série"
 
 #: DB:series_alias_type/name:1
 msgctxt "alias_type"
@@ -5739,6 +5775,11 @@ msgctxt "work_attribute_type_allowed_value"
 msgid "Sitārkhānī"
 msgstr "Sitârkhânî"
 
+#: DB:release_packaging/name:20
+msgctxt "release_packaging"
+msgid "Slidepack"
+msgstr "Slidepack"
+
 #: DB:release_packaging/name:2
 msgctxt "release_packaging"
 msgid "Slim Jewel Case"
@@ -5774,7 +5815,7 @@ msgctxt "series_ordering_type"
 msgid ""
 "Sorts the items in the series automatically by their number attributes, "
 "using a natural sort order."
-msgstr "Trie les éléments de la série automatiquement par leurs attributs de numéro, en utilisant un ordre de tri naturel."
+msgstr "Trie les éléments de la série automatiquement par leurs attributs numériques, en utilisant un ordre de tri naturel."
 
 #: DB:release_group_secondary_type/name:2
 msgctxt "release_group_secondary_type"
@@ -6155,6 +6196,13 @@ msgid ""
 "medium."
 msgstr "La couche CD d’un SACD hybride. La couche SACD doit être ajoutée comme un support à part."
 
+#: DB:medium_format/description:82
+msgctxt "medium_format"
+msgid ""
+"The CD side of a vinyl + CD VinylDisc. The vinyl side should be added as a "
+"separate medium."
+msgstr "La face CD d’un VinylDisc vinyle + CD. La face vinyle doit être ajoutée comme un support à part."
+
 #: DB:medium_format/description:60
 msgctxt "medium_format"
 msgid ""
@@ -6185,6 +6233,13 @@ msgid ""
 "separate medium."
 msgstr "La couche DVD (vidéo) d’un DualDisc. La couche CD doit être ajoutée comme un support à part."
 
+#: DB:medium_format/description:80
+msgctxt "medium_format"
+msgid ""
+"The DVD side of a vinyl + DVD VinylDisc. The vinyl side should be added as a"
+" separate medium."
+msgstr "La face DVD d’un VinylDisc vinyle + DVD. La face vinyle doit être ajoutée comme un support à part."
+
 #: DB:medium_format/description:64
 msgctxt "medium_format"
 msgid ""
@@ -6211,6 +6266,13 @@ msgstr "L’opérette est un genre d’opéra léger, à la fois en terme musica
 msgctxt "release_packaging"
 msgid "The traditional CD case, made of hard, brittle plastic."
 msgstr "Le boîtier traditionnel pour CD, en plastique dur et cassant."
+
+#: DB:medium_format/description:81
+msgctxt "medium_format"
+msgid ""
+"The vinyl side of a VinylDisc. The CD or DVD side should be added as a "
+"separate medium."
+msgstr "La face vinyle d’un VinylDisc. La face CD ou DVD doit être ajoutée comme un support à part."
 
 #: DB:work_type/description:23
 msgctxt "work_type"
@@ -6509,6 +6571,21 @@ msgctxt "medium_format"
 msgid "VinylDisc"
 msgstr "VinylDisc"
 
+#: DB:medium_format/name:82
+msgctxt "medium_format"
+msgid "VinylDisc (CD side)"
+msgstr "VinylDisc (face CD)"
+
+#: DB:medium_format/name:80
+msgctxt "medium_format"
+msgid "VinylDisc (DVD side)"
+msgstr "VinylDisc (face DVD)"
+
+#: DB:medium_format/name:81
+msgctxt "medium_format"
+msgid "VinylDisc (Vinyl side)"
+msgstr "VinylDisc (face vinyle)"
+
 #: DB:work_attribute_type_allowed_value/value:259
 #: DB:work_attribute_type_allowed_value/value:1047
 msgctxt "work_attribute_type_allowed_value"
@@ -6573,7 +6650,7 @@ msgstr "Nom de l’œuvre"
 #: DB:series_type/name:4
 msgctxt "series_type"
 msgid "Work series"
-msgstr "Séries d’œuvres"
+msgstr "Série d’œuvres"
 
 #: DB:work_attribute_type_allowed_value/value:277
 msgctxt "work_attribute_type_allowed_value"

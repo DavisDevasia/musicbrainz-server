@@ -12,17 +12,15 @@ import * as React from 'react';
 import Tabs from '../components/Tabs';
 import Layout from '../layout';
 import TagLink from '../static/scripts/common/components/TagLink';
-import {hyphenateTitle, l, N_l, N_lp} from '../static/scripts/common/i18n';
-import NopArgs from '../static/scripts/common/i18n/NopArgs';
 
-type Props = {|
+type Props = {
   +children: React.Node,
   +page: string,
-  +tag: string,
+  +tag: TagT,
   +title?: string,
-|};
+};
 
-const tabLinks: $ReadOnlyArray<[string, NopArgs]> = [
+const tabLinks: $ReadOnlyArray<[string, () => string]> = [
   ['', N_l('Overview')],
   ['/artist', N_l('Artists')],
   ['/release-group', N_l('Release Groups')],
@@ -42,19 +40,19 @@ const TagLayout = ({children, page, tag, title}: Props) => (
     fullWidth
     title={
       title
-        ? hyphenateTitle(l('Tag “{tag}”', {tag}), title)
-        : l('Tag “{tag}”', {tag: tag})
+        ? hyphenateTitle(texp.l('Tag “{tag}”', {tag: tag.name}), title)
+        : texp.l('Tag “{tag}”', {tag: tag.name})
     }
   >
     <div id="content">
       <h1>
-        {l('Tag “{tag}”', {tag: <TagLink tag={tag} />})}
+        {exp.l('Tag “{tag}”', {tag: <TagLink tag={tag.name} />})}
       </h1>
       <Tabs>
         {tabLinks.map(link => (
           <li className={page === link[0] ? 'sel' : ''} key={link[0]}>
-            <a href={'/tag/' + encodeURIComponent(tag) + link[0]}>
-              {link[1].toString()}
+            <a href={'/tag/' + encodeURIComponent(tag.name) + link[0]}>
+              {link[1]()}
             </a>
           </li>
         ))}

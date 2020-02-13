@@ -11,42 +11,40 @@ import * as React from 'react';
 
 import RequestLogin from '../../../components/RequestLogin';
 import {withCatalystContext} from '../../../context';
-import {l} from '../../../static/scripts/common/i18n';
 import EntityLink from '../../../static/scripts/common/components/EntityLink';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +children?: React.Node,
   +entity: CoreEntityT,
-|};
+};
 
 const EditLinks = ({$c, children, entity}: Props) => (
   <>
     <h2 className="editing">{l('Editing')}</h2>
     <ul className="links">
-      {$c.user_exists ? (
+      {$c.user_exists ? children : (
         <>
-          {children}
           <li>
-            <EntityLink
-              content={l('Open edits')}
-              entity={entity}
-              subPath="open_edits"
-            />
+            <RequestLogin $c={$c} text={l('Log in to edit')} />
           </li>
-          <li>
-            <EntityLink
-              content={l('Editing history')}
-              entity={entity}
-              subPath="edits"
-            />
-          </li>
+          <li className="separator" role="separator" />
         </>
-      ) : (
-        <li>
-          <RequestLogin $c={$c} text={l('Log in to edit')} />
-        </li>
       )}
+      <li>
+        <EntityLink
+          content={l('Open edits')}
+          entity={entity}
+          subPath="open_edits"
+        />
+      </li>
+      <li>
+        <EntityLink
+          content={l('Editing history')}
+          entity={entity}
+          subPath="edits"
+        />
+      </li>
     </ul>
   </>
 );

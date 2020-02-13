@@ -9,22 +9,23 @@
 
 import React from 'react';
 
-import {l} from '../static/scripts/common/i18n';
-import {lp_attributes} from '../static/scripts/common/i18n/attributes';
-import AreaContainmentLink from '../static/scripts/common/components/AreaContainmentLink';
+import AreaContainmentLink
+  from '../static/scripts/common/components/AreaContainmentLink';
 import EntityHeader from '../components/EntityHeader';
 
-type Props = {|
+type Props = {
   +area: AreaT,
   +page: string,
-|};
+};
 
 const AreaHeader = ({area, page}: Props) => {
-  const areaType = area.typeName ? lp_attributes(area.typeName, 'area_type') : l('Area');
+  const areaType = area.typeName
+    ? lp_attributes(area.typeName, 'area_type')
+    : l('Area');
   let subHeading = areaType;
-  if (area.containment && area.containment.length) {
+  if (area.containment?.length) {
     const parentAreas = <AreaContainmentLink area={area} />;
-    subHeading = l('{area_type} in {parent_areas}', {
+    subHeading = exp.l('{area_type} in {parent_areas}', {
       area_type: areaType,
       parent_areas: parentAreas,
     });

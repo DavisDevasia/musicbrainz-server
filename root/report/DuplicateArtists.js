@@ -12,8 +12,6 @@ import * as React from 'react';
 import {withCatalystContext} from '../context';
 import Layout from '../layout';
 import formatUserDate from '../utility/formatUserDate';
-import {l} from '../static/scripts/common/i18n';
-import {lp_attributes} from '../static/scripts/common/i18n/attributes';
 import PaginatedResults from '../components/PaginatedResults';
 import loopParity from '../utility/loopParity';
 import EntityLink from '../static/scripts/common/components/EntityLink';
@@ -40,19 +38,28 @@ const DuplicateArtists = ({
 
       <ul>
         <li>
-          {l('This report aims to identify artists with very similar names. If \
-              two artists are actually the same, please merge them (remember to \
-              {how_to_write_edit_notes|write an edit note} and give your proof). \
-              If they\'re different, add {disambiguation_comment|disambiguation \
-              comments} to them (and once a group of similarly named artists have \
-              disambiguation comments, they will stop appearing here).',
-          {
-            disambiguation_comment: '/doc/Disambiguation_Comment',
-            how_to_write_edit_notes: '/doc/How_to_Write_Edit_Notes',
-          })}
+          {exp.l(
+            `This report aims to identify artists with very similar names.
+             If two artists are actually the same, please merge them
+             (remember to {how_to_write_edit_notes|write an edit note}
+             and give your proof). If they\'re different, add
+             {disambiguation_comment|disambiguation comments} to them
+             (and once a group of similarly named artists have
+             disambiguation comments, they will stop appearing here).`,
+            {
+              disambiguation_comment: '/doc/Disambiguation_Comment',
+              how_to_write_edit_notes: '/doc/How_to_Write_Edit_Notes',
+            },
+          )}
         </li>
-        <li>{l('Total duplicate groups: {count}', {count: pager.total_entries})}</li>
-        <li>{l('Generated on {date}', {date: formatUserDate($c.user, generated)})}</li>
+        <li>
+          {texp.l('Total duplicate groups: {count}',
+                  {count: pager.total_entries})}
+        </li>
+        <li>
+          {texp.l('Generated on {date}',
+                  {date: formatUserDate($c, generated)})}
+        </li>
 
         {canBeFiltered ? <FilterLink filtered={filtered} /> : null}
       </ul>
@@ -70,30 +77,53 @@ const DuplicateArtists = ({
             </thead>
             <tbody>
               {items.map((item, index) => {
-                const alias = item.alias;
+                const {alias, artist} = item;
                 lastKey = currentKey;
                 currentKey = item.key;
                 return (
-                  <>
-                    {lastKey !== item.key ? (
+                  <React.Fragment
+                    key={artist ? artist.gid : `removed-${index}`}
+                  >
+                    {lastKey === item.key ? null : (
                       <tr className="subh">
                         <td colSpan="4" />
                       </tr>
-                    ) : null}
-                    <tr className={loopParity(index)} key={item.artist.gid}>
-                      <td>
-                        <input name="add-to-merge" type="checkbox" value={item.artist.id} />
-                      </td>
-                      <td>
-                        <EntityLink entity={item.artist} />
-                        {alias ? (
-                          <span>{' (' + l('alias:') + ' ' + alias + ')'}</span>
-                        ) : null}
-                      </td>
-                      <td>{item.artist.sort_name}</td>
-                      <td>{item.artist.typeName ? lp_attributes(item.artist.typeName, 'artist_type') : l('Unknown')}</td>
-                    </tr>
-                  </>
+                    )}
+                    {artist ? (
+                      <tr className={loopParity(index)}>
+                        <td>
+                          <input
+                            name="add-to-merge"
+                            type="checkbox"
+                            value={artist.id}
+                          />
+                        </td>
+                        <td>
+                          <EntityLink entity={artist} />
+                          {alias ? (
+                            <span>
+                              {' (' + l('alias:') + ' ' + alias + ')'}
+                            </span>
+                          ) : null}
+                        </td>
+                        <td>{artist.sort_name}</td>
+                        <td>
+                          {artist.typeName
+                            ? lp_attributes(
+                              artist.typeName, 'artist_type',
+                            )
+                            : l('Unknown')}
+                        </td>
+                      </tr>
+                    ) : (
+                      <tr>
+                        <td />
+                        <td colSpan="3">
+                          {l('This artist no longer exists.')}
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </tbody>

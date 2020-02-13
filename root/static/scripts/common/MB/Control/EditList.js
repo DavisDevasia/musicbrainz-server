@@ -1,12 +1,14 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2015 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2015 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
-const $ = require('jquery');
+import $ from 'jquery';
 
-const {l} = require('../../i18n');
-const MB = require('../../MB');
+import MB from '../../MB';
 
 var SELECTED_CLASS = {
     '1':  'vote-yes',
@@ -20,8 +22,12 @@ MB.Control.EditList = function (container) {
     var $container = $(container);
 
     self.initialize = function () {
-        var $voteOptions = $container.find('input[type="radio"]')
-            .first().parents('.voteopts').clone().addClass('overall-vote');
+        var $voteOptions = $container
+            .find('input[type="radio"]')
+            .first()
+            .parents('.voteopts')
+            .clone()
+            .addClass('overall-vote');
 
         $voteOptions.find('label').each(function () {
             $(this).attr('for', $(this).attr('for').replace(/id-enter-vote.vote.\d+/, 'vote-all'));
@@ -39,12 +45,16 @@ MB.Control.EditList = function (container) {
             $('<div>').text(l("Vote on all edits:"))
         );
 
-        // :nth-child would make more sense, but I couldn't get it working
-        // - ocharles
+        /*
+         * :nth-child would make more sense, but I couldn't get it working
+         * - ocharles
+         */
         $voteOptions.find('input').each(function (i) {
             $(this).click(function () {
                     $container.find('div.voteopts').each(function () {
-                            $(this).find('input').eq(i)
+                            $(this)
+                                .find('input')
+                                .eq(i)
                                 .prop('checked', true)
                                 .change();
                         });
@@ -52,17 +62,23 @@ MB.Control.EditList = function (container) {
         });
 
         $container.before($voteOptions);
-    }
+    };
 
-    self.initialize()
+    self.initialize();
     return self;
 };
 
 $(function () {
     $('div.vote input[type="radio"]').change(function () {
-        $(this).parents('.voteopts').find('.vote').attr('class', 'vote');
-        $(this).parent('label').parent('.vote').addClass(SELECTED_CLASS[ $(this).val() ]);
-    })
+        $(this)
+            .parents('.voteopts')
+            .find('.vote')
+            .attr('class', 'vote');
+        $(this)
+            .parent('label')
+            .parent('.vote')
+            .addClass(SELECTED_CLASS[ $(this).val() ]);
+    });
 
     $('div.vote input[checked="checked"]').change();
 });

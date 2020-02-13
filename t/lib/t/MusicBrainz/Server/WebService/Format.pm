@@ -66,6 +66,8 @@ test 'webservice request format handling (JSON)' => sub {
         'sort-name' => 'Distance',
         country => JSON::null,
         area => JSON::null,
+        'begin-area' => JSON::null,
+        'end-area' => JSON::null,
         begin_area => JSON::null,
         end_area => JSON::null,
         disambiguation => 'UK dubstep artist Greg Sanders',
@@ -108,7 +110,7 @@ test 'webservice request format handling (errors)' => sub {
     my $expected = '<?xml version="1.0"?>
 <error>
   <text>Invalid format. Either set an Accept header (recognized mime types are application/json and application/xml), or include a fmt= argument in the query string (valid values for fmt are json and xml).</text>
-  <text>For usage, please see: http://musicbrainz.org/development/mmd</text>
+  <text>For usage, please see: https://musicbrainz.org/development/mmd</text>
 </error>';
 
     $Test->note('Accept: application/something-else');

@@ -9,14 +9,12 @@
 
 import React from 'react';
 
-import {l_languages} from '../static/scripts/common/i18n/languages';
-
 import LinkSearchableProperty from './LinkSearchableProperty';
 
-type Props = {|
+type Props = {
   +entityType: string,
   +language: LanguageT,
-|};
+};
 
 const LinkSearchableLanguage = ({entityType, language}: Props) => (
   <LinkSearchableProperty

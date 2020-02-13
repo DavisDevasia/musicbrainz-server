@@ -10,12 +10,9 @@
 import * as React from 'react';
 
 import {withCatalystContext} from '../../context';
-import {l} from '../../static/scripts/common/i18n';
-import {l_instrument_descriptions} from '../../static/scripts/common/i18n/instrument_descriptions';
-import {lp_attributes} from '../../static/scripts/common/i18n/attributes';
-import EntityLink from '../../static/scripts/common/components/EntityLink';
-import loopParity from '../../utility/loopParity';
-import type {ResultsPropsT} from '../types';
+import InstrumentListEntry
+  from '../../static/scripts/common/components/InstrumentListEntry';
+import type {ResultsPropsWithContextT} from '../types';
 
 import PaginatedSearchResults from './PaginatedSearchResults';
 import ResultsLayout from './ResultsLayout';
@@ -25,17 +22,12 @@ function buildResult(result, index) {
   const score = result.score;
 
   return (
-    <tr className={loopParity(index)} data-score={score} key={instrument.id}>
-      <td>
-        <EntityLink entity={instrument} />
-      </td>
-      <td>{instrument.typeName ? lp_attributes(instrument.typeName, 'instrument_type') : null}</td>
-      <td>
-        {instrument.description
-          ? l_instrument_descriptions(instrument.description)
-          : null}
-      </td>
-    </tr>
+    <InstrumentListEntry
+      index={index}
+      instrument={instrument}
+      key={instrument.id}
+      score={score}
+    />
   );
 }
 
@@ -46,7 +38,7 @@ const InstrumentResults = ({
   pager,
   query,
   results,
-}: ResultsPropsT<InstrumentT>) => (
+}: ResultsPropsWithContextT<InstrumentT>) => (
   <ResultsLayout form={form} lastUpdated={lastUpdated}>
     <PaginatedSearchResults
       buildResult={buildResult}
@@ -61,6 +53,14 @@ const InstrumentResults = ({
       query={query}
       results={results}
     />
+    {$c.user?.is_relationship_editor ? (
+      <p>
+        {exp.l('Alternatively, you may {uri|add a new instrument}.', {
+          uri: '/instrument/create?edit-instrument.name=' +
+            encodeURIComponent(query),
+        })}
+      </p>
+    ) : null}
   </ResultsLayout>
 );
 

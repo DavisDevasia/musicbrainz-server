@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2019 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -9,15 +9,13 @@
 
 import * as React from 'react';
 
-import * as manifest from '../../../manifest';
-
-type Props = {|
+type Props = {
   title?: string,
-|};
+};
 
 const InformationIcon = (props: Props) => (
   <img
-    src={manifest.pathTo('/images/icons/information.png')}
+    src={require('../../../images/icons/information.png')}
     {...props}
   />
 );

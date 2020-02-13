@@ -64,10 +64,10 @@ test 'Insert medium' => sub {
     my $toc = "1 2 $leadoutoffset $trackoffset0 $trackoffset1";
 
     my $fuzzy = 1;
-    my $durationlookup = $c->model('DurationLookup')->lookup($toc, $fuzzy);
-    is(scalar @$durationlookup, 1, "one match with TOC lookup");
+    my ($durationlookup, $hits) = $c->model('DurationLookup')->lookup($toc, $fuzzy);
+    is($hits, 1, "one match with TOC lookup");
 
-    $medium = $durationlookup->[0]->medium;
+    $medium = $c->model('Medium')->get_by_id($durationlookup->[0]{results}[0]{medium});
     is($medium->id, $created->{id});
     is($medium->name, 'Bonus disc', 'TOC lookup found correct disc');
 };
@@ -138,6 +138,17 @@ test 'Reordering mediums' => sub {
 
     is($c->model('Medium')->get_by_id(1)->position => 2);
     is($c->model('Medium')->get_by_id(2)->position => 1);
+};
+
+test 'Merging mediums with swapped recordings (MBS-9309)' => sub {
+    my $test = shift;
+    my $c = $test->c;
+
+    MusicBrainz::Server::Test->prepare_raw_test_database($c, '+mbs-9309');
+
+    my ($success, $error) = $c->model('Release')->determine_recording_merges(1, 2);
+    is($success, 0);
+    like($error->{message}, qr/^A merge cycle exists/);
 };
 
 1;

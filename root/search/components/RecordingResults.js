@@ -10,16 +10,15 @@
 import React from 'react';
 
 import {CatalystContext, withCatalystContext} from '../../context';
-import {l} from '../../static/scripts/common/i18n';
 import EntityLink from '../../static/scripts/common/components/EntityLink';
 import TaggerIcon from '../../static/scripts/common/components/TaggerIcon';
-import formatTrackLength from '../../static/scripts/common/utility/formatTrackLength';
+import formatTrackLength
+  from '../../static/scripts/common/utility/formatTrackLength';
 import loopParity from '../../utility/loopParity';
-import type {InlineResultsPropsT, ResultsPropsT} from '../types';
+import type {InlineResultsPropsT, ResultsPropsWithContextT} from '../types';
 import ArtistCreditLink
   from '../../static/scripts/common/components/ArtistCreditLink';
 import CodeLink from '../../static/scripts/common/components/CodeLink';
-import {lp_attributes} from '../../static/scripts/common/i18n/attributes';
 
 import PaginatedSearchResults from './PaginatedSearchResults';
 import ResultsLayout from './ResultsLayout';
@@ -49,13 +48,13 @@ const buildRecordingColumns = recording => (
 
 const buildTaggerIcon = entity => (
   <CatalystContext.Consumer>
-    {$c => $c.session && $c.session.tport
+    {$c => $c.session?.tport
       ? <td><TaggerIcon entity={entity} /></td>
       : null}
   </CatalystContext.Consumer>
 );
 
-function buildResultWithReleases(result, index, tport) {
+function buildResultWithReleases(result) {
   const recording = result.entity;
   const score = result.score;
 
@@ -78,8 +77,10 @@ function buildResultWithReleases(result, index, tport) {
         </td>
         <td>{extraRow.medium_position}</td>
         <td>
-          {releaseGroup && releaseGroup.typeName
-            ? lp_attributes(releaseGroup.typeName, 'release_group_primary_type')
+          {releaseGroup?.typeName
+            ? lp_attributes(
+              releaseGroup.typeName, 'release_group_primary_type',
+            )
             : null}
         </td>
       </tr>
@@ -87,13 +88,13 @@ function buildResultWithReleases(result, index, tport) {
   });
 }
 
-function buildResult(result, index) {
+function buildResult(result) {
   const recording = result.entity;
   const score = result.score;
 
   return (
-    result.extra && result.extra.length
-      ? buildResultWithReleases(result, index)
+    result.extra?.length
+      ? buildResultWithReleases(result)
       : (
         <tr
           className={loopParity(linenum++)}
@@ -124,7 +125,7 @@ export const RecordingResultsInline = ({
         <th>{l('Artist')}</th>
         <th>{l('ISRCs')}</th>
         <th>{l('Release')}</th>
-        {$c.session && $c.session.tport ? <th>{l('Tagger')}</th> : null}
+        {$c?.session?.tport ? <th>{l('Tagger')}</th> : null}
         <th className="t pos">{l('Track')}</th>
         <th>{l('Medium')}</th>
         <th>{l('Type')}</th>
@@ -143,7 +144,7 @@ const RecordingResults = ({
   pager,
   query,
   results,
-}: ResultsPropsT<RecordingT>) => {
+}: ResultsPropsWithContextT<RecordingT>) => {
   linenum = 0;
   return (
     <ResultsLayout form={form} lastUpdated={lastUpdated}>
@@ -155,8 +156,9 @@ const RecordingResults = ({
       />
       {$c.user && !$c.user.is_editing_disabled ? (
         <p>
-          {l('Alternatively, you may {uri|add a new recording}.', {
-            uri: '/recording/create?edit-recording.name=' + encodeURIComponent(query),
+          {exp.l('Alternatively, you may {uri|add a new recording}.', {
+            uri: '/recording/create?edit-recording.name=' +
+              encodeURIComponent(query),
           })}
         </p>
       ) : null}

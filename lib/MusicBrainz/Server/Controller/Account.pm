@@ -7,6 +7,10 @@ use Digest::SHA qw(sha1_base64);
 use JSON;
 use List::MoreUtils qw( uniq );
 use MusicBrainz::Server::ControllerUtils::JSON qw( serialize_pager );
+use MusicBrainz::Server::Form::Utils qw(
+    build_grouped_options
+    language_options
+);
 use MusicBrainz::Server::Translation qw( l );
 use MusicBrainz::Server::Validation qw( encode_entities is_positive_integer );
 use Try::Tiny;
@@ -414,6 +418,20 @@ sub edit : Local RequireAuth DenyWhenReadonly {
         $c->flash->{message} = $flash;
         $c->response->redirect($c->uri_for_action('/user/profile', [$editor->name]));
         $c->detach;
+    } else {
+        $c->stash(
+            current_view => 'Node',
+            component_path => 'account/EditProfile',
+            component_props => {
+                form => $form,
+                language_options => {
+                    grouped => JSON::true,
+                    options => build_grouped_options($c, language_options($c, 'editor')),
+                },
+
+            },
+        );
+        $c->detach;
     }
 }
 
@@ -604,7 +622,7 @@ sub register : Path('/register') ForbiddenOnSlaves RequireSSL DenyWhenReadonly
 
 =head2 resend_verification
 
-Send out an email allowing users to confirm their email address, from the web
+Send out an email allowing users to verify their email address, from the web
 
 =cut
 
@@ -621,7 +639,7 @@ sub resend_verification : Path('/account/resend-verification') ForbiddenOnSlaves
 
 =head2 _send_confirmation_email
 
-Send out an email allowing users to confirm their email address
+Send out an email allowing users to verify their email address
 
 =cut
 
@@ -647,7 +665,7 @@ sub _send_confirmation_email
     }
     catch {
         $c->flash->{message} = l(
-            '<strong>We were unable to send a confirmation email to you.</strong><br/>Please confirm that you have entered a valid ' .
+            '<strong>We were unable to send a verification email to you.</strong><br/>Please confirm that you have entered a valid ' .
             'address by editing your {settings|account settings}. If the problem still persists, please contact us at ' .
             '{mail|support@musicbrainz.org}.',
             {

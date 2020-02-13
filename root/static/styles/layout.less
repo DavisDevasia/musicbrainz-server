@@ -85,6 +85,11 @@ h3 {
     font-weight: bold;
 }
 
+#sidebar h3, .sidebar h3 {
+    font-size: @small-text;
+    color: @text-orange;
+}
+
 ul {
     margin-left: 0;
     padding-left: 40px;
@@ -127,6 +132,9 @@ pre code {
 }
 
 .deleted { color: @dark-text; }
+
+/* For general right aligning, and especially for barcodes */
+.align-right, .barcode-cell { text-align: right; }
 
 /*
 ** Header
@@ -231,8 +239,6 @@ pre code {
             clear: both;
             font-size: @small-text;
             ul.menu {
-                li a {
-                }
                 li.language-selector {
                     float: right;
                     position: relative;
@@ -354,8 +360,12 @@ div.warning {
     width: 60em;
     background: @warning-background;
 
-    p {
+    p, label {
         margin: 1em;
+    }
+
+    label {
+        display: block;
     }
 }
 
@@ -557,6 +567,18 @@ tr.diff-changes {
     background: @edit-orange !important;
 }
 
+span.ac-mp {
+    display: inline-block;
+    position: relative;
+
+    img.info {
+        width: 16px;
+        height: 16px;
+        vertical-align: text-bottom;
+        margin-left: 0.25em;
+    }
+}
+
 .lastupdate,
 .annotation-details,
 .small {
@@ -662,7 +684,7 @@ table.tbl {
     tr:target td { background-color: @highlight-table-row; }
 
     /* Fixed widths and other custom styles */
-    .pos { width: 1em; white-space: nowrap; }
+    .checkbox-cell, .pos { width: 1em; white-space: nowrap; }
     .year { width: 4em; }
     &.release-group-list .artist { width: 25%; }
     .count { width: 2em; }
@@ -991,8 +1013,21 @@ a.tagger-icon {
     display: block;
 }
 
-.actions-header {
-    min-width: 10em;
+.actions {
+    white-space: nowrap;
+    width: 1px;
+}
+
+.number-column {
+    width: 1em;
+}
+
+.positive {
+    background: @positive-light-bg;
+}
+
+.negative {
+    background: @negative-light-bg;
 }
 
 dl.ars, dl.ars dd, dl.ars dt {
@@ -1039,4 +1074,11 @@ dl.ars dt {
         text-align: justify;
         padding-left: @form-margin;
     }
+}
+
+/* AcoustID fingerprints */
+ 
+.disabled-acoustid {
+    text-decoration: line-through;
+    opacity: 0.5;
 }

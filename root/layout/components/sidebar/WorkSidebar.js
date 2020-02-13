@@ -10,13 +10,14 @@
 import kebabCase from 'lodash/kebabCase';
 import * as React from 'react';
 
-import LinkSearchableLanguage from '../../../components/LinkSearchableLanguage';
+import LinkSearchableLanguage
+  from '../../../components/LinkSearchableLanguage';
 import {withCatalystContext} from '../../../context';
 import CodeLink from '../../../static/scripts/common/components/CodeLink';
 import commaOnlyList from '../../../static/scripts/common/i18n/commaOnlyList';
-import CommonsImage from '../../../static/scripts/common/components/CommonsImage';
-import {addColon, l} from '../../../static/scripts/common/i18n';
-import {lp_attributes} from '../../../static/scripts/common/i18n/attributes';
+import CommonsImage from
+  '../../../static/scripts/common/components/CommonsImage';
+import linkedEntities from '../../../static/scripts/common/linkedEntities';
 import ExternalLinks from '../ExternalLinks';
 
 import AnnotationLinks from './AnnotationLinks';
@@ -30,17 +31,16 @@ import SidebarRating from './SidebarRating';
 import SidebarTags from './SidebarTags';
 import SidebarType from './SidebarType';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +work: WorkT,
-|};
+};
 
 const WorkSidebar = ({$c, work}: Props) => {
-  const gid = encodeURIComponent(work.gid);
   const {attributes, iswcs, languages, typeID} = work;
   const showInfo =
     attributes.length ||
-    (iswcs && iswcs.length) ||
+    iswcs.length ||
     languages.length ||
     typeID;
 
@@ -61,9 +61,12 @@ const WorkSidebar = ({$c, work}: Props) => {
             <SidebarType entity={work} typeType="work_type" />
 
             {languages.length ? (
-              <SidebarProperty className="lyrics-language" label={addColon(l('Lyrics Languages'))}>
+              <SidebarProperty
+                className="lyrics-language"
+                label={addColonText(l('Lyrics Languages'))}
+              >
                 {commaOnlyList(
-                  languages.map((wl, index) => (
+                  languages.map((wl) => (
                     <LinkSearchableLanguage
                       entityType="work"
                       key={wl.language.id}
@@ -74,26 +77,34 @@ const WorkSidebar = ({$c, work}: Props) => {
               </SidebarProperty>
             ) : null}
 
-            {iswcs && iswcs.length ? (
-              iswcs.map((iswc, index) => (
-                <SidebarProperty className="iswc" key={iswc.iswc} label={l('ISWC:')}>
+            {iswcs.length ? (
+              iswcs.map((iswc) => (
+                <SidebarProperty
+                  className="iswc"
+                  key={iswc.iswc}
+                  label={l('ISWC:')}
+                >
                   <CodeLink code={iswc} />
                 </SidebarProperty>
               ))
             ) : null}
 
             {attributes.length ? (
-              attributes.map((attr, index) => {
-                const type =
-                  $c.linked_entities.work_attribute_type[attr.typeID];
+              attributes.map((attr) => {
+                const type = linkedEntities.work_attribute_type[attr.typeID];
                 return (
                   <SidebarProperty
-                    className={'work-attribute work-attribute-' + kebabCase(type.name)}
+                    className={'work-attribute work-attribute-' +
+                      kebabCase(type.name)}
                     key={attr.id}
-                    label={addColon(lp_attributes(type.name, 'work_attribute_type'))}
+                    label={addColonText(
+                      lp_attributes(type.name, 'work_attribute_type'),
+                    )}
                   >
                     {attr.value_id
-                      ? lp_attributes(attr.value, 'work_attribute_type_allowed_value')
+                      ? lp_attributes(
+                        attr.value, 'work_attribute_type_allowed_value',
+                      )
                       : attr.value}
                   </SidebarProperty>
                 );

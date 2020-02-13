@@ -9,17 +9,25 @@
 
 import React from 'react';
 
-import subfieldErrors from '../utility/subfieldErrors';
+import expand2react from '../static/scripts/common/i18n/expand2react';
+import subfieldErrors, {type FieldShape} from '../utility/subfieldErrors';
 
-const buildErrorListItem = (error, index) => (
-  <li key={index}>{error}</li>
-);
+// FIXME: Use expandable object instead of HTML string for safety (MBS-10632)
+const buildErrorListItem = (error, hasHtmlErrors, index) => {
+  if (hasHtmlErrors) {
+    return (
+      <li key={index}>{expand2react(error)}</li>
+    );
+  }
+  return <li key={index}>{error}</li>;
+};
 
-type Props<F> = {|
-  +field: AnyFieldT<F>,
-|};
+type Props = {
+  +field: FieldShape,
+  +hasHtmlErrors?: boolean,
+};
 
-const FieldErrors = <F>({field}: Props<F>) => {
+const FieldErrors = ({field, hasHtmlErrors}: Props) => {
   if (!field) {
     return null;
   }
@@ -27,7 +35,9 @@ const FieldErrors = <F>({field}: Props<F>) => {
   if (errors.length) {
     return (
       <ul className="errors">
-        {errors.map(buildErrorListItem)}
+        {errors.map(function (error, index) {
+          return buildErrorListItem(error, hasHtmlErrors, index);
+        })}
       </ul>
     );
   }

@@ -1,17 +1,23 @@
-// Copyright (C) 2018 MetaBrainz Foundation
-//
-// This file is part of MusicBrainz, the open internet music database,
-// and is licensed under the GPL version 2, or (at your option) any
-// later version: http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * @flow
+ * Copyright (C) 2018 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
+
+/* eslint-disable import/no-commonjs */
 
 const Jed = require('jed');
 
-const jedData = require('../static/scripts/common/i18n/jedData');
+const jedData = require('../static/scripts/jed-data');
 const poFile = require('./gettext/poFile');
 
-const gettext = new Jed({});
+const jedInstance = new Jed(jedData.en);
+jedInstance.locale = 'en';
 
-gettext.setLocale = function (locale) {
+exports.setLocale = function (locale /*: string */) {
   let options = jedData[locale];
 
   if (!options) {
@@ -24,13 +30,13 @@ gettext.setLocale = function (locale) {
     }
   }
 
-  gettext.locale = locale;
-  gettext.options = options;
+  jedInstance.locale = locale;
+  jedInstance.options = options;
 };
 
-gettext.loadDomain = function (domain) {
-  const locale = gettext.locale;
-  const localeData = gettext.options.locale_data;
+exports.loadDomain = function (domain /*: string */) {
+  const locale = jedInstance.locale;
+  const localeData = jedInstance.options.locale_data;
 
   if (!localeData[domain]) {
     try {
@@ -45,7 +51,7 @@ gettext.loadDomain = function (domain) {
   }
 };
 
-gettext.setLocale('en');
-gettext.loadDomain('mb_server');
-
-module.exports = gettext;
+exports.jedInstance = jedInstance;
+exports.dgettext = jedInstance.dgettext.bind(jedInstance);
+exports.dngettext = jedInstance.dngettext.bind(jedInstance);
+exports.dpgettext = jedInstance.dpgettext.bind(jedInstance);

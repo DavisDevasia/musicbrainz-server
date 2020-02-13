@@ -11,12 +11,11 @@ import * as React from 'react';
 
 import Layout from '../layout';
 import TagLink from '../static/scripts/common/components/TagLink';
-import {l} from '../static/scripts/common/i18n';
 
-type Props = {|
+type Props = {
   tagMaxCount: number,
   tags: $ReadOnlyArray<AggregatedTagT>,
-|};
+};
 
 function getTagSize(count: number, tagMaxCount: number) {
   const percent = count / tagMaxCount * 100;
@@ -51,10 +50,13 @@ const TagCloud = ({tagMaxCount, tags}: Props) => (
             {tags.map(({count, tag}) => (
               <li
                 className={getTagSize(count, tagMaxCount)}
-                key={tag}
-                title={l("'{tag}' has been used {num} times", {num: count.toLocaleString(), tag})}
+                key={tag.name}
+                title={texp.l(
+                  "'{tag}' has been used {num} times",
+                  {num: count.toLocaleString(), tag: tag.name},
+                )}
               >
-                <TagLink tag={tag} />
+                <TagLink tag={tag.name} />
                 {' '}
               </li>
             ))}

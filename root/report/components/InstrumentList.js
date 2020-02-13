@@ -9,8 +9,6 @@
 
 import * as React from 'react';
 
-import {l} from '../../static/scripts/common/i18n';
-import {lp_attributes} from '../../static/scripts/common/i18n/attributes';
 import PaginatedResults from '../../components/PaginatedResults';
 import EntityLink from '../../static/scripts/common/components/EntityLink';
 import loopParity from '../../utility/loopParity';
@@ -38,12 +36,31 @@ const InstrumentList = ({
       </thead>
       <tbody>
         {items.map((item, index) => (
-          <tr className={loopParity(index)} key={item.instrument.gid}>
-            <td>
-              <EntityLink entity={item.instrument} />
-            </td>
-            <td>{item.instrument.typeName ? lp_attributes(item.instrument.typeName, 'instrument_type') : l('Unclassified instrument')}</td>
-            <td>{formatUserDate($c.user, item.instrument.last_updated)}</td>
+          <tr className={loopParity(index)} key={item.instrument_id}>
+            {item.instrument ? (
+              <>
+                <td>
+                  <EntityLink entity={item.instrument} />
+                </td>
+                <td>
+                  {item.instrument.typeName
+                    ? lp_attributes(
+                      item.instrument.typeName, 'instrument_type',
+                    )
+                    : l('Unclassified instrument')}
+                </td>
+                <td>
+                  {item.instrument.last_updated
+                    ? formatUserDate($c, item.instrument.last_updated)
+                    : null
+                  }
+                </td>
+              </>
+            ) : (
+              <td colSpan="3">
+                {l('This instrument no longer exists.')}
+              </td>
+            )}
           </tr>
         ))}
       </tbody>

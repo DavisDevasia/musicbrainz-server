@@ -1,4 +1,3 @@
-[% script_manifest('guess-case.js') %]
 [% script_manifest('edit.js') %]
 
 <p>[%- l('For more information, check the {doc_doc|documentation}.', {doc_doc => doc_link('Event')}) -%]</p>
@@ -11,7 +10,7 @@
       <fieldset>
         <legend>[% l('Event Details') %]</legend>
         [%- form_row_name_with_guesscase(r) -%]
-        [%- form_row_text_long(r, 'comment', l('Disambiguation:')) -%]
+        [%- form_row_text_long(r, 'comment', add_colon(l('Disambiguation'))) -%]
         [%- form_row_select(r, 'type_id', l('Type:')) -%]
         [% form_row_checkbox(r, 'cancelled', l('This event was cancelled.')) %]
         [% WRAPPER form_row %]
@@ -32,7 +31,9 @@
             [%- l('Dates are in the format YYYY-MM-DD. Partial dates such as YYYY-MM or just YYYY are OK, or you can omit the date entirely.') -%]
         </p>
         [% form_row_date(r, 'period.begin_date', l('Begin date:')) %]
+        [% too_short_year_error('too_short_begin_year') %]
         [% form_row_date(r, 'period.end_date', l('End date:')) %]
+        [% too_short_year_error('too_short_end_year') %]
         [%- form_row_time(r, 'time', l('Time:')) -%]
       </fieldset>
 
@@ -58,6 +59,8 @@
 
 <script type="text/javascript">
   (function () {
-    MB.Control.initialize_guess_case("event", "id-edit-event");
+    MB.Control.initializeGuessCase("event", "id-edit-event");
+
+    [% too_short_year_js("event") %]
   }());
 </script>

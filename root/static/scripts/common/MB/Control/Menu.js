@@ -1,26 +1,14 @@
 /*
-   This file is part of MusicBrainz, the open internet music database.
-   Copyright (C) 2011 MetaBrainz Foundation
+ * Copyright (C) 2011 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
-   (at your option) any later version.
+import $ from 'jquery';
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-*/
-
-const $ = require('jquery');
-
-const MB = require('../../MB');
+import MB from '../../MB';
 
 MB.Control.HeaderMenu = function () {
     var self = {};
@@ -28,7 +16,9 @@ MB.Control.HeaderMenu = function () {
     function getLeft(li) {
         var $li = $(li);
         if ($li.hasClass('language-selector')) {
-            return '-' + ($li.children('ul:eq(0)').outerWidth() - $li.outerWidth()) + 'px';
+            return '-' +
+                ($li.children('ul:eq(0)').outerWidth() - $li.outerWidth()) +
+                'px';
         }
         return 'auto';
     }
@@ -46,9 +36,11 @@ MB.Control.HeaderMenu = function () {
         }
     });
 
-    $('body').on('click', function (event) {
-        // clicks outside of the menu (anything that reaches the body) should
-        // close the menu
+    $('body').on('click', function () {
+        /*
+         * Clicks outside of the menu (anything that reaches the body) should
+         * close the menu.
+         */
         $('.header ul.menu li ul').css('left', '-10000px');
         $('.header .menu-header').parent().removeClass('fake-active');
     });
@@ -59,7 +51,7 @@ MB.Control.HeaderMenu = function () {
     });
 
     return self;
-}
+};
 
 $(document).ready(function () {
     MB.Control.header_menu = MB.Control.HeaderMenu();

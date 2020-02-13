@@ -14,15 +14,15 @@ import EntityLink from '../static/scripts/common/components/EntityLink';
 import EntityTabs from './EntityTabs';
 import SubHeader from './SubHeader';
 
-type Props = {|
+type Props = {
   +editTab?: React.Node,
   +entity: CoreEntityT,
   +headerClass: string,
-  +heading?: string | React.Node,
+  +heading?: React.Node,
   +page: string,
   +preHeader?: React.Node,
-  +subHeading: string,
-|};
+  +subHeading: React.Node,
+};
 
 const EntityHeader = ({
   editTab,
@@ -30,13 +30,12 @@ const EntityHeader = ({
   headerClass,
   heading,
   page,
-  // $FlowFixMe
-  preHeader = null,
+  preHeader,
   subHeading,
 }: Props) => (
   <>
     <div className={headerClass}>
-      {preHeader}
+      {preHeader || null}
       <h1>
         {heading || <EntityLink entity={entity} />}
       </h1>

@@ -10,10 +10,11 @@
 import React from 'react';
 
 import {withCatalystContext} from '../../../context';
-import ArtistCreditLink from '../../../static/scripts/common/components/ArtistCreditLink';
+import ArtistCreditLink
+  from '../../../static/scripts/common/components/ArtistCreditLink';
 import CodeLink from '../../../static/scripts/common/components/CodeLink';
-import formatTrackLength from '../../../static/scripts/common/utility/formatTrackLength';
-import {l} from '../../../static/scripts/common/i18n';
+import formatTrackLength
+  from '../../../static/scripts/common/utility/formatTrackLength';
 import ExternalLinks from '../ExternalLinks';
 
 import AnnotationLinks from './AnnotationLinks';
@@ -27,13 +28,12 @@ import {SidebarProperty, SidebarProperties} from './SidebarProperties';
 import SidebarRating from './SidebarRating';
 import SidebarTags from './SidebarTags';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +recording: RecordingT,
-|};
+};
 
 const RecordingSidebar = ({$c, recording}: Props) => {
-  const gid = encodeURIComponent(recording.gid);
 
   return (
     <div id="sidebar">
@@ -53,7 +53,11 @@ const RecordingSidebar = ({$c, recording}: Props) => {
         ) : null}
 
         {recording.isrcs.map(isrc => (
-          <SidebarProperty className="isrc" key={'isrc-' + isrc.isrc} label={l('ISRC:')}>
+          <SidebarProperty
+            className="isrc"
+            key={'isrc-' + isrc.isrc}
+            label={l('ISRC:')}
+          >
             <CodeLink code={isrc} />
           </SidebarProperty>
         ))}

@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2018 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -9,9 +9,9 @@
 
 import * as React from 'react';
 
-type Props = {|
+type Props = {
   +children: React.Node,
-|};
+};
 
 const Tabs = ({children}: Props) => (
   <div className="tabs">

@@ -11,34 +11,33 @@ import React from 'react';
 
 import {withCatalystContext} from '../context';
 import Layout from '../layout';
-import {l} from '../static/scripts/common/i18n';
 
 import ElectionDetails from './ElectionDetails';
 import ElectionVotes from './ElectionVotes';
 import ElectionVoting from './ElectionVoting';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +election: AutoEditorElectionT,
-|};
+};
 
 const Show = ({$c, election}: Props) => {
   const user = $c.user;
   if (!election) {
     return null;
   }
-  const title = l('Auto-editor election #{no}', {no: election.id});
+  const title = texp.l('Auto-editor election #{no}', {no: election.id});
   return (
     <Layout fullWidth title={title}>
       <h1>{title}</h1>
       <p>
         <a href="/elections">{l('Back to elections')}</a>
       </p>
-      <ElectionDetails election={election} user={user} />
+      <ElectionDetails $c={$c} election={election} />
       <h2>{l('Voting')}</h2>
       <ElectionVoting election={election} user={user} />
       <h2>{l('Votes cast')}</h2>
-      <ElectionVotes election={election} user={user} />
+      <ElectionVotes $c={$c} election={election} />
     </Layout>
   );
 };

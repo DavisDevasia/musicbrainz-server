@@ -7,21 +7,19 @@
  * later version: http://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-import $ from 'jquery';
 import React from 'react';
 
 import hydrate, {minimalEntity} from '../../../../utility/hydrate';
-import {l} from '../i18n';
 import entityHref from '../utility/entityHref';
 
-type Props = {|
+type Props = {
   +cachedImage: ?CommonsImageT,
   +entity: CoreEntityT,
-|};
+};
 
-type State = {|
+type State = {
   image: ?CommonsImageT,
-|};
+};
 
 class CommonsImage extends React.Component<Props, State> {
   constructor(props: Props) {
@@ -31,6 +29,7 @@ class CommonsImage extends React.Component<Props, State> {
 
   componentDidMount() {
     if (!this.state.image) {
+      const $ = require('jquery');
       $.get(entityHref(this.props.entity, '/commons-image'), data => {
         this.setState({image: data.image});
       });
@@ -53,4 +52,8 @@ class CommonsImage extends React.Component<Props, State> {
   }
 }
 
-export default hydrate<Props>('commons-image', CommonsImage, minimalEntity);
+export default hydrate<Props>(
+  'div.commons-image',
+  CommonsImage,
+  minimalEntity,
+);

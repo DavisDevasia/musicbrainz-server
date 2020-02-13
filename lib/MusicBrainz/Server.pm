@@ -48,6 +48,7 @@ __PACKAGE__->config(
     encoding => 'UTF-8',
     "View::Default" => {
         expose_methods => [qw(
+            boolean_to_json
             comma_list
             comma_only_list
         )],
@@ -335,7 +336,6 @@ around dispatch => sub {
     $c->$orig(@args);
 };
 
-my $ORIG_SEARCH_SERVER = DBDefs->can('SEARCH_SERVER');
 my $ORIG_ENTITY_CACHE_TTL = DBDefs->can('ENTITY_CACHE_TTL');
 my $ORIG_CACHE_NAMESPACE = DBDefs->can('CACHE_NAMESPACE');
 
@@ -359,7 +359,6 @@ before dispatch => sub {
         my $cache_namespace = DBDefs->CACHE_NAMESPACE;
         *DBDefs::CACHE_NAMESPACE = sub { $cache_namespace . $database . ':' };
         *DBDefs::ENTITY_CACHE_TTL = sub { 1 };
-        *DBDefs::SEARCH_SERVER = sub { '' };
     } else {
         # Use a fresh database connection for every request, and
         # remember to disconnect at the end.
@@ -386,7 +385,6 @@ after dispatch => sub {
         $ctx->clear_database;
         *DBDefs::CACHE_NAMESPACE = $ORIG_CACHE_NAMESPACE;
         *DBDefs::ENTITY_CACHE_TTL = $ORIG_ENTITY_CACHE_TTL;
-        *DBDefs::SEARCH_SERVER = $ORIG_SEARCH_SERVER;
     }
 };
 
@@ -448,7 +446,7 @@ around 'finalize_error' => sub {
                 $c->res->{status} = $c->stash->{status};
             } else {
                 $c->res->{body} = 'clear';
-                $c->view('Default')->process($c);
+                $c->view->process($c);
                 $c->res->{body} = encode('utf-8', $c->res->{body});
                 $c->res->{status} = 503
                     if $timed_out;
@@ -488,22 +486,23 @@ sub TO_JSON {
 
     # Whitelist of keys that we use in the templates.
     my @stash_keys = qw(
-        all_collections
-        collections
+        collaborative_collections
         commons_image
         containment
         current_language
         current_language_html
         entity
-        hide_merge_helper
+        genre_map
         jsonld_data
         last_replication_date
-        makes_no_changes
-        merge_link
         more_tags
-        new_edit_notes
+        new_edit_notes_mtime
+        number_of_collections
         number_of_revisions
+        own_collections
         release_artwork
+        release_artwork_count
+        release_cdtoc_count
         server_details
         server_languages
         subscribed
@@ -512,9 +511,20 @@ sub TO_JSON {
         user_tags
     );
 
+    my @boolean_stash_keys = qw(
+        hide_merge_helper
+        makes_no_changes
+        new_edit_notes
+    );
+
     my %stash;
     for (@stash_keys) {
         $stash{$_} = $self->stash->{$_} if exists $self->stash->{$_};
+    }
+
+    for (@boolean_stash_keys) {
+        $stash{$_} = boolean_to_json($self->stash->{$_})
+            if exists $self->stash->{$_};
     }
 
     if (my $entity = delete $stash{entity}) {
@@ -547,7 +557,7 @@ sub TO_JSON {
     my $req = $self->req;
     my %headers;
     for my $name ($req->headers->header_field_names) {
-        $headers{$name} = $req->headers->header($name);
+        $headers{lc($name)} = $req->headers->header($name);
     }
 
     return {

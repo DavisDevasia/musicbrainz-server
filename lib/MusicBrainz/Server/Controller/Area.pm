@@ -5,7 +5,13 @@ BEGIN { extends 'MusicBrainz::Server::Controller'; }
 
 with 'MusicBrainz::Server::Controller::Role::Load' => {
     model           => 'Area',
-    relationships   => { all => ['show'], cardinal => ['edit'], default => ['url'] },
+    relationships   => {
+        cardinal    => ['edit'],
+        default     => ['url'],
+        subset      => {
+            show => [qw( area artist label place series instrument release release_group recording work url )],
+        }
+    },
 };
 with 'MusicBrainz::Server::Controller::Role::LoadWithRowID';
 with 'MusicBrainz::Server::Controller::Role::Annotation';
@@ -27,6 +33,7 @@ use Data::Page;
 use HTTP::Status qw( :constants );
 use MusicBrainz::Server::Translation qw( l );
 use MusicBrainz::Server::Constants qw( $EDIT_AREA_CREATE $EDIT_AREA_EDIT $EDIT_AREA_DELETE $EDIT_AREA_MERGE );
+use MusicBrainz::Server::ControllerUtils::JSON qw( serialize_pager );
 use Sql;
 
 =head1 NAME
@@ -81,7 +88,17 @@ sub show : PathPart('') Chained('load')
 {
     my ($self, $c) = @_;
 
-    $c->stash(template => 'area/index.tt');
+    my %props = (
+        area              => $c->stash->{area},
+        numberOfRevisions => $c->stash->{number_of_revisions},
+        wikipediaExtract  => $c->stash->{wikipedia_extract},
+    );
+
+    $c->stash(
+        component_path => 'area/AreaIndex',
+        component_props => \%props,
+        current_view => 'Node',
+    );
 }
 
 =head2 artists
@@ -98,10 +115,54 @@ sub artists : Chained('load')
     });
         $c->model('ArtistType')->load(@$artists);
         $c->model('Gender')->load(@$artists);
+        $c->model('Area')->load(@$artists);
+        $c->model('Area')->load_containment(map { $_->{area}, $_->{begin_area}, $_->{end_area} } @$artists);
     if ($c->user_exists) {
         $c->model('Artist')->rating->load_user_ratings($c->user->id, @$artists);
     }
-    $c->stash( artists => $artists );
+
+    my %props = (
+        area        => $c->stash->{area},
+        artists     => $artists,
+        pager       => serialize_pager($c->stash->{pager}),
+    );
+
+    $c->stash(
+        component_path  => 'area/AreaArtists',
+        component_props => \%props,
+        current_view    => 'Node',
+    );
+}
+
+=head2 events
+
+Shows all events for an area.
+
+=cut
+
+sub events : Chained('load')
+{
+    my ($self, $c) = @_;
+    my $events = $self->_load_paged($c, sub {
+        $c->model('Event')->find_by_area($c->stash->{area}->id, shift, shift);
+    });
+    $c->model('Event')->load_related_info(@$events);
+    $c->model('Area')->load(map { $_->{entity} } map { $_->all_places } @$events);
+    $c->model('Area')->load_containment(map { (map { $_->{entity} } $_->all_areas),
+                                              (map { $_->{entity}->area } $_->all_places) } @$events);
+    $c->model('Event')->rating->load_user_ratings($c->user->id, @$events) if $c->user_exists;
+
+    my %props = (
+        area       => $c->stash->{area},
+        events      => $events,
+        pager       => serialize_pager($c->stash->{pager}),
+    );
+
+    $c->stash(
+        component_path  => 'area/AreaEvents',
+        component_props => \%props,
+        current_view    => 'Node',
+    );
 }
 
 =head2 labels
@@ -117,10 +178,23 @@ sub labels : Chained('load')
         $c->model('Label')->find_by_area($c->stash->{area}->id, shift, shift);
     });
     $c->model('LabelType')->load(@$labels);
+    $c->model('Area')->load(@$labels);
+    $c->model('Area')->load_containment(map { $_->{area} } @$labels);
     if ($c->user_exists) {
         $c->model('Label')->rating->load_user_ratings($c->user->id, @$labels);
     }
-    $c->stash( labels => $labels );
+
+    my %props = (
+        area         => $c->stash->{area},
+        labels       => $labels,
+        pager        => serialize_pager($c->stash->{pager}),
+    );
+
+    $c->stash(
+        component_path  => 'area/AreaLabels',
+        component_props => \%props,
+        current_view    => 'Node',
+    );
 }
 
 =head2 releases
@@ -139,9 +213,17 @@ sub releases : Chained('load')
 
     $c->model('ArtistCredit')->load(@$releases);
     $c->model('Release')->load_related_info(@$releases);
+
+    my %props = (
+        area        => $c->stash->{area},
+        releases    => $releases,
+        pager       => serialize_pager($c->stash->{pager}),
+    );
+
     $c->stash(
-        template => 'area/releases.tt',
-        releases => $releases,
+        component_path  => 'area/AreaReleases',
+        component_props => \%props,
+        current_view    => 'Node',
     );
 }
 
@@ -158,19 +240,30 @@ sub places : Chained('load')
         $c->model('Place')->find_by_area($c->stash->{area}->id, shift, shift);
     });
     $c->model('PlaceType')->load(@$places);
-    $c->stash(
-        places => $places,
-        map_data_args => $c->json->encode({
+    $c->model('Area')->load(@$places);
+    $c->model('Area')->load_containment(map { $_->area } @$places);
+
+    my %props = (
+        area        => $c->stash->{area},
+        mapDataArgs => $c->json->encode({
             places => [
                 map {
                     my $json = $_->TO_JSON;
                     # These arguments aren't needed at all to render the map,
                     # and only increase the page size.
-                    delete @{$json}{qw(annotation area unaccented_name)};
+                    delete @{$json}{qw(annotation unaccented_name)};
                     $json;
                 } grep { $_->coordinates } @$places
             ],
         }),
+        places      => $places,
+        pager       => serialize_pager($c->stash->{pager}),
+    );
+
+    $c->stash(
+        component_path  => 'area/AreaPlaces',
+        component_props => \%props,
+        current_view    => 'Node',
     );
 }
 
@@ -192,7 +285,18 @@ sub users : Chained('load') {
         $c->model('Editor')->load_preferences(@$editors);
         ($editors, $total);
     });
-    $c->stash( editors => $editors );
+
+    my %props = (
+        area        => $c->stash->{area},
+        editors     => $editors,
+        pager       => serialize_pager($c->stash->{pager}),
+    );
+
+    $c->stash(
+        component_path  => 'area/AreaUsers',
+        component_props => \%props,
+        current_view    => 'Node',
+    );
 }
 
 =head2 WRITE METHODS

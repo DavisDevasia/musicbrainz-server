@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2018 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -7,7 +7,38 @@
  * later version: http://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-import {l, lp} from '../i18n';
+export function formatPluralEntityTypeName(typeName: string) {
+  switch (typeName) {
+    case 'area':
+      return l('Areas');
+    case 'artist':
+      return l('Artists');
+    case 'collection':
+      return l('Collections');
+    case 'event':
+      return l('Events');
+    case 'instrument':
+      return l('Instruments');
+    case 'label':
+      return l('Labels');
+    case 'place':
+      return l('Places');
+    case 'recording':
+      return l('Recordings');
+    case 'release':
+      return l('Releases');
+    case 'release_group':
+      return l('Release Groups');
+    case 'series':
+      return lp('Series', 'plural');
+    case 'url':
+      return l('URLs');
+    case 'work':
+      return l('Works');
+    default:
+      return typeName;
+  }
+}
 
 export default function formatEntityTypeName(typeName: string) {
   switch (typeName) {

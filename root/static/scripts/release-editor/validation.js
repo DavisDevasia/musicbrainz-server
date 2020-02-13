@@ -1,13 +1,16 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import $ from 'jquery';
 import ko from 'knockout';
 import _ from 'lodash';
 
-import * as i18n from '../common/i18n';
+import expand2text from '../common/i18n/expand2text';
 import {errorsExist} from '../edit/validation';
 
 import utils from './utils';
@@ -21,8 +24,10 @@ releaseEditor.validation = validation;
 validation.errorsExist = errorsExist;
 
 function markTabWithErrors($panel) {
-    // Don't mark the edit note tab, because it's the last one and only
-    // can have one error, so the user will always see it anyway.
+    /*
+     * Don't mark the edit note tab, because it's the last one and only
+     * can have one error, so the user will always see it anyway.
+     */
     if ($panel.attr("id") === "edit-note") {
         return;
     }
@@ -40,18 +45,18 @@ function markTabWithErrors($panel) {
 
 function showErrorHandler(handler) {
     return function (element, valueAccessor, allBindings, vm) {
-        var $element = $(element).hide(),
-            errorField = valueAccessor();
+        const $element = $(element).hide();
+        const errorField = valueAccessor();
 
         // Binding may be running before element has been added to the DOM.
         _.defer(function () {
             ko.computed({
                 read: function () {
-                    var value = errorField.call(vm),
-                        $panel = $element.parents(".ui-tabs-panel");
+                    const value = errorField.call(vm);
+                    const $panel = $element.parents(".ui-tabs-panel");
 
                     if (_.isString(value)) {
-                        $element.text(value || "")
+                        $element.text(value || "");
                     }
                     handler(value, $element, $panel);
                     markTabWithErrors($panel);
@@ -70,6 +75,7 @@ ko.bindingHandlers.showErrorRightAway = {
     })
 };
 
+ko.bindingHandlers.showMessageRightAway = ko.bindingHandlers.showErrorRightAway;
 
 ko.bindingHandlers.showErrorWhenTabIsSwitched = {
 
@@ -92,8 +98,10 @@ ko.bindingHandlers.showErrorWhenTabIsSwitched = {
 $(function () {
     $("#release-editor").on("tabsbeforeactivate", function (event, ui) {
 
-        // Show errors on and mark all tabs between the one we just
-        // clicked on, including the one we left.
+        /*
+         * Show errors on and mark all tabs between the one we just
+         * clicked on, including the one we left.
+         */
         var oldPanel = ui.oldPanel;
         var newPanel = ui.newPanel;
 
@@ -128,40 +136,40 @@ utils.withRelease(function (release) {
         return;
     }
 
-    var checkDigitText = i18n.N_l("The check digit is {checkdigit}.");
-    var doubleCheckText = i18n.l("Please double-check the barcode on the release.");
+    var checkDigitText = l("The check digit is {checkdigit}.");
+    var doubleCheckText = l("Please double-check the barcode on the release.");
 
     if (barcode.length === 11) {
         field.error(
-            i18n.l("The barcode you entered looks like a UPC code with the check digit missing.") +
+            l("The barcode you entered looks like a UPC code with the check digit missing.") +
             " " +
-            checkDigitText.toLocaleString({ checkdigit: field.checkDigit("0" + barcode) })
+            expand2text(checkDigitText, { checkdigit: field.checkDigit("0" + barcode) })
         );
     } else if (barcode.length === 12) {
         if (field.validateCheckDigit("0" + barcode)) {
-            field.message(i18n.l("The barcode you entered is a valid UPC code."));
+            field.message(l("The barcode you entered is a valid UPC code."));
         } else {
             field.error(
-                i18n.l("The barcode you entered is either an invalid UPC code, or an EAN code with the check digit missing.") +
+                l("The barcode you entered is either an invalid UPC code, or an EAN code with the check digit missing.") +
                 " " +
                 doubleCheckText +
                 " " +
-                checkDigitText.toLocaleString({ checkdigit: field.checkDigit(barcode) })
+                expand2text(checkDigitText, { checkdigit: field.checkDigit(barcode) })
             );
         }
     } else if (barcode.length === 13) {
         if (field.validateCheckDigit(barcode)) {
-            field.message(i18n.l("The barcode you entered is a valid EAN code."));
+            field.message(l("The barcode you entered is a valid EAN code."));
         } else {
             field.error(
-                i18n.l("The barcode you entered is not a valid EAN code.") +
+                l("The barcode you entered is not a valid EAN code.") +
                 " " +
                 doubleCheckText
             );
         }
     } else {
         field.error(
-            i18n.l("The barcode you entered is not a valid UPC or EAN code.") +
+            l("The barcode you entered is not a valid UPC or EAN code.") +
             " " +
             doubleCheckText
         );

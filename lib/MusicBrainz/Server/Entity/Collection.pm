@@ -3,6 +3,7 @@ use Moose;
 
 use MusicBrainz::Server::Data::Utils qw( boolean_to_json );
 use MusicBrainz::Server::Entity::Types;
+use MusicBrainz::Server::Filters qw( format_wikitext );
 
 extends 'MusicBrainz::Server::Entity::CoreEntity';
 
@@ -36,6 +37,22 @@ has entity_count => (
     predicate => 'loaded_entity_count'
 );
 
+has subscribed => (
+    is => 'rw',
+    isa => 'Bool',
+    predicate => 'loaded_subscription'
+);
+
+has 'collaborators' => (
+    isa     => 'ArrayRef[Editor]',
+    is      => 'rw',
+    traits => [ 'Array' ],
+    default => sub { [] },
+    handles => {
+        all_collaborators => 'elements',
+    }
+);
+
 around TO_JSON => sub {
     my ($orig, $self) = @_;
 
@@ -44,9 +61,15 @@ around TO_JSON => sub {
     $json->{editor} = $self->editor ? $self->editor->TO_JSON : undef;
     $json->{public} = boolean_to_json($self->public);
     $json->{description} = $self->description;
+    $json->{description_html} = format_wikitext($self->description);
+    $json->{collaborators} = [map { $_->TO_JSON } $self->all_collaborators];
 
     if ($self->loaded_entity_count) {
         $json->{entity_count} = $self->entity_count;
+    }
+
+    if ($self->loaded_subscription) {
+        $json->{subscribed} = boolean_to_json($self->subscribed);
     }
 
     return $json;

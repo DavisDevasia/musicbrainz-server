@@ -10,9 +10,10 @@
 import * as React from 'react';
 
 import {withCatalystContext} from '../../../context';
-import CommonsImage from '../../../static/scripts/common/components/CommonsImage';
-import DescriptiveLink from '../../../static/scripts/common/components/DescriptiveLink';
-import {l} from '../../../static/scripts/common/i18n';
+import CommonsImage
+  from '../../../static/scripts/common/components/CommonsImage';
+import DescriptiveLink
+  from '../../../static/scripts/common/components/DescriptiveLink';
 import * as age from '../../../utility/age';
 import formatLabelCode from '../../../utility/formatLabelCode';
 import ExternalLinks from '../ExternalLinks';
@@ -34,14 +35,15 @@ import SidebarTags from './SidebarTags';
 import SidebarType from './SidebarType';
 import SubscriptionLinks from './SubscriptionLinks';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +label: LabelT,
-|};
+};
 
 const LabelSidebar = ({$c, label}: Props) => {
   const labelAge = age.age(label);
   const gid = encodeURIComponent(label.gid);
+  const area = label.area;
 
   return (
     <div id="sidebar">
@@ -57,9 +59,17 @@ const LabelSidebar = ({$c, label}: Props) => {
       <SidebarProperties>
         <SidebarType entity={label} typeType="label_type" />
 
-        <SidebarBeginDate age={labelAge} entity={label} label={l('Founded:')} />
+        <SidebarBeginDate
+          age={labelAge}
+          entity={label}
+          label={l('Founded:')}
+        />
 
-        <SidebarEndDate age={labelAge} entity={label} label={l('Defunct:')} />
+        <SidebarEndDate
+          age={labelAge}
+          entity={label}
+          label={l('Defunct:')}
+        />
 
         <SidebarIpis entity={label} />
 
@@ -71,9 +81,9 @@ const LabelSidebar = ({$c, label}: Props) => {
           </SidebarProperty>
         ) : null}
 
-        {label.area ? (
+        {area ? (
           <SidebarProperty className="area" label={l('Area:')}>
-            <DescriptiveLink entity={label.area} />
+            <DescriptiveLink entity={area} />
           </SidebarProperty>
         ) : null}
       </SidebarProperties>

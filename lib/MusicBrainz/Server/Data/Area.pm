@@ -8,7 +8,6 @@ use List::UtilsBy qw( partition_by );
 use MusicBrainz::Server::Constants qw(
     $STATUS_OPEN
     $AREA_TYPE_COUNTRY
-    $PART_OF_AREA_LINK_TYPE_ID
 );
 use MusicBrainz::Server::Data::Edit;
 use MusicBrainz::Server::Entity::Area;
@@ -16,6 +15,7 @@ use MusicBrainz::Server::Entity::PartialDate;
 use Readonly;
 use MusicBrainz::Server::Data::Utils qw(
     add_partial_date_to_row
+    get_area_containment_query
     hash_to_row
     load_subobjects
     merge_table_attributes
@@ -24,6 +24,7 @@ use MusicBrainz::Server::Data::Utils qw(
     placeholders
     object_to_ids
 );
+use MusicBrainz::Server::Data::Utils::Cleanup qw( used_in_relationship );
 
 extends 'MusicBrainz::Server::Data::CoreEntity';
 with 'MusicBrainz::Server::Data::Role::Annotation' => { type => 'area' };
@@ -70,32 +71,6 @@ sub load
     load_subobjects($self, ['area', 'begin_area', 'end_area', 'country'], @objs);
 }
 
-sub get_containment_query {
-    my ($self, $link_type_param, $descendant_param) = @_;
-
-    return (qq{
-        WITH RECURSIVE area_descendants AS (
-            SELECT entity0 AS parent, entity1 AS descendant, 1 AS depth
-              FROM l_area_area laa
-              JOIN link ON laa.link = link.id
-             WHERE link.link_type = $link_type_param
-               AND entity1 = $descendant_param
-                UNION
-            SELECT entity0 AS parent, descendant, (depth + 1) AS depth
-              FROM l_area_area laa
-              JOIN link ON laa.link = link.id
-              JOIN area_descendants ON area_descendants.parent = laa.entity1
-             WHERE link.link_type = $link_type_param
-               AND entity0 != descendant
-        )
-        SELECT ad.descendant, ad.parent, ad.depth
-          FROM area_descendants ad
-          JOIN area a ON a.id = ad.parent
-         WHERE a.type IN (1, 2, 3)
-         ORDER BY ad.descendant, ad.depth ASC
-    }, $PART_OF_AREA_LINK_TYPE_ID);
-}
-
 sub load_containment {
     my ($self, @areas) = @_;
 
@@ -103,7 +78,7 @@ sub load_containment {
     return unless @areas;
 
     my @results = @{ $self->sql->select_list_of_hashes(
-        $self->get_containment_query('$1', 'any($2)'),
+        get_area_containment_query('$1', 'any($2)'),
         [map { $_->id } @areas],
     ) };
 
@@ -160,23 +135,53 @@ sub update
     return 1;
 }
 
+sub is_release_country_area {
+    my ($self, $area_id) = @_;
+
+    my $is_used = $self->sql->select_single_value('SELECT 1 FROM country_area WHERE area = ?', $area_id);
+    return 1 if $is_used;
+
+    return 0;
+}
+
 sub can_delete
 {
     my ($self, $area_id) = @_;
 
-    # Check no releases use the area
-    my $refcount = $self->sql->select_single_column_array('select 1 from release_country WHERE country = ?', $area_id);
-    return 0 if @$refcount != 0;
+    # Check the area is not one of the release countries
+    return 0 if $self->is_release_country_area($area_id);
 
-    # Check no artists use the area
-    $refcount = $self->sql->select_single_column_array('select 1 from artist WHERE begin_area = ? OR end_area = ? OR area = ?', $area_id, $area_id, $area_id);
-    return 0 if @$refcount != 0;
+    my $used_in_relationship = used_in_relationship($self->c, area => 'area_row.id');
+    return 1 if $self->sql->select_single_value(<<EOSQL, $area_id, $STATUS_OPEN);
+        SELECT TRUE
+        FROM area area_row
+        WHERE id = ?
+        AND edits_pending = 0
+        AND NOT (
+          EXISTS (
+            SELECT TRUE FROM edit_area
+            JOIN edit ON edit_area.edit = edit.id
+            WHERE edit.status = ? AND edit_area.area = area_row.id
+          ) OR
+          EXISTS (
+            SELECT TRUE FROM artist
+            WHERE area = area_row.id
+            OR begin_area = area_row.id
+            OR end_area = area_row.id
+          ) OR
+          EXISTS (
+            SELECT TRUE FROM label
+            WHERE area = area_row.id
+          ) OR
+          EXISTS (
+            SELECT TRUE FROM place
+            WHERE area = area_row.id
+          ) OR
+          $used_in_relationship
+        )
+EOSQL
 
-    # Check no labels use the area
-    $refcount = $self->sql->select_single_column_array('select 1 from label WHERE area = ?', $area_id);
-    return 0 if @$refcount != 0;
-
-    return 1;
+    return 0;
 }
 
 sub delete

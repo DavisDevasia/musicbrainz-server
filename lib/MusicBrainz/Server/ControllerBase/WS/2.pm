@@ -12,6 +12,7 @@ use MusicBrainz::Server::WebService::JSONSerializer;
 use MusicBrainz::Server::WebService::XMLSerializer;
 use Readonly;
 use Scalar::Util qw( looks_like_number );
+use List::Util qw( sum );
 use List::UtilsBy qw( partition_by );
 use Try::Tiny;
 
@@ -103,7 +104,13 @@ sub method_not_allowed : Private {
     ));
 }
 
-sub begin : Private { }
+sub begin : Private {
+    my ($self, $c) = @_;
+
+    $c->stash->{current_view} = 'WS';
+    $c->stash->{serializer} = $self->get_serialization($c);
+}
+
 sub end : Private { }
 
 sub root : Chained('/') PathPart("ws/2") CaptureArgs(0)
@@ -203,14 +210,9 @@ sub _tags
     my @todo = grep { $c->stash->{inc}->$_ } qw( tags user_tags genres user_genres );
 
     for my $type (@todo) {
-        # This is a hack but it seems pointless to create a dupe
-        # find_genres_for_entities, etc.
-        my $genre_flag = $type =~ /genres$/ ? 1 : 0;
-        my $massaged_type = $type =~ s/genre/tag/gr;
-        my $find_method = 'find_' . $massaged_type . '_for_entities';
+        my $find_method = 'find_' . $type . '_for_entities';
         my @tags = $model->tags->$find_method(
                         ($type =~ /^user_/ ? $c->user->id : ()),
-                        $genre_flag,
                         map { $_->id } @$entities);
 
         my %tags_by_entity = partition_by { $_->entity_id } @tags;
@@ -302,6 +304,33 @@ sub make_list
         total => defined $total ? $total : scalar @$results,
         offset => defined $offset ? $offset : 0
     };
+}
+
+=head2 limit_releases_by_tracks
+
+Truncates a list of releases such that the entire list doesn't contain more
+than C<DBDefs::WS_TRACK_LIMIT> tracks in total (but returns at least one
+release). The idea is to limit browse queries that contain an excessive number
+of tracks when C<inc=recordings> is specified.
+
+Note: This mutates the passed-in array reference C<$releases>.
+
+=cut
+
+sub limit_releases_by_tracks {
+    my ($self, $c, $releases) = @_;
+
+    my $track_count = 0;
+    my $release_count = 0;
+
+    for my $release (@{$releases}) {
+        $c->model('Medium')->load_for_releases($release);
+        $track_count += sum map { $_->track_count } $release->all_mediums;
+        last if $track_count > DBDefs->WS_TRACK_LIMIT && $release_count > 0;
+        $release_count++;
+    }
+
+    @$releases = @$releases[0 .. ($release_count - 1)];
 }
 
 sub linked_artists
@@ -437,6 +466,14 @@ sub linked_release_groups
     if ($c->stash->{inc}->artist_credits)
     {
         $c->model('ArtistCredit')->load(@$release_groups);
+
+        my @acns = map { $_->artist_credit->all_names } @$release_groups;
+        $c->model('Artist')->load(@acns);
+
+        $self->linked_artists(
+            $c, $stash,
+            [uniq_by { $_->id } map { $_->artist } @acns],
+        );
     }
 
     $self->_tags_and_ratings($c, 'ReleaseGroup', $release_groups, $stash);

@@ -12,14 +12,16 @@ import {URL} from 'url';
 import React from 'react';
 
 import {withCatalystContext} from '../context';
+import escapeLuceneValue
+  from '../static/scripts/common/utility/escapeLuceneValue';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +entityType: string,
   +searchField: string,
   +searchValue: string,
   +text?: string,
-|};
+};
 
 const LinkSearchableProperty = ({
   $c,
@@ -32,7 +34,11 @@ const LinkSearchableProperty = ({
   const url = new URL($c.req.uri);
   url.pathname = '/search';
   url.search =
-    'query=' + encodeURIComponent(searchField + ':' + searchValue) +
+    'query=' +
+    encodeURIComponent(
+      searchField + ':"' +
+      escapeLuceneValue(searchValue) + '"',
+    ) +
     '&type=' + encodeURIComponent(entityType) +
     '&limit=25&method=advanced';
   return <a href={url.toString()}>{text}</a>;

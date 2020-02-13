@@ -1,5 +1,6 @@
 package MusicBrainz::Server::Data::Utils;
 
+use 5.18.2;
 use strict;
 use warnings;
 
@@ -14,6 +15,7 @@ use Math::Random::Secure qw( irand );
 use MIME::Base64 qw( encode_base64url );
 use Digest::SHA qw( sha1_base64 );
 use Encode qw( decode encode );
+use JSON::XS;
 use List::MoreUtils qw( natatime uniq zip );
 use List::UtilsBy qw( sort_by );
 use MusicBrainz::Server::Constants qw(
@@ -21,6 +23,7 @@ use MusicBrainz::Server::Constants qw(
     $VARTIST_ID
     $DLABEL_ID
     $INSTRUMENT_ROOT_ID
+    $PART_OF_AREA_LINK_TYPE_ID
     $VOCAL_ROOT_ID
     %ENTITIES
 );
@@ -44,10 +47,12 @@ our @EXPORT_OK = qw(
     defined_hash
     generate_gid
     generate_token
+    get_area_containment_query
     hash_structure
     hash_to_row
     is_special_artist
     is_special_label
+    localized_note
     load_everything_for_edits
     load_meta
     load_subobjects
@@ -68,6 +73,7 @@ our @EXPORT_OK = qw(
     sanitize
     take_while
     trim
+    trim_comment
     type_to_model
     split_relationship_by_attributes
 );
@@ -135,7 +141,7 @@ sub load_subobjects
         my $attr_id = $attr_obj . '_id';
         my @objs_with_id;
         for my $obj (@objs) {
-            next unless $obj->meta->find_attribute_by_name($attr_id);
+            next unless $obj->can($attr_id);
             my $id = $obj->$attr_id;
             if (defined $id) {
                 push @ids, $id;
@@ -233,6 +239,35 @@ sub generate_token
     encode_base64url(pack('LLLL', irand(), irand(), irand(), irand()));
 }
 
+sub get_area_containment_query {
+    my ($link_type_param, $descendant_param, %args) = @_;
+
+    my $levels_condition = $args{check_all_levels} 
+        ? '' 
+        : ' JOIN area a ON a.id = ad.parent WHERE a.type IN (1, 2, 3) ';
+
+    return ("
+        WITH RECURSIVE area_descendants AS (
+            SELECT entity0 AS parent, entity1 AS descendant, 1 AS depth
+              FROM l_area_area laa
+              JOIN link ON laa.link = link.id
+             WHERE link.link_type = $link_type_param
+               AND entity1 = $descendant_param
+                UNION
+            SELECT entity0 AS parent, descendant, (depth + 1) AS depth
+              FROM l_area_area laa
+              JOIN link ON laa.link = link.id
+              JOIN area_descendants ON area_descendants.parent = laa.entity1
+             WHERE link.link_type = $link_type_param
+               AND entity0 != descendant
+        )
+        SELECT ad.descendant, ad.parent, ad.depth
+          FROM area_descendants ad
+         $levels_condition
+         ORDER BY ad.descendant, ad.depth ASC",
+        $PART_OF_AREA_LINK_TYPE_ID);
+}
+
 sub defined_hash
 {
     my %hash = @_;
@@ -308,6 +343,14 @@ sub trim {
     $t = Text::Trim::trim($t);
 
     return $t;
+}
+
+sub trim_comment {
+    my $t = shift;
+
+    $t =~ s/^\s*\(([^()]+)\)\s*$/$1/;
+
+    return trim($t);
 }
 
 sub remove_direction_marks {
@@ -624,24 +667,25 @@ sub datetime_to_iso8601 {
     return $date;
 }
 
+sub localized_note {
+    my ($message, $args) = @_;
+
+    state $json = JSON::XS->new;
+    'localize:' . $json->encode({
+        message => $message,
+        defined $args ? (args => $args) : (),
+    });
+}
+
 1;
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2009 Lukas Lalinsky, 2009-2013 MetaBrainz Foundation
+Copyright (C) 2009 Lukas Lalinsky
+Copyright (C) 2009-2013 MetaBrainz Foundation
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+This file is part of MusicBrainz, the open internet music database,
+and is licensed under the GPL version 2, or (at your option) any
+later version: http://www.gnu.org/licenses/gpl-2.0.txt
 
 =cut

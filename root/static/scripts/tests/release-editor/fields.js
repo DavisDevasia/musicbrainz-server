@@ -1,7 +1,10 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import $ from 'jquery';
 import ko from 'knockout';
@@ -52,18 +55,18 @@ fieldTest("mediums having their \"loaded\" observable set correctly", function (
 
     mediums([
         new fields.Medium({ tracks: [] }),
-        new fields.Medium({ tracks: [ {} ] }),
+        new fields.Medium({ tracks: [{}] }),
         new fields.Medium({ id: 1, tracks: [] }),
         new fields.Medium({ originalID: 1, tracks: [] }),
-        new fields.Medium({ id: 1, tracks: [ {} ] }),
-        new fields.Medium({ originalID: 1, tracks: [ {} ] })
+        new fields.Medium({ id: 1, tracks: [{}] }),
+        new fields.Medium({ originalID: 1, tracks: [{}] })
     ]);
 
     t.equal(mediums()[0].loaded(), true, "medium without id or tracks is considered loaded");
     t.equal(mediums()[1].loaded(), true, "medium without id but with tracks is considered loaded");
-    t.equal(mediums()[2].loaded(), false, "medium with id but without tracks is considered not loaded")
+    t.equal(mediums()[2].loaded(), false, "medium with id but without tracks is considered not loaded");
     t.equal(mediums()[3].loaded(), false, "medium with originalID but without tracks is considered not loaded");
-    t.equal(mediums()[4].loaded(), true, "medium with id and with tracks is considered loaded")
+    t.equal(mediums()[4].loaded(), true, "medium with id and with tracks is considered loaded");
     t.equal(mediums()[5].loaded(), true, "medium with originalID and with tracks is considered loaded");
 
 });
@@ -74,12 +77,12 @@ fieldTest("loading a medium doesn't overwrite its original edit data", function 
     var medium = new fields.Medium({
         id: 123,
         position: 1,
-        formatID: 1,
+        format_id: 1,
         name: "foo",
         tracks: []
     }, release);
 
-    release.mediums([ medium ]);
+    release.mediums([medium]);
 
     medium.position(2);
     medium.formatID(2);
@@ -94,7 +97,7 @@ fieldTest("loading a medium doesn't overwrite its original edit data", function 
     t.equal(original.name, "foo", "original name is foo");
 
     medium.tracksLoaded({
-        tracks: [ { position: 1, name: "~fooo~", length: 12345 } ]
+        tracks: [{ position: 1, name: "~fooo~", length: 12345 }]
     });
 
     t.ok(medium.loaded(), "medium is loaded");
@@ -185,10 +188,10 @@ fieldTest("tracks are set correctly when the cdtoc is changed", function (t, rel
     t.ok(_.last(medium.tracks()).isDataTrack());
 });
 
-fieldTest("track times entered as integers are converted into HH:MM:SS", function (t, release){
+fieldTest("track times entered as integers are converted into HH:MM:SS", function (t, release) {
     t.plan(11);
 
-    var medium = new fields.Medium({ tracks: [ {} ] }, release);
+    var medium = new fields.Medium({ tracks: [{}] }, release);
 
     const tests = [
         {input: "5", output: "0:05"},

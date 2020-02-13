@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2018 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -10,12 +10,11 @@
 import React from 'react';
 import type {Node as ReactNode} from 'react';
 
-import {l} from '../static/scripts/common/i18n';
 
-type Props<F> = {|
+type Props<F> = {
   +children: ReactNode,
-  +form: FormT<F & {+make_votable: FieldT<boolean>}>,
-|};
+  +form: FormT<{...F, +make_votable: ReadOnlyFieldT<boolean>}>,
+};
 
 const EnterEdit = <F>({children, form}: Props<F>) => (
   <>

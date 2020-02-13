@@ -9,19 +9,18 @@
 
 import React from 'react';
 
-import {l, lp} from '../static/scripts/common/i18n';
 import EditorLink from '../static/scripts/common/components/EditorLink';
 import bracketed from '../static/scripts/common/utility/bracketed';
 import formatUserDate from '../utility/formatUserDate';
 import {votesVisible} from '../utility/voting';
-import ExpirationTime from '../components/ExpirationTime';
+import VotingPeriod from '../components/VotingPeriod';
 
 type PropsT = {
+  +$c: CatalystContextT,
   +election: AutoEditorElectionT,
-  +user?: EditorT,
 };
 
-const ElectionDetails = ({election, user}: PropsT) => (
+const ElectionDetails = ({$c, election}: PropsT) => (
   <>
     <h2>{l('Details')}</h2>
     <table className="properties">
@@ -49,7 +48,7 @@ const ElectionDetails = ({election, user}: PropsT) => (
             : '-'}
         </td>
       </tr>
-      {votesVisible(election, user)
+      {votesVisible(election, $c.user)
         ? (
           <>
             <tr>
@@ -66,7 +65,10 @@ const ElectionDetails = ({election, user}: PropsT) => (
             ? (
               <tr>
                 <th>{l('Votes for/against:')}</th>
-                <td>{l('The tally of votes cast will only be shown when the election is complete.')}</td>
+                <td>
+                  {l(`The tally of votes cast will only be shown
+                      when the election is complete.`)}
+                </td>
               </tr>
             ) : null
         )
@@ -74,10 +76,10 @@ const ElectionDetails = ({election, user}: PropsT) => (
       <tr>
         <th>{lp('Status:', 'election status')}</th>
         <td>
-          {election.is_open
+          {election.is_open && election.open_time
             ? (
-              lp(election.status_name, 'autoeditor election status', {
-                date: formatUserDate(user, election.open_time),
+              texp.lp(election.status_name, 'autoeditor election status', {
+                date: formatUserDate($c, election.open_time),
               })
             ) : null}
 
@@ -90,9 +92,8 @@ const ElectionDetails = ({election, user}: PropsT) => (
               <>
                 {' '}
                 {bracketed(
-                  <ExpirationTime
-                    date={election.current_expiration_time}
-                    user={user}
+                  <VotingPeriod
+                    closingDate={election.current_expiration_time}
                   />,
                 )}
               </>
@@ -102,12 +103,13 @@ const ElectionDetails = ({election, user}: PropsT) => (
             ? (
               election.close_time
                 ? (
-                  lp(election.status_name, 'autoeditor election status', {
-                    date: formatUserDate(user, election.close_time),
-                  })
+                  texp.lp(election.status_name, 'autoeditor election status',
+                          {
+                            date: formatUserDate($c, election.close_time),
+                          })
                 ) : (
                   lp(election.status_name_short,
-                    'autoeditor election status (short)')
+                     'autoeditor election status (short)')
                 )
             ) : null}
 

@@ -9,21 +9,21 @@
 
 import React from 'react';
 
-import {l} from '../static/scripts/common/i18n';
-import {lp_attributes} from '../static/scripts/common/i18n/attributes';
 import EntityHeader from '../components/EntityHeader';
 
-type Props = {|
+type Props = {
   +event: EventT,
   +page: string,
-|};
+};
 
 const EventHeader = ({event, page}: Props) => (
   <EntityHeader
     entity={event}
     headerClass="eventheader"
     page={page}
-    subHeading={event.typeName ? lp_attributes(event.typeName, 'event_type') : l('Event')}
+    subHeading={event.typeName
+      ? lp_attributes(event.typeName, 'event_type')
+      : l('Event')}
   />
 );
 

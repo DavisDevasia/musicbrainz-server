@@ -1,23 +1,25 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2015 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2015 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
-const $ = require('jquery');
+import $ from 'jquery';
 
-const i18n = require('../../../common/i18n');
-const MB = require('../../../common/MB');
+import MB from '../../../common/MB';
 
 MB.Control.ArtistEdit = function () {
     var self = {};
 
-    self.$name   = $('#id-edit-artist\\.name');
-    self.$begin  = $('#label-id-edit-artist\\.period\\.begin_date');
-    self.$ended  = $('#label-id-edit-artist\\.period\\.ended');
-    self.$end    = $('#label-id-edit-artist\\.period\\.end_date');
-    self.$beginarea    = $('#label-id-edit-artist\\.begin_area\\.name');
-    self.$endarea    = $('#label-id-edit-artist\\.end_area\\.name');
-    self.$type   = $('#id-edit-artist\\.type_id');
+    self.$name = $('#id-edit-artist\\.name');
+    self.$begin = $('#label-id-edit-artist\\.period\\.begin_date');
+    self.$ended = $('#label-id-edit-artist\\.period\\.ended');
+    self.$end = $('#label-id-edit-artist\\.period\\.end_date');
+    self.$beginarea = $('#label-id-edit-artist\\.begin_area\\.name');
+    self.$endarea = $('#label-id-edit-artist\\.end_area\\.name');
+    self.$type = $('#id-edit-artist\\.type_id');
     self.$gender = $('#id-edit-artist\\.gender_id');
     self.old_gender = self.$gender.val();
 
@@ -32,34 +34,35 @@ MB.Control.ArtistEdit = function () {
         self.$endarea.text(end);
     };
 
-    /* Sets the label descriptions depending upon the artist type:
-
-           Unknown: 0
-           Person: 1
-           Group: 2
-           Orchestra: 5
-           Choir: 6
-    */
+    /*
+     * Sets the label descriptions depending upon the artist type:
+     *
+     *   Unknown: 0
+     *   Person: 1
+     *   Group: 2
+     *   Orchestra: 5
+     *   Choir: 6
+     */
     self.typeChanged = function () {
         switch (self.$type.val()) {
             default:
             case '0':
-                self.changeDateText(i18n.l("Began:"), i18n.l("Ended:"), i18n.l("This artist has ended."));
-                self.changeAreaText(i18n.l("Begin area:"), i18n.l("End area:"));
+                self.changeDateText(l("Began:"), l("Ended:"), l("This artist has ended."));
+                self.changeAreaText(l("Begin area:"), l("End area:"));
                 self.enableGender();
                 break;
 
             case '1':
-                self.changeDateText(i18n.l("Born:"), i18n.l("Died:"), i18n.l("This person is deceased."));
-                self.changeAreaText(i18n.l("Born in:"), i18n.l("Died in:"));
+                self.changeDateText(l("Born:"), l("Died:"), l("This person is deceased."));
+                self.changeAreaText(l("Born in:"), l("Died in:"));
                 self.enableGender();
                 break;
 
             case '2':
             case '5':
             case '6':
-                self.changeDateText(i18n.l("Founded:"), i18n.l("Dissolved:"), i18n.l("This group has dissolved."));
-                self.changeAreaText(i18n.l("Founded in:"), i18n.l("Dissolved in:"));
+                self.changeDateText(l("Founded:"), l("Dissolved:"), l("This group has dissolved."));
+                self.changeAreaText(l("Founded in:"), l("Dissolved in:"));
                 self.disableGender();
                 break;
         }
@@ -83,17 +86,17 @@ MB.Control.ArtistEdit = function () {
     self.$type.bind('change.mb', self.typeChanged);
 
     self.initializeArtistCreditPreviews = function (gid) {
-        var artist_re = new RegExp("/artist/" + gid + "$");
+        var artistRe = new RegExp("/artist/" + gid + "$");
         $('span.rename-artist-credit').each(function () {
             var $ac = $(this);
             $ac.find('input').change(function () {
                 var checked = this.checked;
-                var new_name = self.$name.val();
+                var newName = self.$name.val();
                 $ac.find('span.ac-preview')[checked ? 'show' : 'hide']();
                 $ac.find('span.ac-preview a').each(function () {
                     var $link = $(this);
                     if ($link.data('old_name')) {
-                        $link.text(checked ? new_name : $link.data('old_name'));
+                        $link.text(checked ? newName : $link.data('old_name'));
                     }
                 });
             });
@@ -102,28 +105,32 @@ MB.Control.ArtistEdit = function () {
             });
             $ac.find('span.ac-preview a').each(function () {
                 var $link = $(this);
-                if (artist_re.test($link.attr('href'))) {
+                if (artistRe.test($link.attr('href'))) {
                     $link.data('old_name', $link.text());
                 }
             });
         });
         self.$name.change(function () {
-            var new_name = self.$name.val();
+            var newName = self.$name.val();
             $('span.rename-artist-credit').each(function () {
                 var $ac = $(this);
                 if ($ac.find('input:checked').length) {
                     $ac.find('span.ac-preview a').each(function () {
                         var $link = $(this);
                         if ($link.data('old_name')) {
-                            $link.text(new_name);
+                            $link.text(newName);
                         }
                     });
                 }
             });
         });
-    }
+    };
 
-    MB.Control.initialize_guess_case('artist', 'id-edit-artist');
+    MB.Control.RangeSelect(
+        '#artist-credit-renamer span.rename-artist-credit input[type="checkbox"]',
+    );
+
+    MB.Control.initializeGuessCase('artist', 'id-edit-artist');
 
     MB.Control.Area("#area", "#begin_area", "#end_area");
 

@@ -12,18 +12,17 @@ import type {Node as ReactNode} from 'react';
 
 import Layout from '../layout';
 import AreaSidebar from '../layout/components/sidebar/AreaSidebar';
-import {hyphenateTitle, l} from '../static/scripts/common/i18n';
 import localizeAreaName from '../static/scripts/common/i18n/localizeAreaName';
 
 import AreaHeader from './AreaHeader';
 
-type Props = {|
+type Props = {
   +children: ReactNode,
   +entity: AreaT,
   +fullWidth?: boolean,
   +page: string,
   +title?: string,
-|};
+};
 
 const AreaLayout = ({
   children,

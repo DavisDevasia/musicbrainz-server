@@ -26,9 +26,8 @@
                     return !plotEvent;
             });
             return plotEvent;
-        } else {
-            return false;
-        }
+        } 
+        return false;
     }
 
     function drawCrosshairLine(plot, ctx, x, color) {
@@ -55,7 +54,9 @@
 
     function init(plot) {
         plot.changeCurrentEvent = changeCurrentEvent;
-        plot.getEvent = function (pos) { return getEvent(pos, plot) };
+        plot.getEvent = function (pos) {
+            return getEvent(pos, plot);
+        };
 
         plot.hooks.drawOverlay.push(function (plot, ctx) {
             var options = plot.getOptions();

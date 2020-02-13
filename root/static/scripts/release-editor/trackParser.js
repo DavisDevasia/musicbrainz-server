@@ -1,7 +1,10 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2010-2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2010-2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import $ from 'jquery';
 import ko from 'knockout';
@@ -9,12 +12,12 @@ import _ from 'lodash';
 
 import {MIN_NAME_SIMILARITY} from '../common/constants';
 import {
-  artistCreditFromArray,
   hasVariousArtists,
   isCompleteArtistCredit,
   reduceArtistCredit,
 } from '../common/immutable-entities';
 import clean from '../common/utility/clean';
+import debounce from '../common/utility/debounce';
 import isBlank from '../common/utility/isBlank';
 import getCookie from '../common/utility/getCookie';
 import setCookie from '../common/utility/setCookie';
@@ -25,10 +28,11 @@ import fields from './fields';
 import utils from './utils';
 import releaseEditor from './viewModel';
 
-releaseEditor.trackParser = {
+const trackParser = releaseEditor.trackParser = {
 
     // These are all different types of dash
-    separators: /(\s+[\-‒–—―]\s+|\s*\t\s*)/,
+    defaultSeparators: /(\s+[\-‒–—―]\s+|\s*\t\s*)/,
+    separators: null,
 
     // Leading "M." is for Japanese releases. MBS-3398
     trackNumber: /^(?:M[\.\-])?([０-９0-9]+(?:-[０-９0-9]+)?)(?:\.|．|\s?-|:|：|;|,|，|$)?/,
@@ -40,10 +44,17 @@ releaseEditor.trackParser = {
         hasTrackNumbers: optionCookie("trackparser_tracknumbers", true),
         hasTrackArtists: optionCookie("trackparser_trackartists", true),
         hasVinylNumbers: optionCookie("trackparser_vinylnumbers", false),
+        customDelimiter: optionCookie("trackparser_customdelimiter", "", false),
+        useCustomDelimiter: optionCookie("trackparser_usecustomdelimiter", false),
         useTrackNumbers: optionCookie("trackparser_usetracknumbers", true),
         useTrackNames: optionCookie("trackparser_usetracknames", true),
         useTrackArtists: optionCookie("trackparser_usetrackartists", true),
-        useTrackLengths: optionCookie("trackparser_tracktimes", true)
+        useTrackLengths: optionCookie("trackparser_tracktimes", true),
+    },
+
+    delimiterHelpVisible: ko.observable(false),
+    toggleDelimiterHelp: function () {
+      trackParser.delimiterHelpVisible(!trackParser.delimiterHelpVisible());
     },
 
     parse: function (str, medium) {
@@ -67,8 +78,10 @@ releaseEditor.trackParser = {
             hasTocs = medium.hasToc();
             releaseAC = medium.release.artistCredit();
 
-            // Don't add more tracks than the CDTOC allows. If there are data
-            // tracks, then more can be added at the end.
+            /*
+             * Don't add more tracks than the CDTOC allows. If there are data
+             * tracks, then more can be added at the end.
+             */
             if (hasTocs && !medium.hasDataTracks()) {
                 lines = lines.slice(0, currentTracks.length);
             }
@@ -77,10 +90,14 @@ releaseEditor.trackParser = {
         var newTracksData = $.map(lines, function (line) {
             var data = self.parseLine(line, options);
 
-            // We should've parsed at least some values, otherwise something
-            // went wrong. Returning undefined removes this result from
-            // newTracks.
-            if (!_.some(_.values(data))) return;
+            /*
+             * We should've parsed at least some values, otherwise something
+             * went wrong. Returning undefined or null removes this result from
+             * newTracks because $.map discards it.
+             */
+            if (!_.some(_.values(data))) {
+                return null;
+            }
 
             currentPosition += 1;
             data.position = currentPosition;
@@ -89,24 +106,31 @@ releaseEditor.trackParser = {
                 data.number = currentPosition;
             }
 
-            if (!currentTracks || !currentTracks.length) return data;
+            if (!currentTracks || !currentTracks.length) {
+                return data;
+            }
 
-            // Check for tracks with similar names to existing tracks, so that
-            // we can reuse them if possible. If the medium has a CDTOC, don't
-            // do this because we can't move tracks around. Also don't do this
-            // if the user says not to use track names.
+            /*
+             * Check for tracks with similar names to existing tracks, so that
+             * we can reuse them if possible. If the medium has a CDTOC, don't
+             * do this because we can't move tracks around. Also don't do this
+             * if the user says not to use track names.
+             */
 
             if (hasTocs || !options.useTrackNames) {
                 data.matchedTrack = currentTracks.shift();
             } else {
-                // Pair every parsed track object with every existing track,
-                // along with their similarity.
+                /*
+                 * Pair every parsed track object with every existing track,
+                 * along with their similarity.
+                 */
                 dataTrackPairs = dataTrackPairs.concat(
                     _(currentTracks)
                         .map(function (track) {
                             return self.matchDataWithTrack(data, track);
                         })
-                        .compact().value()
+                        .compact()
+                        .value()
                 );
             }
 
@@ -130,9 +154,12 @@ releaseEditor.trackParser = {
             var matchedTrackAC = matchedTrack && matchedTrack.artistCredit();
             var previousTrackAC = previousTrack && previousTrack.artistCredit();
 
-            // See if we can re-use the AC from the matched track, the previous
-            // track at this position, or the release.
-            var matchedAC = _.find([ matchedTrackAC, previousTrackAC, releaseAC ],
+            /*
+             * See if we can re-use the AC from the matched track, the previous
+             * track at this position, or the release.
+             */
+            var matchedAC = _.find(
+                [matchedTrackAC, previousTrackAC, releaseAC],
                 function (ac) {
                     if (!ac || hasVariousArtists(ac)) {
                         return false;
@@ -142,21 +169,24 @@ releaseEditor.trackParser = {
                         !data.artist ||
                         utils.similarNames(data.artist, reduceArtistCredit(ac))
                     );
-                }
+                },
             );
 
             if (matchedAC) {
                 data.artistCredit = matchedAC;
             }
 
-            data.artistCredit = data.artistCredit || [{ name: data.artist || "" }];
+            data.artistCredit = data.artistCredit ||
+                {names: [{ name: data.artist || "" }]};
 
-            // If the AC has just a single artist, we can re-use the parsed
-            // artist text as the credited name for that artist. Otherwise we
-            // can't easily do anything with it because the parsed text likely
-            // contains bits for every artist.
-            if (data.artist && data.artistCredit.length === 1) {
-                data.artistCredit[0].name = data.artist;
+            /*
+             * If the AC has just a single artist, we can re-use the parsed
+             * artist text as the credited name for that artist. Otherwise we
+             * can't easily do anything with it because the parsed text likely
+             * contains bits for every artist.
+             */
+            if (data.artist && data.artistCredit.names.length === 1) {
+                data.artistCredit.names[0].name = data.artist;
             }
 
             if (matchedTrack) {
@@ -175,7 +205,7 @@ releaseEditor.trackParser = {
                 }
 
                 if (options.useTrackArtists) {
-                    matchedTrack.artistCredit(artistCreditFromArray(data.artistCredit));
+                    matchedTrack.artistCredit(data.artistCredit);
                 }
 
                 return matchedTrack;
@@ -196,16 +226,20 @@ releaseEditor.trackParser = {
                 var dataTracksEnded = false;
 
                 _.each(newTracks.slice(0).reverse(), function (t, index) {
-                    // Don't touch the data track boundary if the total number
-                    // of tracks is >= the previous number. The user can edit
-                    // things manually if it needs fixing. Since we're
-                    // iterating backwards, the condition is checking that we
-                    // don't exceed the point where the audio tracks end.
+                    /*
+                     * Don't touch the data track boundary if the total number
+                     * of tracks is >= the previous number. The user can edit
+                     * things manually if it needs fixing. Since we're
+                     * iterating backwards, the condition is checking that we
+                     * don't exceed the point where the audio tracks end.
+                     */
                     if (difference >= 0) {
                         t.isDataTrack(index < (newTracks.length - oldAudioTrackCount));
-                    // Otherwise, keep isDataTrack true for ones that stayed at
-                    // the end, but unset it if they somehow moved up in the
-                    // tracklist and are no longer contiguous.
+                    /*
+                     * Otherwise, keep isDataTrack true for ones that stayed
+                     * at the end, but unset it if they somehow moved up in
+                     * the tracklist and are no longer contiguous.
+                     */
                     } else if (dataTracksEnded) {
                         t.isDataTrack(false);
                     } else if (!t.isDataTrack()) {
@@ -237,17 +271,21 @@ releaseEditor.trackParser = {
             }
         }
 
-        // MBS-7719: make sure the "Reuse previous recordings" button is
-        // available for new tracks by saving any unset recordings onto the
-        // new track instances.
+        /*
+         * MBS-7719: Make sure the "Reuse previous recordings" button is
+         * available for new tracks by saving any unset recordings onto the
+         * new track instances.
+         */
         if (previousTracks && previousTracks.length) {
             _.each(newTracks, function (track, index) {
                 delete track.previousTrackAtThisPosition;
 
                 var previousTrack = previousTracks[index];
 
-                // Don't save the recording that was at this position if the
-                // *track* that was at this position was moved/reused.
+                /*
+                 * Don't save the recording that was at this position if the
+                 * *track* that was at this position was moved/reused.
+                 */
                 if (previousTrack && !matchedTracks[previousTrack.uniqueID]) {
                     var previousRecording = previousTrack.recording.peek();
 
@@ -280,10 +318,14 @@ releaseEditor.trackParser = {
         // trim only, keeping tabs and other space separators intact.
         line = line.trim();
 
-        if (line === "") return data;
+        if (line === "") {
+            return data;
+        }
 
-        // Parse track times first, because they could be confused with track
-        // numbers if the line only contains a time.
+        /*
+         * Parse track times first, because they could be confused with track
+         * numbers if the line only contains a time.
+         */
 
         // Assume the track time is at the end.
         var match = line.match(this.trackTime);
@@ -302,7 +344,9 @@ releaseEditor.trackParser = {
             match = line.match(options.hasVinylNumbers ? this.vinylNumber : this.trackNumber);
 
             // There should always be a track number if this option's set.
-            if (match === null) return {};
+            if (match === null) {
+                return {};
+            }
 
             if (options.useTrackNumbers) {
                 data.number = fromFullwidthLatin(match[1]);
@@ -324,12 +368,18 @@ releaseEditor.trackParser = {
             return data;
         }
 
-        // Split the string into parts, if there are any.
-        var parts = line.split(this.separators),
-            names = _.reject(parts, x => this.separatorOrBlank(x));
+        // Use custom delimiter as separator.
+        const customDelimiter = trackParser.customDelimiterRegExp();
+        this.separators = customDelimiter || this.defaultSeparators;
 
-        // Only parse an artist if there's more than one name. Assume the
-        // artist is the last name.
+        // Split the string into parts, if there are any.
+        const parts = line.split(this.separators);
+        const names = _.reject(parts, x => this.separatorOrBlank(x));
+
+        /*
+         * Only parse an artist if there's more than one name. Assume the
+         * artist is the last name.
+         */
 
         if (names.length > 1) {
             var artist = names.pop();
@@ -350,8 +400,10 @@ releaseEditor.trackParser = {
             data.name = clean(line);
         }
 
-        // Either of these could be the artist name (they may have to be
-        // swapped by the user afterwards), so run `cleanArtistName` on both.
+        /*
+         * Either of these could be the artist name (they may have to be
+         * swapped by the user afterwards), so run `cleanArtistName` on both.
+         */
 
         if (options.useTrackNames) {
             data.name = this.cleanArtistName(data.name || "");
@@ -388,7 +440,9 @@ releaseEditor.trackParser = {
             if (options.hasTrackArtists) {
                 var artist = reduceArtistCredit(track.artistCredit());
 
-                if (artist) memo += " - " + artist;
+                if (artist) {
+                    memo += " - " + artist;
+                }
             }
 
             memo += " (" + (track.formattedLength.peek() || "?:??") + ")";
@@ -398,22 +452,55 @@ releaseEditor.trackParser = {
     },
 
     matchDataWithTrack: function (data, track) {
-        if (!track) return;
+        /*
+         * The result of this function will be fed into _.compact so that
+         * null and undefined return values will be stripped.
+         */
+        if (!track) {
+            return null;
+        }
 
         var similarity = getSimilarity(data.name, track.name.peek());
 
         if (similarity >= MIN_NAME_SIMILARITY) {
             return { similarity: similarity, track: track, data: data };
         }
+
+        return null;
     }
 };
 
-function optionCookie(name, defaultValue) {
-    var existingValue = getCookie(name);
+trackParser.customDelimiterRegExp = ko.computed(function () {
+    if (!trackParser.options.useCustomDelimiter()) {
+        return null;
+    }
+    try {
+        const delimiter = trackParser.options.customDelimiter();
+        return new RegExp('(' + delimiter + ')');
+    } catch (e) {
+        return null;
+    }
+});
 
-    var observable = ko.observable(
-        defaultValue ? existingValue !== "false" : existingValue === "true"
-    );
+trackParser.customDelimiterError = debounce(function () {
+    if (!trackParser.options.useCustomDelimiter()) {
+        return '';
+    }
+    return trackParser.customDelimiterRegExp()
+        ? ''
+        : l('Invalid regular expression.');
+});
+
+function optionCookie(name, defaultValue, checkbox=true) {
+    const existingValue = getCookie(name);
+
+    const observable = checkbox
+      ? ko.observable(
+          defaultValue
+              ? existingValue !== "false"
+              : existingValue === "true",
+        )
+      : ko.observable(existingValue || defaultValue);
 
     observable.subscribe(function (newValue) {
         setCookie(name, newValue);

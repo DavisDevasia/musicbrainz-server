@@ -320,7 +320,7 @@ sub load_writers
 {
     my ($self, @works) = @_;
 
-    @works = grep { scalar $_->all_writers == 0 } @works;
+    @works = grep { defined $_ && scalar $_->all_writers == 0 } @works;
     my @ids = map { $_->id } @works;
     return () unless @ids;
 
@@ -338,13 +338,14 @@ sub _find_writers
     return unless @$ids;
 
     my $query = "
-        SELECT law.entity1 AS work, law.entity0 AS artist, array_agg(lt.name) AS roles
+        SELECT law.entity1 AS work, law.entity0 AS artist, 
+            law.entity0_credit AS credit, array_agg(lt.name) AS roles
         FROM l_artist_work law
         JOIN link l ON law.link = l.id
         JOIN link_type lt ON l.link_type = lt.id
         WHERE law.entity1 IN (" . placeholders(@$ids) . ")
-        GROUP BY law.entity1, law.entity0
-        ORDER BY count(*) DESC, artist
+        GROUP BY law.entity1, law.entity0, law.entity0_credit
+        ORDER BY count(*) DESC, artist, credit
     ";
 
     my $rows = $self->sql->select_list_of_lists($query, @$ids);
@@ -353,11 +354,12 @@ sub _find_writers
     my $artists = $self->c->model('Artist')->get_by_ids(@artist_ids);
 
     for my $row (@$rows) {
-        my ($work_id, $artist_id, $roles) = @$row;
+        my ($work_id, $artist_id, $credit, $roles) = @$row;
         $map->{$work_id} ||= [];
         push @{ $map->{$work_id} }, {
+            credit => $credit,
             entity => $artists->{$artist_id},
-            roles => $roles
+            roles => [ uniq @{ $roles } ]
         }
     }
 }
@@ -365,8 +367,9 @@ sub _find_writers
 =method load_recording_artists
 
 This method will load the work's artists based on the recordings the work
-is linked to. The artist credits are sorted by the number of recordings in
-descending order (i.e. the top artists will be first in the list).
+is linked to. The artist credits are sorted by the number of tracks for
+the recordings by that artist in descending order. This ensures the 
+artists most associated with the work will be listed first.
 
 =cut
 
@@ -374,7 +377,7 @@ sub load_recording_artists
 {
     my ($self, @works) = @_;
 
-    @works = grep { scalar $_->all_artists == 0 } @works;
+    @works = grep { defined $_ && scalar $_->all_artists == 0 } @works;
     my @ids = map { $_->id } @works;
     return () unless @ids;
 
@@ -395,6 +398,7 @@ sub _find_recording_artists
         SELECT lrw.entity1 AS work, r.artist_credit
         FROM l_recording_work lrw
         JOIN recording r ON lrw.entity0 = r.id
+        LEFT JOIN track t on r.id = t.recording
         WHERE lrw.entity1 IN (" . placeholders(@$ids) . ")
         GROUP BY lrw.entity1, r.artist_credit
         ORDER BY count(*) DESC, artist_credit

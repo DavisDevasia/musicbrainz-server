@@ -21,7 +21,7 @@ input::-webkit-input-placeholder { // webkit
     color: @dark-text;
 }
 input[disabled].lookup-performed,
-input[disabled] { background: @medium-bg; cursor: default; }
+input[disabled], input[readonly] { background: @medium-bg; cursor: default; }
 
 /* this is to ensure input/select/textarea elements are all the same
    width if you set the same width on them. (without this a <select>
@@ -206,15 +206,21 @@ dl.properties label {
     width: auto;
 }
 
-div.ar-descr {
-    background: @effectively-white-bg;
-    padding: 4px;
-    border: dotted 1px @medium-border;
+div.ar-descr, div.form-help {
+    .help-box();
     margin: 6px;
+}
+
+div.form-help {
+    margin-left: 1.4em;
 }
 
 div.searchform {
     margin-top: 24px;
+}
+
+#edit-search select[multiple=multiple] {
+    resize: vertical;
 }
 
 /* <table>-based forms to replace div.row-based stuff. */
@@ -477,7 +483,6 @@ ul.conditions button.remove img {
     background: @very-light-bg;
     .border-radius(3px);
     padding: 0.5em;
-    display: none;
 }
 
 input.icon, div.icon.img, button.icon {

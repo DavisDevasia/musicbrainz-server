@@ -24,13 +24,13 @@ requires 'Data::Page'                                 => '2.02';
 requires 'Data::UUID::MT'                             => '1.000';
 requires 'Date::Calc'                                 => '6.3';
 requires 'DateTime::Format::ISO8601'                  => '0.08';
-requires 'DateTime::Format::Natural'                  => '1.02';
-requires 'DateTime::Format::Pg'                       => '0.16009';
-requires 'DateTime::Locale'                           => '1.11';
-requires 'DateTime::TimeZone'                         => '2.19';
-requires 'DBD::Pg'                                    => '3.5.3';
-requires 'DBI'                                        => '1.63';
-requires 'DBIx::Connector'                            => '0.53';
+requires 'DateTime::Format::Natural'                  => '1.08';
+requires 'DateTime::Format::Pg'                       => '0.16013';
+requires 'DateTime::Locale'                           => '1.25';
+requires 'DateTime::TimeZone'                         => '2.38';
+requires 'DBD::Pg'                                    => '3.10.0';
+requires 'DBI'                                        => '1.642';
+requires 'DBIx::Connector'                            => '0.56';
 requires 'Digest::HMAC_SHA1'                          => '1.03';
 requires 'Digest::MD5'                                => '2.52';
 requires 'Digest::MD5::File'                          => '0.08';
@@ -83,7 +83,7 @@ requires 'Redis'                                      => '1.967';
 requires 'REST::Utils'                                => '0.6';
 requires 'Set::Scalar'                                => '1.27';
 requires 'Statistics::Basic'                          => '1.6607';
-requires 'String::CamelCase'                          => '0.02';
+requires 'String::CamelCase'                          => '0.04';
 requires 'String::ShellQuote'                         => '1.03';
 requires 'String::TT'                                 => '0.03';
 requires 'Sys::Hostname'                              => '1.17';
@@ -98,6 +98,7 @@ requires 'Text::WikiFormat'                           => '0.81';
 requires 'Throwable'                                  => '0.200009';
 requires 'Unicode::ICU::Collator'                     => '0.002';
 requires 'URI'                                        => '1.69';
+requires 'XML::LibXML'                                => '1.70';
 requires 'XML::Parser::Lite'                          => '0.719';
 requires 'XML::RSS::Parser::Lite'                     => '0.10';
 requires 'XML::Simple'                                => '2.20';
@@ -105,8 +106,7 @@ requires 'XML::XPath'                                 => '1.13';
 
 # Production server features
 feature production => sub {
-    requires 'DateTime::Format::W3CDTF'         => '0.06';
-    requires 'Locale::PO'                       => '0.27';
+    requires 'DateTime::Format::W3CDTF'         => '0.07';
     requires 'Parallel::ForkManager'            => '0.7.6';
     requires 'Sentry::Raven'                    => '1.09';
     requires 'Server::Starter'                  => '0.31';
@@ -115,13 +115,12 @@ feature production => sub {
 };
 
 author_requires 'Catalyst::Devel'               => '1.39';
+author_requires 'Locale::PO'                    => '0.27';
 author_requires 'Test::EOL';
 author_requires 'Test::NoTabs';
 
 test_requires 'Cache::Null';
 test_requires 'Catalyst::Plugin::Static::Simple';
-# Broken in Perl >= 5.22; the one test that requires it is disabled for now.
-# test_requires 'Coro';
 test_requires 'HTML::HTML5::Parser';
 test_requires 'HTML::HTML5::Sanity';
 test_requires 'HTML::Selector::XPath';

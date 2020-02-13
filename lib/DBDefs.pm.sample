@@ -101,15 +101,21 @@ MusicBrainz::Server::DatabaseConnectionFactory->register_databases(
 #       host            => "",
 #       port            => "5432",
 #   },
-    # Fill out only if RAWDATA lives on a different host from the READWRITE server.
-    # RAWDATA_SYSTEM => undef,
+    # How to connect when running development scripts that query the production database.
+#   PROD_STANDBY    => {
+#       database    => "musicbrainz_db",
+#       username    => "musicbrainz_ro",
+#       password        => "",
+#       host            => "",
+#       port            => "5432",
+#   },
 );
 
 # The schema sequence number.  Must match the value in
 # replication_control.current_schema_sequence.
 # This is required, there is no default in order to prevent it changing without
 # manual intervention.
-sub DB_SCHEMA_SEQUENCE { 24 }
+sub DB_SCHEMA_SEQUENCE { 25 }
 
 # What type of server is this?
 # * RT_MASTER - This is a master replication server.  Changes are allowed, and
@@ -373,6 +379,10 @@ sub WEB_SERVER                { "www.musicbrainz.example.com" }
 # sub COVER_ART_ARCHIVE_SECRET_KEY { };
 # sub COVER_ART_ARCHIVE_UPLOAD_PREFIXER { shift; sprintf("//%s.s3.us.archive.org/", shift) };
 # sub COVER_ART_ARCHIVE_DOWNLOAD_PREFIX { "//coverartarchive.org" };
+
+# Mapbox access token must be set to display area/place maps.
+# sub MAPBOX_MAP_ID { 'mapbox.streets' }
+# sub MAPBOX_ACCESS_TOKEN { '' }
 
 # Disallow OAuth2 requests over plain HTTP
 # sub OAUTH2_ENFORCE_TLS { my $self = shift; !$self->DB_STAGING_SERVER }

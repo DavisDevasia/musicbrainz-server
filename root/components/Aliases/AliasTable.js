@@ -9,7 +9,6 @@
 
 import React from 'react';
 
-import {l} from '../../static/scripts/common/i18n';
 
 import AliasTableBody from './AliasTableBody';
 
@@ -30,7 +29,7 @@ const AliasTable = (props: Props) => (
         <th>{l('Type')}</th>
         <th>{l('Locale')}</th>
         {props.allowEditing
-          ? <th className="actions-header">{l('Actions')}</th>
+          ? <th className="actions">{l('Actions')}</th>
           : null}
       </tr>
     </thead>

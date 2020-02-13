@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2018 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -8,99 +8,277 @@
  */
 
 
-export type ReportArtistAnnotationT = {|
-  +artist: ArtistT,
+export type ReportArtistAnnotationT = {
+  +artist: ?ArtistT,
   +artist_id: number,
   +created: string,
   +row_number: number,
   +text: string,
-|};
+};
 
-export type ReportArtistRelationshipT = {|
-  +artist: ArtistT,
+export type ReportArtistRelationshipT = {
+  +artist: ?ArtistT,
   +artist_id: number,
   +link_gid: string,
   +link_name: string,
   +row_number: number,
-|};
+};
 
-export type ReportArtistT = {|
+export type ReportArtistT = {
   +alias?: string,
-  +artist: ArtistT,
+  +artist: ?ArtistT,
   +artist_id: number,
   +key?: string,
   +row_number: number,
-|};
+};
 
-export type ReportArtistURLT = {|
-  +artist: ArtistT,
+export type ReportArtistUrlT = {
+  +artist: ?ArtistT,
   +artist_id: number,
   +row_number: number,
   +url: UrlT,
-|};
+};
 
-export type ReportCollaborationT = {|
-  +artist0: ArtistT,
-  +artist1: ArtistT,
+export type ReportCollaborationT = {
+  +artist0: ?ArtistT,
+  +artist1: ?ArtistT,
   +id0: number,
   +id1: number,
   +name0: string,
   +name1: string,
   +row_number: number,
-|};
+};
 
-export type ReportDataT<T> = {|
+export type ReportDataT<T> = {
   +$c: CatalystContextT,
   +canBeFiltered: boolean,
   +filtered: boolean,
   +generated: string,
   +items: $ReadOnlyArray<T>,
   +pager: PagerT,
-|};
+};
 
-export type ReportEditorT = {|
+export type ReportEditorT = {
   +editor: EditorT,
   +id: number,
   +row_number: number,
-|};
+};
 
-export type ReportEventT = {|
-  +event: EventT,
+export type ReportEventT = {
+  +event: ?EventT,
   +event_id: number,
   +row_number: number,
-|};
+};
 
-export type ReportInstrumentT = {|
-  +instrument: InstrumentT,
+export type ReportInstrumentT = {
+  +instrument: ?InstrumentT,
   +instrument_id: number,
   +row_number: number,
-|};
+};
 
-export type ReportLabelAnnotationT = {|
+export type ReportIsrcT = {
+  +isrc: string,
+  +length: number,
+  +name: string,
+  +recording: ?RecordingT,
+  +recording_id: string,
+  +recordingcount: number,
+  +row_number: number,
+  +text: string,
+};
+
+export type ReportIswcT = {
+  +iswc: string,
+  +row_number: number,
+  +text: string,
+  +work: ?WorkT,
+  +work_id: string,
+  +workcount: number,
+};
+
+export type ReportLabelAnnotationT = {
   +created: string,
-  +label: LabelT,
+  +label: ?LabelT,
   +label_id: number,
   +row_number: number,
   +text: string,
-|};
+};
 
-export type ReportLabelRelationshipT = {|
-  +label: LabelT,
+export type ReportLabelRelationshipT = {
+  +label: ?LabelT,
   +label_id: number,
   +link_gid: string,
   +link_name: string,
   +row_number: number,
-|};
+};
 
-export type ReportLabelT = {|
-  +label: LabelT,
+export type ReportLabelT = {
+  +label: ?LabelT,
   +label_id: number,
   +row_number: number,
-|};
+};
 
-export type ReportLabelURLT = {|
-  +label: LabelT,
+export type ReportLabelUrlT = {
+  +label: ?LabelT,
   +label_id: number,
   +row_number: number,
   +url: UrlT,
-|};
+};
+
+export type ReportPlaceAnnotationT = {
+  +created: string,
+  +place: ?PlaceT,
+  +place_id: number,
+  +row_number: number,
+  +text: string,
+};
+
+export type ReportPlaceRelationshipT = {
+  +link_gid: string,
+  +link_name: string,
+  +place: ?PlaceT,
+  +place_id: number,
+  +row_number: number,
+};
+
+export type ReportRecordingAnnotationT = {
+  +created: string,
+  +recording: ?RecordingT,
+  +recording_id: number,
+  +row_number: number,
+  +text: string,
+};
+
+export type ReportRecordingRelationshipT = {
+  +link_gid: string,
+  +link_name: string,
+  +recording: ?RecordingT,
+  +recording_id: number,
+  +row_number: number,
+};
+
+export type ReportRecordingT = {
+  +recording: ?RecordingT,
+  +recording_id: number,
+  +row_number: number,
+};
+
+export type ReportReleaseAnnotationT = {
+  +created: string,
+  +release: ?ReleaseT,
+  +release_id: number,
+  +row_number: number,
+  +text: string,
+};
+
+export type ReportReleaseCatNoT = {
+  +catalog_number: string,
+  +release: ?ReleaseT,
+  +release_id: number,
+  +row_number: number,
+};
+
+export type ReportReleaseGroupAnnotationT = {
+  +created: string,
+  +release_group: ?ReleaseGroupT,
+  +release_group_id: number,
+  +row_number: number,
+  +text: string,
+};
+
+export type ReportReleaseGroupRelationshipT = {
+  +link_gid: string,
+  +link_name: string,
+  +release_group: ?ReleaseGroupT,
+  +release_group_id: number,
+  +row_number: number,
+};
+
+export type ReportReleaseGroupT = {
+  +key?: string,
+  +release_group: ?ReleaseGroupT,
+  +release_group_id: number,
+  +row_number: number,
+};
+
+export type ReportReleaseGroupUrlT = {
+  +release_group: ?ReleaseGroupT,
+  +release_group_id: number,
+  +row_number: number,
+  +url: UrlT,
+};
+
+export type ReportReleaseLabelT = {
+  +label_gid: string,
+  +label_name: string,
+  +release: ?ReleaseT,
+  +release_id: number,
+  +row_number: number,
+};
+
+export type ReportReleaseRelationshipT = {
+  +link_gid: string,
+  +link_name: string,
+  +release: ?ReleaseT,
+  +release_id: number,
+  +row_number: number,
+};
+
+export type ReportReleaseReleaseGroupT = {
+  +release: ?ReleaseT,
+  +release_group: ?ReleaseGroupT,
+  +release_group_id: number,
+  +release_id: number,
+  +row_number: number,
+};
+
+export type ReportReleaseT = {
+  +release: ?ReleaseT,
+  +release_id: number,
+  +row_number: number,
+};
+
+export type ReportReleaseUrlT = {
+  +release: ?ReleaseT,
+  +release_id: number,
+  +row_number: number,
+  +url: UrlT,
+};
+
+export type ReportSeriesAnnotationT = {
+  +created: string,
+  +row_number: number,
+  +series: ?SeriesT,
+  +series_id: number,
+  +text: string,
+};
+
+export type ReportUrlRelationshipT = {
+  +link_gid: string,
+  +link_name: string,
+  +row_number: number,
+  +url: ?UrlT,
+  +url_id: number,
+};
+
+export type ReportWorkAnnotationT = {
+  +created: string,
+  +row_number: number,
+  +text: string,
+  +work: ?WorkT,
+  +work_id: number,
+};
+
+export type ReportWorkRelationshipT = {
+  +link_gid: string,
+  +link_name: string,
+  +row_number: number,
+  +work: ?WorkT,
+  +work_id: number,
+};
+
+export type ReportWorkT = {
+  +row_number: number,
+  +work: ?WorkT,
+  +work_id: number,
+};

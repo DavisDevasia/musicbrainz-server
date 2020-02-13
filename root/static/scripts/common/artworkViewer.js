@@ -1,12 +1,13 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2013 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2013 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
-const $ = require('jquery');
-const _ = require('lodash');
-
-const {l} = require('./i18n');
+import $ from 'jquery';
+import _ from 'lodash';
 
 $.widget("mb.artworkViewer", $.ui.dialog, {
 
@@ -26,9 +27,11 @@ $.widget("mb.artworkViewer", $.ui.dialog, {
 
         // Only display prev/next buttons if there's >1 image.
         if (this.$artwork.length > 1) {
-            // jQuery UI dialogs have a buttons API, but it's difficult to
-            // style them like our other ones without duplicating CSS. And
-            // it doesn't save a whole lotta code anyway.
+            /*
+             * jQuery UI dialogs have a buttons API, but it's difficult to
+             * style them like our other ones without duplicating CSS. And
+             * it doesn't save a whole lotta code anyway.
+             */
 
             this.$prev = $("<button>").attr("type", "button")
                             .text(l("Previous"))
@@ -57,7 +60,8 @@ $.widget("mb.artworkViewer", $.ui.dialog, {
     open: function (link, wasClosed) {
         this._imageElement = null;
 
-        var hadFocus = document.activeElement, $preview = $(link).find("img");
+        const hadFocus = document.activeElement;
+        const $preview = $(link).find("img");
         this._setOption("title", $preview.attr("title"));
 
         var index = this.$artwork.index(link);
@@ -68,18 +72,20 @@ $.widget("mb.artworkViewer", $.ui.dialog, {
         this.$next.prop("disabled", !this._nextImageLink);
 
         this.$pager.text(
-            l("Image {current} of {total}", {
+            texp.l("Image {current} of {total}", {
                 current: index + 1, total: this.$artwork.length
             })
         );
 
         this._super();
 
-        // Only size the dialog based on the preview image's aspect ratio if
-        // the dialog was just opened. If the dialog is already open and the
-        // user is simply loading a previous/next image, it'll get resized
-        // later, once the image actually loads. But if we were to resize
-        // *now*, the current image would get clipped.
+        /*
+         * Only size the dialog based on the preview image's aspect ratio if
+         * the dialog was just opened. If the dialog is already open and the
+         * user is simply loading a previous/next image, it'll get resized
+         * later, once the image actually loads. But if we were to resize
+         * *now*, the current image would get clipped.
+         */
 
         if (wasClosed) {
             this._sizeAndPosition($preview.width() / $preview.height());
@@ -133,14 +139,20 @@ $.widget("mb.artworkViewer", $.ui.dialog, {
 
     _imageLoaded: function (image) {
         // Return if the user skipped this image or closed the dialog.
-        if (!this.isOpen() || image.src !== this._currentImageSrc) return;
+        if (!this.isOpen() || image.src !== this._currentImageSrc) {
+            return;
+        }
 
         this._imageAspectRatio = image.width / image.height;
         this._imageElement = image;
 
         this._sizeAndPosition();
 
-        this.element.find("img").remove().end().append(image);
+        this.element
+            .find("img")
+            .remove()
+            .end()
+            .append(image);
         this.$loading.stop(true, true).fadeOut();
 
         // Preload the previous and next images.
@@ -152,14 +164,16 @@ $.widget("mb.artworkViewer", $.ui.dialog, {
         imageAspectRatio = this._imageAspectRatio || imageAspectRatio;
         imageElement = this._imageElement || imageElement;
 
-        var $window = $(window),
-            maxDialogHeight = $window.height() * 0.95,
-            maxDialogWidth = $window.width() * 0.95,
-            nonContentHeight = this.uiDialog.outerHeight() - this.element.height(),
-            nonContentWidth = this.uiDialog.outerWidth() - this.element.width();
+        const $window = $(window);
+        const maxDialogHeight = $window.height() * 0.95;
+        const maxDialogWidth = $window.width() * 0.95;
+        const nonContentHeight = this.uiDialog.outerHeight() - this.element.height();
+        const nonContentWidth = this.uiDialog.outerWidth() - this.element.width();
 
-        // Don't stretch the image beyond its original dimensions, and don't
-        // exceed maxDialogHeight or maxDialogWidth.
+        /*
+         * Don't stretch the image beyond its original dimensions, and don't
+         * exceed maxDialogHeight or maxDialogWidth.
+         */
         var imageHeight = maxDialogHeight - nonContentHeight;
 
         if (imageElement && imageElement.height < imageHeight) {
@@ -189,11 +203,15 @@ $.widget("mb.artworkViewer", $.ui.dialog, {
 $(function () {
     var $activeDialog = $();
 
-    // Create separate dialogs for the sidebar and content, so that the
-    // image "albums" are logically grouped.
+    /*
+     * Create separate dialogs for the sidebar and content, so that the
+     * image "albums" are logically grouped.
+     */
     $("#sidebar, #content").each(function (index, container) {
         var $artwork = $("a.artwork-image", container);
-        if ($artwork.length === 0) return;
+        if ($artwork.length === 0) {
+            return;
+        }
 
         var $artworkViewer = $("<div>").appendTo("body")
                 .artworkViewer({ $artwork: $artwork });
@@ -210,7 +228,9 @@ $(function () {
 
     $("body")
         .on("keydown", function (event) {
-            if ($activeDialog.artworkViewer("isOpen") !== true) return;
+            if ($activeDialog.artworkViewer("isOpen") !== true) {
+                return;
+            }
 
             if (event.keyCode === 37) { // Left arrow
                 $activeDialog.artworkViewer("prevImage");
@@ -237,7 +257,9 @@ $(function () {
     var resizeDialog = _.debounce(function () {
         var dialog = $activeDialog.data("mb-artworkViewer");
 
-        if (dialog && dialog.isOpen()) dialog._sizeAndPosition();
+        if (dialog && dialog.isOpen()) {
+            dialog._sizeAndPosition();
+        }
     }, 100);
 
     $(window).on("resize", resizeDialog);

@@ -17,6 +17,8 @@ with 'MusicBrainz::Server::Entity::Role::Type' => { model => 'EventType' };
 use MooseX::Types::Structured qw( Dict );
 use MooseX::Types::Moose qw( ArrayRef Object Str );
 use MusicBrainz::Server::Data::Utils qw( boolean_to_json );
+use MusicBrainz::Server::Entity::Util::JSON qw( add_linked_entity );
+use MusicBrainz::Server::Filters qw( format_setlist );
 use MusicBrainz::Server::Types qw( Time );
 use List::UtilsBy qw( uniq_by );
 
@@ -49,6 +51,7 @@ has 'performers' => (
     is => 'ro',
     isa => ArrayRef[
         Dict[
+            credit => Str,
             roles => ArrayRef[Str],
             entity => Object
         ]
@@ -103,6 +106,9 @@ sub related_series {
 around TO_JSON => sub {
     my ($orig, $self) = @_;
 
+    my @related_series = $self->related_series;
+    add_linked_entity('series', $_->id, $_) for @related_series;
+
     return {
         %{ $self->$orig },
         areas => [map +{
@@ -110,12 +116,15 @@ around TO_JSON => sub {
         }, $self->all_areas],
         cancelled => boolean_to_json($self->cancelled),
         performers => [map +{
+            credit => $_->{credit},
             entity => $_->{entity},
             roles => $_->{roles},
         }, $self->all_performers],
         places => [map +{
             entity => $_->{entity},
         }, $self->all_places],
+        related_series => [map { $_->id } @related_series],
+        setlist => format_setlist($self->setlist),
         time => $self->formatted_time,
     };
 };

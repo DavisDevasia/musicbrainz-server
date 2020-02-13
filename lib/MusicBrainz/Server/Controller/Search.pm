@@ -4,7 +4,7 @@ BEGIN { extends 'MusicBrainz::Server::Controller' }
 
 use List::Util qw( min max );
 use MusicBrainz::Server::ControllerUtils::JSON qw( serialize_pager );
-use MusicBrainz::Server::Data::Utils qw( model_to_type type_to_model );
+use MusicBrainz::Server::Data::Utils qw( datetime_to_iso8601 model_to_type type_to_model );
 use MusicBrainz::Server::Form::Search::Query;
 use MusicBrainz::Server::Form::Search::Search;
 use Scalar::Util qw( looks_like_number );
@@ -65,7 +65,7 @@ sub search : Path('')
 
             my %props = (
                 form => $stash->{form},
-                lastUpdated => $stash->{last_updated},
+                lastUpdated => datetime_to_iso8601($stash->{last_updated}),
                 pager => serialize_pager($stash->{pager}),
                 query => $stash->{query},
                 results => $stash->{results},
@@ -178,6 +178,10 @@ sub direct : Private
             $c->model('Event')->load_related_info(@entities);
             $c->model('Event')->load_areas(@entities);
         }
+        when ('tag') {
+            #TODO: add support for genre aliases when finishing MBS-10062
+            $c->model('Genre')->load(@entities);
+        }
     }
 
     if ($type =~ /(recording|release|release_group)/)
@@ -186,7 +190,6 @@ sub direct : Private
     }
 
     $c->stash(
-        template => sprintf('search/results-%s.tt', $type),
         query    => $query,
         results  => $results,
         type     => $type,

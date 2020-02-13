@@ -358,6 +358,7 @@ sub COVER_ART_ARCHIVE_SECRET_KEY { };
 sub COVER_ART_ARCHIVE_UPLOAD_PREFIXER { shift; sprintf("//%s.s3.us.archive.org/", shift) };
 sub COVER_ART_ARCHIVE_DOWNLOAD_PREFIX { "//coverartarchive.org" };
 
+# Mapbox access token must be set to display area/place maps.
 sub MAPBOX_MAP_ID { 'mapbox.streets' }
 sub MAPBOX_ACCESS_TOKEN { '' }
 
@@ -439,6 +440,11 @@ sub USE_SET_DATABASE_HEADER { shift->USE_SELENIUM_HEADER }
 sub USE_SELENIUM_HEADER { 0 }
 
 sub WIKIMEDIA_COMMONS_IMAGES_ENABLED { 1 }
+
+# On release browse endpoints in the webservice, we limit the number of
+# releases returned such that the total number of tracks doesn't exceed this
+# number.
+sub WS_TRACK_LIMIT { 500 }
 
 ################################################################################
 # Profiling

@@ -153,7 +153,11 @@ sub search
         $extra_ordering = ', entity.artist_credit';
 
         my ($join_sql, $where_sql)
-            = ("JOIN ${type} entity ON r.name = entity.name", '');
+            = (
+                "LEFT JOIN ${type}_alias AS alias ON (alias.name = r.name OR alias.sort_name = r.name)
+                JOIN ${type} entity ON (r.name = entity.name OR alias.${type} = entity.id)",
+                ''
+            );
 
         if ($type eq 'release' && $where && exists $where->{track_count}) {
             $join_sql .= ' JOIN medium ON medium.release = entity.id';
@@ -173,14 +177,17 @@ sub search
             SELECT DISTINCT
                 entity.id,
                 entity.gid,
+                entity.name,
                 entity.comment,
                 $extra_columns
-                r.name,
                 r.rank
             FROM
                 (
                     SELECT name, ts_rank_cd(to_tsvector('mb_simple', name), query, 2) as rank
-                    FROM ${type},
+                    FROM
+                        (SELECT name              FROM ${type}       UNION ALL
+                         SELECT name              FROM ${type}_alias UNION ALL
+                         SELECT sort_name AS name FROM ${type}_alias) names,
                         plainto_tsquery('mb_simple', ?) AS query
                     WHERE to_tsvector('mb_simple', name) @@ query OR name = ?
                     ORDER BY rank DESC
@@ -189,7 +196,7 @@ sub search
                 $join_sql
                 $where_sql
             ORDER BY
-                r.rank DESC, r.name
+                r.rank DESC, entity.name
                 ${extra_ordering}, entity.gid
             OFFSET
                 ?
@@ -263,11 +270,41 @@ sub search
         $hard_search_limit = $offset * 2;
     }
 
+    elsif ($type eq 'genre') {
+
+        $query = "
+            SELECT
+                entity.id,
+                entity.gid,
+                entity.name,
+                entity.comment,
+                MAX(rank) AS rank
+            FROM
+                (
+                    SELECT name, ts_rank_cd(to_tsvector('mb_simple', name), query, 2) AS rank
+                    FROM genre,
+                        plainto_tsquery('mb_simple', ?) AS query
+                    WHERE to_tsvector('mb_simple', name) @@ query OR name = ?
+                    ORDER BY rank DESC
+                ) AS r
+                JOIN genre AS entity ON r.name = entity.name
+            GROUP BY
+                entity.id, entity.gid, entity.name, entity.comment
+            ORDER BY
+                rank DESC, entity.name, entity.gid
+            OFFSET
+                ?
+        ";
+
+        $use_hard_search_limit = 0;
+    }
+
     elsif ($type eq "tag") {
         $query = "
-            SELECT id, name, ts_rank_cd(to_tsvector('mb_simple', name), query, 2) AS rank
-            FROM tag, plainto_tsquery('mb_simple', ?) AS query
-            WHERE to_tsvector('mb_simple', name) @@ query OR name = ?
+            SELECT tag.id, tag.name, genre.id as genre_id,
+                   ts_rank_cd(to_tsvector('mb_simple', tag.name), query, 2) AS rank
+            FROM tag LEFT JOIN genre USING (name), plainto_tsquery('mb_simple', ?) AS query
+            WHERE to_tsvector('mb_simple', tag.name) @@ query OR tag.name = ?
             ORDER BY rank DESC, tag.name
             OFFSET ?
         ";
@@ -513,10 +550,29 @@ sub schema_fixup
                 name => delete $data->{status}
             )
         }
-        if ($data->{packaging}) {
-            $data->{packaging} = MusicBrainz::Server::Entity::ReleasePackaging->new(
-                name => delete $data->{packaging}
-            )
+
+        my $packaging = delete $data->{packaging};
+        my $packaging_id = delete $data->{'packaging-id'};
+
+        if ($packaging) {
+            if (ref($packaging) eq 'HASH') {
+                # MB Solr search server v3.1
+                $data->{packaging} = MusicBrainz::Server::Entity::ReleasePackaging->new(
+                    name => $packaging->{name},
+                    defined $packaging->{id} ? (gid => $packaging->{id}) : ()
+                )
+            } elsif ($packaging_id) {
+                # MB Solr search server v3.2? (SOLR-121)
+                $data->{packaging} = MusicBrainz::Server::Entity::ReleasePackaging->new(
+                    name => $packaging,
+                    gid => $packaging_id
+                )
+            } else {
+                # MB Lucene search server
+                $data->{packaging} = MusicBrainz::Server::Entity::ReleasePackaging->new(
+                    name => $packaging
+                )
+            }
         }
     }
     if ($type eq 'release-group') {
@@ -591,16 +647,19 @@ sub schema_fixup
 
             my %entity = %{ $rel->{$entity_type} };
 
+            $self->schema_fixup(\%entity, $entity_type);
+
             # The search server returns the MBID in the 'id' attribute, so we
-            # need to rename that.
-            $entity{gid} = delete $entity{id};
-            %entity = %{ $self->schema_fixup_type(\%entity, $entity_type) };
+            # need to delete that. (`schema_fixup` copies it to gid.)
+            delete $entity{id};
 
             my $entity = $self->c->model( type_to_model ($entity_type) )->
                 _entity_class->new(%entity);
 
             push @relationships, MusicBrainz::Server::Entity::Relationship->new(
                 entity1 => $entity,
+                target => $entity,
+                target_type => $entity->entity_type,
                 link => MusicBrainz::Server::Entity::Link->new(
                     type => MusicBrainz::Server::Entity::LinkType->new(
                         entity1_type => $entity_type,
@@ -652,9 +711,11 @@ sub schema_fixup
                 map {
                     my @relationships = @{ $relationship_map{$_} };
                     {
+                        # TODO: Pass the actual credit when SEARCH-585 is fixed
+                        credit => '',
                         entity => $relationships[0]->entity1,
-                            roles  => [ map { $_->link->type->name } grep { $_->link->type->entity1_type eq 'artist' } @relationships ]
-                        }
+                        roles  => [ map { $_->link->type->name } grep { $_->link->type->entity1_type eq 'artist' } @relationships ]
+                    }
                 } grep {
                     my @relationships = @{ $relationship_map{$_} };
                     any { $_->link->type->entity1_type eq 'artist' } @relationships;

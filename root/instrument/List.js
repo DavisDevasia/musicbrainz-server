@@ -11,17 +11,15 @@ import React from 'react';
 
 import Layout from '../layout';
 import EntityLink from '../static/scripts/common/components/EntityLink';
-import {l} from '../static/scripts/common/i18n';
-import {lp_attributes} from '../static/scripts/common/i18n/attributes';
-import {l_instrument_descriptions} from '../static/scripts/common/i18n/instrument_descriptions';
+import expand2react from '../static/scripts/common/i18n/expand2react';
 
-type PropsT = {|
+type PropsT = {
   +instrument_types: $ReadOnlyArray<InstrumentTypeT>,
-  +instruments_by_type: {|
-    +[number]: $ReadOnlyArray<InstrumentT>,
+  +instruments_by_type: {
+    +[typeId: number]: $ReadOnlyArray<InstrumentT>,
     +unknown: $ReadOnlyArray<InstrumentT>,
-  |},
-|};
+  },
+};
 
 const Instrument = ({instrument}) => (
   <li>
@@ -30,7 +28,7 @@ const Instrument = ({instrument}) => (
       ? (
         <>
           {' — '}
-          {l_instrument_descriptions(instrument.description)}
+          {expand2react(l_instrument_descriptions(instrument.description))}
         </>
       )
       : null}
@@ -57,7 +55,7 @@ const InstrumentList = ({
             </ul>
           </React.Fragment>
         ))}
-        {(unknown && unknown.length)
+        {unknown?.length
           ? (
             <>
               <h2>{l('Unclassified instrument')}</h2>
@@ -70,9 +68,11 @@ const InstrumentList = ({
           )
           : null}
         <p>
-          {l('Is this list missing an instrument? Request it by following {link|these instructions}.', {
-            link: '/doc/How_to_Add_Instruments',
-          })}
+          {exp.l(
+            `Is this list missing an instrument?
+             Request it by following {link|these instructions}.`,
+            {link: '/doc/How_to_Add_Instruments'},
+          )}
         </p>
       </div>
     </Layout>

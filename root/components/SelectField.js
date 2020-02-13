@@ -1,6 +1,6 @@
 /*
  * @flow
- * Copyright (C) 2017 MetaBrainz Foundation
+ * Copyright (C) 2019 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
  * and is licensed under the GPL version 2, or (at your option) any
@@ -9,11 +9,12 @@
 
 import React from 'react';
 
+import {unwrapNl} from '../static/scripts/common/i18n';
 import getSelectValue from '../utility/getSelectValue';
 
 const buildOption = (option: SelectOptionT, index: number) => (
   <option key={index} value={option.value}>
-    {option.label.toLocaleString()}
+    {unwrapNl<string>(option.label)}
   </option>
 );
 
@@ -23,14 +24,30 @@ const buildOptGroup = (optgroup, index) => (
   </optgroup>
 );
 
-type Props = {|
+type SelectElementProps = {
+  className?: string,
+  defaultValue?: StrOrNum,
+  disabled?: boolean,
+  id?: string,
+  name?: string,
+  onChange?: (event: SyntheticEvent<HTMLSelectElement>) => void,
+  required?: boolean,
+  style?: {},
+  value?: StrOrNum,
+  ...
+};
+
+type SelectFieldProps = {
   +allowEmpty?: boolean,
+  +className?: string,
   +disabled?: boolean,
-  +field: FieldT<number | string>,
+  +field: ReadOnlyFieldT<?StrOrNum>,
   +onChange?: (event: SyntheticEvent<HTMLSelectElement>) => void,
   +options: MaybeGroupedOptionsT,
-  +required?: boolean
-|};
+  +required?: boolean,
+  +uncontrolled?: boolean,
+  ...
+};
 
 const SelectField = ({
   allowEmpty = true,
@@ -39,23 +56,38 @@ const SelectField = ({
   onChange,
   options,
   required,
-}: Props) => (
-  <select
-    className="with-button"
-    disabled={disabled}
-    id={'id-' + field.html_name}
-    name={field.html_name}
-    onChange={onChange}
-    required={required}
-    value={getSelectValue(field, options, allowEmpty)}
-  >
-    {allowEmpty
-      ? <option value="">{'\xA0'}</option>
-      : null}
-    {options.grouped
-      ? options.options.map(buildOptGroup)
-      : options.options.map(buildOption)}
-  </select>
-);
+  uncontrolled = false,
+  ...props
+}: SelectFieldProps) => {
+  const selectProps: SelectElementProps = props;
+
+  if (selectProps.className === undefined) {
+    selectProps.className = 'with-button';
+  }
+
+  selectProps.disabled = disabled;
+  selectProps.id = 'id-' + field.html_name;
+  selectProps.name = field.html_name;
+  selectProps.required = required;
+
+  if (uncontrolled) {
+    selectProps.defaultValue =
+      getSelectValue(field, options, allowEmpty);
+  } else {
+    selectProps.onChange = onChange;
+    selectProps.value = getSelectValue(field, options, allowEmpty);
+  }
+
+  return (
+    <select {...selectProps}>
+      {allowEmpty
+        ? <option value="">{'\xA0'}</option>
+        : null}
+      {options.grouped
+        ? options.options.map(buildOptGroup)
+        : options.options.map(buildOption)}
+    </select>
+  );
+};
 
 export default SelectField;

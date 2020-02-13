@@ -12,11 +12,10 @@ import * as React from 'react';
 import {withCatalystContext} from '../context';
 import Layout from '../layout';
 import formatUserDate from '../utility/formatUserDate';
-import {l} from '../static/scripts/common/i18n';
 
-import ArtistURLList from './components/ArtistURLList';
+import ArtistUrlList from './components/ArtistUrlList';
 import FilterLink from './FilterLink';
-import type {ReportArtistURLT, ReportDataT} from './types';
+import type {ReportArtistUrlT, ReportDataT} from './types';
 
 const DiscogsLinksWithMultipleArtists = ({
   $c,
@@ -25,21 +24,28 @@ const DiscogsLinksWithMultipleArtists = ({
   generated,
   items,
   pager,
-}: ReportDataT<ReportArtistURLT>) => (
+}: ReportDataT<ReportArtistUrlT>) => (
   <Layout fullWidth title={l('Discogs URLs linked to multiple artists')}>
     <h1>{l('Discogs URLs linked to multiple artists')}</h1>
 
     <ul>
       <li>
-        {l('This report shows Discogs URLs which are linked to multiple artists.')}
+        {l(`This report shows Discogs URLs which are linked
+            to multiple artists.`)}
       </li>
-      <li>{l('Total artists found: {count}', {count: pager.total_entries})}</li>
-      <li>{l('Generated on {date}', {date: formatUserDate($c.user, generated)})}</li>
+      <li>
+        {texp.l('Total artists found: {count}',
+                {count: pager.total_entries})}
+      </li>
+      <li>
+        {texp.l('Generated on {date}',
+                {date: formatUserDate($c, generated)})}
+      </li>
 
       {canBeFiltered ? <FilterLink filtered={filtered} /> : null}
     </ul>
 
-    <ArtistURLList items={items} pager={pager} />
+    <ArtistUrlList items={items} pager={pager} />
 
   </Layout>
 );

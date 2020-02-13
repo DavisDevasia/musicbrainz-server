@@ -1,7 +1,10 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import $ from 'jquery';
 import _ from 'lodash';
@@ -39,10 +42,13 @@ function dialogTest(name, callback) {
             useTrackLengths: true
         };
 
-        var $fixture = $('<div>').attr('id', 'fixture').appendTo('body').append(
-            $("<div>").attr("id", "add-disc-dialog").hide(),
-            $("<div>").attr("id", "track-parser-dialog").hide()
-        );
+        var $fixture = $('<div>')
+            .attr('id', 'fixture')
+            .appendTo('body')
+            .append(
+                $("<div>").attr("id", "add-disc-dialog").hide(),
+                $("<div>").attr("id", "track-parser-dialog").hide(),
+            );
 
         releaseEditor.activeTabID("#information");
 
@@ -126,7 +132,7 @@ dialogTest("adding a new medium does not cause reorder edits (MBS-7412)", functi
 
     release.mediums([
         new fields.Medium(
-            _.assign(_.omit(common.testMedium, "id"), { position: 1 })
+            Object.assign(_.omit(common.testMedium, "id"), { position: 1 })
         )
     ]);
 

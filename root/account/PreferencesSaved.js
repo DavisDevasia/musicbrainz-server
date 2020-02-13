@@ -9,19 +9,25 @@
 
 import React from 'react';
 
-import {l} from '../static/scripts/common/i18n';
 import {withCatalystContext} from '../context';
 import StatusPage from '../components/StatusPage';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT | SanitizedCatalystContextT,
-|};
+};
 
 const PreferencesSaved = ({$c}: Props) => (
   <StatusPage title={l('Preferences')}>
     <p>
-      {l('Your preferences have been saved. Click {link|here} to continue to your user page.',
-        {link: $c.user ? '/user/' + encodeURIComponent($c.user.name) : '/register'})}
+      {exp.l(
+        `Your preferences have been saved. Click {link|here} to
+         continue to your user page.`,
+        {
+          link: $c.user
+            ? '/user/' + encodeURIComponent($c.user.name)
+            : '/register',
+        },
+      )}
     </p>
   </StatusPage>
 );

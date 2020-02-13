@@ -1,7 +1,10 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import $ from 'jquery';
 import ko from 'knockout';
@@ -12,6 +15,7 @@ import {reduceArtistCredit} from '../common/immutable-entities';
 import MB from '../common/MB';
 import clean from '../common/utility/clean';
 import debounce from '../common/utility/debounce';
+import isBlank from '../common/utility/isBlank';
 import isPositiveInteger from '../edit/utility/isPositiveInteger';
 import * as validation from '../edit/validation';
 
@@ -76,9 +80,8 @@ releaseEditor.edits = {
 
         if (!release.gid()) {
             edits.push(MB.edit.releaseCreate(newData));
-        }
-        else if (!_.isEqual(newData, oldData)) {
-            newData = _.extend(_.clone(newData), { to_edit: release.gid() });
+        } else if (!_.isEqual(newData, oldData)) {
+            newData = {...newData, to_edit: release.gid()};
             edits.push(MB.edit.releaseEdit(newData, oldData));
         }
         return edits;
@@ -141,11 +144,13 @@ releaseEditor.edits = {
     medium: function (release) {
         var edits = [];
 
-        // oldPositions are the original positions for all the original
-        // mediums (as they exist in the database). newPositions are all
-        // the new positions for the new mediums (as they exist on the
-        // page). tmpPositions stores any positions we use to avoid
-        // conflicts between oldPositions/newPositions.
+        /*
+         * oldPositions are the original positions for all the original
+         * mediums (as they exist in the database). newPositions are all
+         * the new positions for the new mediums (as they exist on the
+         * page). tmpPositions stores any positions we use to avoid
+         * conflicts between oldPositions/newPositions.
+         */
 
         var oldPositions = _.map(release.mediums.original(), function (m) {
             return m.original().position;
@@ -168,7 +173,7 @@ releaseEditor.edits = {
                     var oldRecording = track.recording.savedEditData;
 
                     if (oldRecording) {
-                        if (track.updateRecordingTitle()) {
+                        if (track.updateRecordingTitle() && !isBlank(trackData.name)) {
                             newRecording.name = trackData.name;
                         }
 
@@ -195,15 +200,17 @@ releaseEditor.edits = {
                     edits.push(MB.edit.mediumEdit(newNoPosition, oldNoPosition));
                 }
             } else if (medium.hasTracks()) {
-                // With regards to the medium position, make sure that:
-                //
-                //  (1) The position doesn't conflict with an existing
-                //      medium as present in the database. If it does,
-                //      pick a position that doesn't and enter a reorder
-                //      edit.
-                //
-                //  (2) The position doesn't conflict with the new
-                //      position of any moved medium, unless they swap.
+                /*
+                 * With regards to the medium position, make sure that:
+                 *
+                 *  (1) The position doesn't conflict with an existing
+                 *      medium as present in the database. If it does,
+                 *      pick a position that doesn't and enter a reorder
+                 *      edit.
+                 *
+                 *  (2) The position doesn't conflict with the new
+                 *      position of any moved medium, unless they swap.
+                 */
 
                 var newPosition = newMediumData.position;
 
@@ -211,7 +218,7 @@ releaseEditor.edits = {
                     var lastAttempt = (_.last(tmpPositions) + 1) || 1;
                     var attempt;
 
-                    while (attempt = lastAttempt++) {
+                    while ((attempt = lastAttempt++)) {
                         if (_.includes(oldPositions, attempt) ||
                             _.includes(tmpPositions, attempt)) {
                             // This position is taken.
@@ -219,9 +226,11 @@ releaseEditor.edits = {
                         }
 
                         if (_.includes(newPositions, attempt)) {
-                            // Another medium is being moved to the
-                            // position we want. Avoid this *unless* we're
-                            // swapping with that medium.
+                            /*
+                             * Another medium is being moved to the
+                             * position we want. Avoid this *unless* we're
+                             * swapping with that medium.
+                             */
 
                             var possibleSwap = _.find(
                                 newMediums,
@@ -281,10 +290,12 @@ releaseEditor.edits = {
             );
 
             if (oldPosition !== newPosition) {
-                // A removed medium is already in the position we want, so
-                // make sure we swap with it to avoid conflicts.
+                /*
+                 * A removed medium is already in the position we want, so
+                 * make sure we swap with it to avoid conflicts.
+                 */
                 var removedMedium;
-                if (removedMedium = removedMediums[newPosition]) {
+                if ((removedMedium = removedMediums[newPosition])) {
                     newOrder.push({
                         medium_id:  removedMedium.id,
                         "old":      newPosition,
@@ -337,6 +348,11 @@ releaseEditor.edits = {
     externalLinks: function (release) {
         var edits = [];
 
+        function hasVideo(relationship) {
+            const attributes = relationship.attributes;
+            return (attributes && attributes.some(attr => attr.type.gid === VIDEO_ATTRIBUTE_GID));
+        }
+
         if (releaseEditor.hasInvalidLinks()) {
             return edits;
         }
@@ -359,7 +375,7 @@ releaseEditor.edits = {
                     if (!_.isEqual(newData, original)) {
                         var editData = MB.edit.relationshipEdit(newData, original);
 
-                        if (original.video && !newData.video) {
+                        if (hasVideo(original) && !hasVideo(newData)) {
                             editData.attributes = [{type: {gid: VIDEO_ATTRIBUTE_GID}, removed: true}];
                         }
 
@@ -399,21 +415,29 @@ releaseEditor.loadingEditPreviews = ko.observable(false);
 
 
 releaseEditor.getEditPreviews = function () {
-    var previews = {}, previewRequest = null;
+    const previews = {};
+    let previewRequest = null;
 
     function refreshPreviews(edits) {
         releaseEditor.editPreviews(_.compact(_.map(edits, getPreview)));
     }
 
-    function getPreview(edit) { return previews[edit.hash] }
+    function getPreview(edit) {
+        return previews[edit.hash];
+    }
+
     function addPreview(tuple) {
-        var editHash = tuple[0].hash, preview = tuple[1];
+        const editHash = tuple[0].hash;
+        const preview = tuple[1];
         if (preview) {
             preview.editHash = editHash;
             previews[editHash] = preview;
         }
     }
-    function isNewEdit(edit) { return previews[edit.hash] === undefined }
+
+    function isNewEdit(edit) {
+        return previews[edit.hash] === undefined;
+    }
 
     debounce(function () {
         var edits = releaseEditor.allEdits();
@@ -492,14 +516,14 @@ function chainEditSubmissions(release, submissions) {
             return;
         }
 
-        var edits = current.edits(release),
-            submitted = null;
+        const edits = current.edits(release);
+        let submitted = null;
 
         if (edits.length) {
             submitted = MB.edit.create($.extend({ edits: edits }, args));
         }
 
-        let submissionDone = function (data) {
+        const submissionDone = function (data) {
             if (data && current.callback) {
                 current.callback(
                     release,
@@ -592,8 +616,11 @@ releaseEditor.orderedEditSubmissions = [
         edits: releaseEditor.edits.medium,
 
         callback: function (release, edits) {
-            var added = _(edits).map("entity").compact()
-                                .keyBy("position").value();
+            var added = _(edits)
+                .map("entity")
+                .compact()
+                .keyBy("position")
+                .value();
 
             var newMediums = release.mediums();
 
@@ -605,9 +632,11 @@ releaseEditor.orderedEditSubmissions = [
 
                     var currentData = MB.edit.fields.medium(medium);
 
-                    // mediumReorder edits haven't been submitted yet, so
-                    // we must keep the position the medium was added in
-                    // (i.e. tmpPosition).
+                    /*
+                     * mediumReorder edits haven't been submitted yet, so
+                     * we must keep the position the medium was added in
+                     * (i.e. tmpPosition).
+                     */
                     currentData.position = addedData.position;
 
                     medium.original(currentData);

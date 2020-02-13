@@ -11,10 +11,10 @@ import URL from 'url';
 import React from 'react';
 import _ from 'lodash';
 
-import {withCatalystContext} from '../../context';
 import EntityLink from '../../static/scripts/common/components/EntityLink';
 import {FAVICON_CLASSES} from '../../static/scripts/common/constants';
 import {compare, l} from '../../static/scripts/common/i18n';
+import linkedEntities from '../../static/scripts/common/linkedEntities';
 
 function faviconClass(urlEntity) {
   let matchingClass;
@@ -50,9 +50,10 @@ const ExternalLink = ({className, relationship, text}) => {
   );
 };
 
-const ExternalLinks = ({$c, entity, empty, heading}) => {
+const ExternalLinks = ({entity, empty, heading}) => {
   const relationships = entity.relationships;
   const links = [];
+  const blogLinks = [];
   const otherLinks = [];
 
   for (let i = 0; i < relationships.length; i++) {
@@ -64,7 +65,7 @@ const ExternalLinks = ({$c, entity, empty, heading}) => {
     }
 
     const linkType =
-      $c.linked_entities.link_type[relationship.linkTypeID];
+      linkedEntities.link_type[relationship.linkTypeID];
     if (/^official (?:homepage|site)$/.test(linkType.name)) {
       links.push(
         <ExternalLink
@@ -74,12 +75,21 @@ const ExternalLinks = ({$c, entity, empty, heading}) => {
           text={l('Official homepage')}
         />,
       );
+    } else if (/^blog$/.test(linkType.name)) {
+      blogLinks.push(
+        <ExternalLink
+          className="blog-favicon"
+          key={relationship.id}
+          relationship={relationship}
+          text={l('Blog')}
+        />,
+      );
     } else if (target.show_in_external_links) {
       otherLinks.push(relationship);
     }
   }
 
-  if (!(links.length || otherLinks.length)) {
+  if (!(links.length || blogLinks.length || otherLinks.length)) {
     return null;
   }
 
@@ -90,6 +100,8 @@ const ExternalLinks = ({$c, entity, empty, heading}) => {
 
   const uniqueOtherLinks = _.sortedUniqBy(otherLinks, x => x.target.href_url);
 
+  // We ensure official sites are listed above blogs, and blogs above others
+  links.push.apply(links, blogLinks);
   links.push.apply(links, uniqueOtherLinks.map(function (relationship) {
     return <ExternalLink key={relationship.id} relationship={relationship} />;
   }));
@@ -117,4 +129,4 @@ const ExternalLinks = ({$c, entity, empty, heading}) => {
   );
 };
 
-export default withCatalystContext(ExternalLinks);
+export default ExternalLinks;

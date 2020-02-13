@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2019 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -9,12 +9,10 @@
 
 import * as React from 'react';
 
-import * as manifest from '../../../manifest';
-
 const AddIcon = () => (
   <img
     className="bottom"
-    src={manifest.pathTo('/images/icons/add.png')}
+    src={require('../../../images/icons/add.png')}
   />
 );
 

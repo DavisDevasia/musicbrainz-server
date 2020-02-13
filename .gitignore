@@ -25,7 +25,6 @@
 /MYMETA.yml
 /po/*.mo
 *.ttc
-*.pyc
 *~
 .#*
 *.swp
@@ -39,6 +38,14 @@
 # Ignore nodejs dir
 /node_modules
 
+# Ignore cpanm/perl dir (created by musicbrainz-docker dev setup)
+/.cpanm
+/perl_modules
+
+# Ignore log files (created by replication slave.sh cron script)
+/.logrotate-state
+/slave.log*
+
 # If there's at least one person using a mac
 .DS_Store
 
@@ -50,3 +57,12 @@
 
 # Ignore schema change catchup folder
 /catchup
+
+# Istanbul coverage
+/.nyc_output/
+/coverage/
+
+# sir log/pid files created by script/reset_selenium_env.sh.
+/t/selenium/.sir-amqp_watch.log
+/t/selenium/.sir-amqp_watch.pid
+/t/selenium/.sir-reindex.log

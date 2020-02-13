@@ -1,27 +1,40 @@
-// @flow
-// Copyright (C) 2014 Khan Academy
-// Copyright (C) 2015 MetaBrainz Foundation
+/*
+ * @flow
+ * Copyright (C) 2014 Khan Academy
+ * Copyright (C) 2015 MetaBrainz Foundation
+ */
 
-// The source code contained in this file was originally derived from
-// https://raw.githubusercontent.com/Khan/react-components/9984740/js/info-tip.jsx
-// which is released under the MIT license. The full terms of this license can
-// be found in the original source code repository at
-// https://raw.githubusercontent.com/Khan/react-components/9984740/LICENSE
+/*
+ * The source code contained in this file was originally derived from
+ * https://raw.githubusercontent.com/Khan/react-components/9984740/js/info-tip.jsx
+ * which is released under the MIT license. The full terms of this license can
+ * be found in the original source code repository at
+ * https://raw.githubusercontent.com/Khan/react-components/9984740/LICENSE
+ */
 
-const React = require('react');
-const ReactDOM = require('react-dom');
+import * as React from 'react';
 
-type TooltipProps = {|
+type TooltipProps = {
   +hoverCallback: (bool) => void,
   +content: React.Node,
-|};
+};
 
 class Tooltip extends React.Component<TooltipProps> {
+  containerRef: {current: HTMLDivElement | null};
+
+  constructor(props: TooltipProps) {
+    super(props);
+
+    this.containerRef = React.createRef();
+  }
+
   componentDidMount() {
-    const element: any = ReactDOM.findDOMNode(this);
-    const links = element.getElementsByTagName('a');
-    for (let i = 0; i < links.length; i++) {
-      links[i].setAttribute('target', '_blank');
+    const container = this.containerRef.current;
+    const links = container?.getElementsByTagName('a');
+    if (links) {
+      for (let i = 0; i < links.length; i++) {
+        links[i].setAttribute('target', '_blank');
+      }
     }
   }
 
@@ -30,7 +43,8 @@ class Tooltip extends React.Component<TooltipProps> {
     return (
       <div className="tooltip-container"
            onMouseEnter={() => hoverCallback(true)}
-           onMouseLeave={() => hoverCallback(false)}>
+           onMouseLeave={() => hoverCallback(false)}
+           ref={this.containerRef}>
         <div className="tooltip-triangle" />
         <div className="tooltip-content">{this.props.content}</div>
       </div>
@@ -38,4 +52,4 @@ class Tooltip extends React.Component<TooltipProps> {
   }
 }
 
-module.exports = Tooltip;
+export default Tooltip;

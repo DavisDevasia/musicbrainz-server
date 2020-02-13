@@ -2,6 +2,8 @@ package MusicBrainz::Server::Controller::Role::Merge;
 use MooseX::MethodAttributes::Role;
 use MooseX::Role::Parameterized;
 
+use List::UtilsBy qw( nsort_by );
+use MusicBrainz::Server::Data::Utils qw( type_to_model );
 use MusicBrainz::Server::Log qw( log_assertion );
 use MusicBrainz::Server::Translation qw( l ln );
 use MusicBrainz::Server::Validation qw( is_positive_integer );
@@ -34,6 +36,7 @@ role {
     method 'merge_queue' => sub {
         my ($self, $c) = @_;
         my $model = $c->model( $self->{model} );
+        my $type = model_to_type($self->{model});
 
         my $add = exists $c->req->params->{'add-to-merge'} ? $c->req->params->{'add-to-merge'} : [];
         my @add = ref($add) ? @$add : ($add);
@@ -43,9 +46,9 @@ role {
             my @loaded = values %{ $model->get_by_ids(@add) };
 
             if (!$c->session->{merger} ||
-                 $c->session->{merger}->type ne $self->{model}) {
+                 $c->session->{merger}->type ne $type) {
                 $c->session->{merger} = MusicBrainz::Server::MergeQueue->new(
-                    type => $self->{model},
+                    type => $type,
                 );
             }
 
@@ -55,7 +58,7 @@ role {
             if ($merger->ready_to_merge) {
                 $c->response->redirect(
                     $c->uri_for_action(
-                        $self->action_for('merge')));
+                        $self->action_for('merge'), { returnto => $c->req->referer }));
                 $c->detach;
             }
         }
@@ -85,7 +88,7 @@ role {
         my ($self, $c) = @_;
         delete $c->session->{merger};
         $c->res->redirect(
-            $c->req->referer || $c->uri_for('/'));
+            $c->req->query_params->{returnto} || $c->req->referer || $c->uri_for('/'));
         $c->detach;
     };
 
@@ -122,11 +125,15 @@ role {
             or $c->res->redirect('/'), $c->detach;
 
         my @entities = values %{
-            $c->model($merger->type)->get_by_ids($merger->all_entities)
+            $c->model($self->{model})->get_by_ids($merger->all_entities)
         };
 
-        $c->detach
-            unless $merger->ready_to_merge;
+        unless ($merger->ready_to_merge) {
+            $c->response->redirect(
+                $c->req->referer ||
+                    $c->uri_for_action('/'));
+            $c->detach;
+        }
 
         my $check_form = $c->form(form => 'Merge');
         if ($check_form->submitted_and_valid($c->req->params)) {
@@ -135,6 +142,11 @@ role {
             @entities = values %{
                 $c->model($self->{model})->get_by_ids(map { $_->value } $check_form->field('merging')->fields)
             };
+
+            my $target = $check_form->field('target')->value;
+            # Put the target first, since `determine_recording_merges` etc.
+            # requires that.
+            @entities = nsort_by { $_->id == $target ? 0 : 1 } @entities;
         }
 
         $self->_merge_load_entities($c, @entities);
@@ -145,13 +157,14 @@ role {
             $self->_merge_form_arguments($c, @entities)
         );
 
-        if ($c->namespace eq 'artist') {
+        if ($c->namespace =~ /^(?:artist|recording)$/) {
             my %props = (
+                isrcsDiffer => $c->stash->{isrcs_differ},
                 form => $form,
                 toMerge => \@entities,
             );
             $c->stash(
-                component_path => $c->namespace . '/Merge.js',
+                component_path => $c->namespace . '/'. type_to_model($c->namespace) . 'Merge.js',
                 component_props => \%props,
                 current_view => 'Node',
             );

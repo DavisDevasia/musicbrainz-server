@@ -9,15 +9,15 @@
 
 import * as React from 'react';
 
-import {l} from '../../../static/scripts/common/i18n';
-import bracketed from '../../../static/scripts/common/utility/bracketed';
+import {bracketedText}
+  from '../../../static/scripts/common/utility/bracketed';
 import formatDate from '../../../static/scripts/common/utility/formatDate';
 import isDateEmpty from '../../../static/scripts/common/utility/isDateEmpty';
 import {displayAge} from '../../../utility/age';
 
 import {SidebarProperty} from './SidebarProperties';
 
-type Props = {|
+type Props = {
   +age?: [number, number, number] | null,
   +entity:
     | AreaT
@@ -26,7 +26,7 @@ type Props = {|
     | LabelT
     | PlaceT,
   +label: string,
-|};
+};
 
 const SidebarEndDate = ({age, entity, label}: Props) => (
   isDateEmpty(entity.end_date) ? (
@@ -39,7 +39,7 @@ const SidebarEndDate = ({age, entity, label}: Props) => (
     <SidebarProperty className="end-date" label={label}>
       {formatDate(entity.end_date)}
       {age ? (
-        ' ' + bracketed(
+        ' ' + bracketedText(
           displayAge(
             age,
             entity.entityType === 'artist' && entity.typeID === 1,

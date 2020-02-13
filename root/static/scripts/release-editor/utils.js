@@ -1,18 +1,22 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2011-2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
-//
-// The 'base64' function contained in this file is derived from:
-// http://stringencoders.googlecode.com/svn-history/r210/trunk/javascript/base64.js
-// Original version Copyright (C) 2010 Nick Galbreath, and released under
-// the MIT license: http://opensource.org/licenses/MIT
+/*
+ * Copyright (C) 2011-2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ *
+ * The 'base64' function contained in this file is derived from:
+ * http://stringencoders.googlecode.com/svn-history/r210/trunk/javascript/base64.js
+ * Original version Copyright (C) 2010 Nick Galbreath, and released under
+ * the MIT license: http://opensource.org/licenses/MIT
+ */
 
 import ko from 'knockout';
 import _ from 'lodash';
 
-import {rstr_sha1} from '../../lib/sha1/sha1';
-import {MAX_LENGTH_DIFFERENCE, MIN_NAME_SIMILARITY} from '../common/constants';
+import {rstr_sha1 as rstrSha1} from '../../lib/sha1/sha1';
+import {MAX_LENGTH_DIFFERENCE, MIN_NAME_SIMILARITY}
+    from '../common/constants';
 import escapeLuceneValue from '../common/utility/escapeLuceneValue';
 import request from '../common/utility/request';
 import similarity from '../edit/utility/similarity';
@@ -61,7 +65,7 @@ export function unformatTrackLength(duration) {
     var hours = parseInt(parts.pop() || 0, 10) * 3600;
 
     return (hours + minutes + seconds) * 1000;
-};
+}
 
 utils.unformatTrackLength = unformatTrackLength;
 
@@ -71,7 +75,7 @@ utils.escapeLuceneValue = escapeLuceneValue;
 
 utils.constructLuceneField = function (values, key) {
     return key + ":(" + values.join(" OR ") + ")";
-}
+};
 
 utils.constructLuceneFieldConjunction = function (params) {
     return _.map(params, utils.constructLuceneField).join(" AND ");
@@ -87,43 +91,64 @@ utils.search = function (resource, query, limit, offset) {
         }
     };
 
-    if (limit !== undefined) requestArgs.data.limit = limit;
+    if (limit !== undefined) {
+        requestArgs.data.limit = limit;
+    }
 
-    if (offset !== undefined) requestArgs.data.offset = offset;
+    if (offset !== undefined) {
+        requestArgs.data.offset = offset;
+    }
 
     return request(requestArgs);
 };
 
 
 utils.reuseExistingMediumData = function (data) {
-    // When reusing an existing medium, we don't want to keep its id or
-    // its cdtocs, since neither of those will be shared. However, if we
-    // haven't loaded the tracks yet, we retain the id as originalID so we
-    // can request them later.
-    var newData = _.omit(data, "id", "cdtocs");
+    /*
+     * When reusing an existing medium, we don't want to keep its id or
+     * its cdtocs, since neither of those will be shared. However, if we
+     * haven't loaded the tracks yet, we retain the id as originalID so we
+     * can request them later. We also drop the format, since it'll often
+     * be different.
+     */
+    var newData = _.omit(data, "id", "cdtocs", "format", "format_id");
 
-    if (data.id) newData.originalID = data.id;
+    if (data.id) {
+        newData.originalID = data.id;
+    }
 
     return newData;
 };
 
 
-// Converts JSON from /ws/2 into /ws/js-formatted data. Hopefully one day
-// we'll have a standard MB data format and this won't be needed.
+/*
+ * Converts JSON from /ws/2 into /ws/js-formatted data. Hopefully one day
+ * we'll have a standard MB data format and this won't be needed.
+ */
 
 utils.cleanWebServiceData = function (data) {
     var clean = { gid: data.id, name: data.title };
 
-    if (data.length) clean.length = data.length;
+    if (data.length) {
+        clean.length = data.length;
+    }
 
-    if (data["sort-name"]) clean.sort_name = data["sort-name"];
+    if (data["sort-name"]) {
+        clean.sort_name = data["sort-name"];
+    }
 
     if (data["artist-credit"]) {
-        clean.artistCredit = _.map(data["artist-credit"], cleanArtistCreditName);
+        clean.artistCredit = {
+            names: _.map(data["artist-credit"], cleanArtistCreditName),
+        };
     }
 
     if (data.disambiguation) {
         clean.comment = data.disambiguation;
+    }
+
+    if (data.isrcs) {
+        clean.isrcs = data.isrcs.map(cleanIsrc);
     }
 
     return clean;
@@ -139,6 +164,12 @@ function cleanArtistCreditName(data) {
         },
         name: data.name || data.artist.name,
         joinPhrase: data.joinphrase || ""
+    };
+}
+
+function cleanIsrc(data) {
+    return {
+        isrc: data,
     };
 }
 
@@ -158,8 +189,10 @@ utils.similarNames = function (oldName, newName) {
 };
 
 utils.similarLengths = function (oldLength, newLength) {
-    // If either of the lengths are empty, we can't compare them, so we
-    // consider them to be "similar" for recording association purposes.
+    /*
+     * If either of the lengths are empty, we can't compare them, so we
+     * consider them to be "similar" for recording association purposes.
+     */
     return !oldLength || !newLength || lengthsAreWithin10s(oldLength, newLength);
 };
 
@@ -173,8 +206,8 @@ export function calculateDiscID(toc) {
         temp += paddedHex(info[i], 8);
     }
 
-    return base64(rstr_sha1(temp));
-};
+    return base64(rstrSha1(temp));
+}
 
 utils.calculateDiscID = calculateDiscID;
 
@@ -182,14 +215,17 @@ function paddedHex(str, length) {
     return _.padStart((parseInt(str, 10) || 0).toString(16).toUpperCase(), length, '0');
 }
 
-// The alphabet has been modified and does not conform to RFC822.
-// For an explanation, see http://wiki.musicbrainz.org/Disc_ID_Calculation
+/*
+ * The alphabet has been modified and does not conform to RFC822.
+ * For an explanation, see http://wiki.musicbrainz.org/Disc_ID_Calculation
+ */
 
 var padchar = "-";
 var alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._";
 
 function base64(s) {
-    var i, b10;
+    let i;
+    let b10;
     var x = [];
     var imax = s.length - s.length % 3;
 

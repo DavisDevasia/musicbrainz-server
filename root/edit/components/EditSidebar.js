@@ -9,18 +9,18 @@
 
 import * as React from 'react';
 
-import ExpirationTime from '../../components/ExpirationTime';
+import RequestLogin from '../../components/RequestLogin';
+import VotingPeriod from '../../components/VotingPeriod';
 import {
   EDIT_STATUS_OPEN,
   EDIT_STATUS_TOBEDELETED,
 } from '../../constants';
 import {withCatalystContext} from '../../context';
-import SidebarDataQuality from '../../layout/components/sidebar/SidebarDataQuality';
 import {
   SidebarProperties,
   SidebarProperty,
 } from '../../layout/components/sidebar/SidebarProperties';
-import {addColon, l, ln, lp} from '../../static/scripts/common/i18n';
+import expand2react from '../../static/scripts/common/i18n/expand2react';
 import {
   getEditExpireAction,
   getEditStatusName,
@@ -28,10 +28,10 @@ import {
 } from '../../utility/edit';
 import formatUserDate from '../../utility/formatUserDate';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +edit: EditT,
-|};
+};
 
 const EditSidebar = ({$c, edit}: Props) => (
   <div id="sidebar">
@@ -45,29 +45,30 @@ const EditSidebar = ({$c, edit}: Props) => (
 
     <SidebarProperties>
       <SidebarProperty className="" label={l('Opened:')}>
-        {formatUserDate($c.user, edit.created_time)}
+        {formatUserDate($c, edit.created_time)}
       </SidebarProperty>
 
       {edit.status === EDIT_STATUS_OPEN ? (
-        <SidebarProperty className="" label={addColon(l('Expiration'))}>
+        <SidebarProperty className="" label={addColonText(l('Voting'))}>
           <div className="edit-expiration">
-            <ExpirationTime date={edit.expires_time} user={$c.user} />
+            <VotingPeriod closingDate={edit.expires_time} user={$c.user} />
           </div>
         </SidebarProperty>
       ) : (
         <SidebarProperty className="" label={l('Closed:')}>
           <div className="edit-expiration">
             {edit.status === EDIT_STATUS_TOBEDELETED
-              ? l('<em>Cancelling</em>')
-              : formatUserDate($c.user, edit.close_time)}
+              ? expand2react(l('<em>Cancelling</em>'))
+              : formatUserDate($c, edit.close_time)}
           </div>
         </SidebarProperty>
       )}
 
-      <SidebarDataQuality quality={edit.quality} />
-
-      <SidebarProperty className="" label={l('Requires:')}>
-        {ln(
+      <SidebarProperty
+        className=""
+        label={addColonText(l('For quicker closing'))}
+      >
+        {texp.ln(
           '1 vote',
           '{n} unanimous votes',
           edit.conditions.votes,
@@ -75,15 +76,20 @@ const EditSidebar = ({$c, edit}: Props) => (
         )}
       </SidebarProperty>
 
-      <SidebarProperty className="" label={l('Conditions:')}>
+      <SidebarProperty
+        className=""
+        label={addColonText(l('If no votes cast'))}
+      >
         {getEditExpireAction(edit)}
       </SidebarProperty>
     </SidebarProperties>
 
     <p>
-      <a href={`/edit/${edit.id}/data`}>
-        <bdi>{l('Raw edit data for this edit')}</bdi>
-      </a>
+      {$c.user_exists ? (
+        <a href={`/edit/${edit.id}/data`}>
+          <bdi>{l('Raw edit data for this edit')}</bdi>
+        </a>
+      ) : null}
     </p>
 
     <p>{l('For more information:')}</p>

@@ -10,11 +10,14 @@
 import * as React from 'react';
 
 import ConfirmLayout from '../../components/ConfirmLayout';
-import {l} from '../../static/scripts/common/i18n';
 
-const RevokeApplicationAccess = () => ConfirmLayout({
-  question: l('Are you sure you want to revoke this application\'s access?'),
-  title: l('Revoke Application Access'),
-});
+const RevokeApplicationAccess = () => (
+  <ConfirmLayout
+    question={l(
+      `Are you sure you want to revoke this application's access?`,
+    )}
+    title={l('Revoke Application Access')}
+  />
+);
 
 export default RevokeApplicationAccess;

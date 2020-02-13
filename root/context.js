@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2018 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -7,26 +7,17 @@
  * later version: http://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-import React from 'react';
-import type {ComponentType} from 'react';
+// NOTE: Don't convert to an ES module; this is used by root/server.js.
+/* eslint-disable import/no-commonjs */
+
+const React = require('react');
+/*:: import type {ComponentType} from 'react'; */
 
 const defaultContext = {
   action: {
     name: '',
   },
-  linked_entities: {
-    artist_type: {},
-    language: {},
-    link_type: {},
-    release_group_primary_type: {},
-    release_group_secondary_type: {},
-    release_packaging: {},
-    release_status: {},
-    script: {},
-    series_ordering_type: {},
-    series_type: {},
-    work_attribute_type: {},
-  },
+  flash: {},
   relative_uri: '',
   req: {
     headers: {},
@@ -43,18 +34,28 @@ const defaultContext = {
   user_exists: false,
 };
 
-export const CatalystContext = React.createContext<typeof defaultContext>(defaultContext);
+const CatalystContext =
+  React.createContext/*:: <typeof defaultContext> */(defaultContext);
 
+exports.CatalystContext = CatalystContext;
+
+/*::
 type ContextPropT = {
   +$c: CatalystContextT | SanitizedCatalystContextT,
+  ...
 };
+*/
 
-export function withCatalystContext<P: ContextPropT>(
-  Component: ComponentType<P>,
-): ComponentType<$Diff<P, ContextPropT>> {
-  return (props) => (
-    <CatalystContext.Consumer>
-      {($c: CatalystContextT) => <Component $c={$c} {...props} />}
-    </CatalystContext.Consumer>
+function withCatalystContext/*:: <P: ContextPropT> */(
+  Component /*: ComponentType<P> */,
+) /*: ComponentType<$Exact<$Diff<P, ContextPropT>>> */ {
+  return (props) => React.createElement(
+    CatalystContext.Consumer,
+    null,
+    ($c /*: CatalystContextT */) => (
+      React.createElement(Component, {$c, ...props})
+    ),
   );
 }
+
+exports.withCatalystContext = withCatalystContext;

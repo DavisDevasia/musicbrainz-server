@@ -12,15 +12,14 @@ import type {Node as ReactNode} from 'react';
 
 
 import PaginatedResults from '../../components/PaginatedResults';
-import {l} from '../../static/scripts/common/i18n';
 
-type Props<T> = {|
+type Props<T> = {
   +buildResult: (SearchResultT<T>, number) => ReactNode,
   +columns: ReactNode,
   +pager: PagerT,
   +query: string,
   +results: $ReadOnlyArray<SearchResultT<T>>,
-|};
+};
 
 const PaginatedSearchResults = <T>({
   buildResult,
@@ -28,19 +27,21 @@ const PaginatedSearchResults = <T>({
   pager,
   query,
   results,
-}: Props<T>) => results.length ? (
-  <PaginatedResults pager={pager} query={query} search>
-    <table className="tbl">
-      <thead>
-        <tr>
-          {columns}
-        </tr>
-      </thead>
-      <tbody>
-        {results.map(buildResult)}
-      </tbody>
-    </table>
-  </PaginatedResults>
-) : <p>{l('No results found. Try refining your search query.')}</p>;
+}: Props<T>) => {
+  return results.length ? (
+    <PaginatedResults pager={pager} query={query} search>
+      <table className="tbl">
+        <thead>
+          <tr>
+            {columns}
+          </tr>
+        </thead>
+        <tbody>
+          {results.map(buildResult)}
+        </tbody>
+      </table>
+    </PaginatedResults>
+  ) : <p>{l('No results found. Try refining your search query.')}</p>;
+};
 
 export default PaginatedSearchResults;

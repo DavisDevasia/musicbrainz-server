@@ -9,7 +9,6 @@
 
 import * as React from 'react';
 
-import {l} from '../../static/scripts/common/i18n';
 import PaginatedResults from '../../components/PaginatedResults';
 import EditorLink from '../../static/scripts/common/components/EditorLink';
 import bracketed from '../../static/scripts/common/utility/bracketed';
@@ -39,7 +38,14 @@ const EditorList = ({
               <td>
                 <EditorLink editor={editor} />
                 {' '}
-                {bracketed(<a href={'/admin/user/delete/' + encodeURIComponent(editor.name)}>{l('delete')}</a>)}
+                {bracketed(
+                  <a
+                    href={'/admin/user/delete/' +
+                    encodeURIComponent(editor.name)}
+                  >
+                    {l('delete')}
+                  </a>,
+                )}
               </td>
               <td>{editor.registration_date}</td>
               <td>{editor.website}</td>
@@ -52,4 +58,5 @@ const EditorList = ({
     </table>
   </PaginatedResults>
 );
+
 export default EditorList;

@@ -10,12 +10,12 @@
 import React from 'react';
 
 import {withCatalystContext} from '../../../context';
-import ArtistCreditLink from '../../../static/scripts/common/components/ArtistCreditLink';
+import ArtistCreditLink
+  from '../../../static/scripts/common/components/ArtistCreditLink';
 import entityHref from '../../../static/scripts/common/utility/entityHref';
 import ExternalLinks from '../ExternalLinks';
 import releaseGroupType from '../../../utility/releaseGroupType';
 import {Artwork} from '../../../components/Artwork';
-import {l} from '../../../static/scripts/common/i18n';
 
 import AnnotationLinks from './AnnotationLinks';
 import CollectionLinks from './CollectionLinks';
@@ -27,14 +27,14 @@ import {SidebarProperty, SidebarProperties} from './SidebarProperties';
 import SidebarRating from './SidebarRating';
 import SidebarTags from './SidebarTags';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +releaseGroup: ReleaseGroupT,
-|};
+};
 
 const ReleaseGroupSidebar = ({$c, releaseGroup}: Props) => {
   const gid = encodeURIComponent(releaseGroup.gid);
-  const typeName = releaseGroupType($c, releaseGroup);
+  const typeName = releaseGroupType(releaseGroup);
 
   return (
     <div id="sidebar">

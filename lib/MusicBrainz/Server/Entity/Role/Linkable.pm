@@ -24,6 +24,7 @@ has has_loaded_relationships => (
     default => 0,
 );
 
+# Converted to JavaScript at root/utility/groupRelationships.js
 sub grouped_relationships
 {
     my ($self, @types) = @_;
@@ -50,6 +51,7 @@ sub grouped_relationships
     return \%groups;
 }
 
+# Converted to JavaScript at root/utility/filterRelationshipsByType.js
 sub relationships_by_type
 {
     my ($self, @types) = @_;
@@ -71,20 +73,6 @@ sub relationships_by_link_type_names
         defined $_->link->type->name &&
         exists $names{ $_->link->type->name };
     } $self->all_relationships ];
-}
-
-sub appearances {
-    my $self = shift;
-    my @rels = @{ $self->relationships_by_type($self->_appearances_table_types) };
-
-    my %groups;
-    for my $rel (@rels) {
-        my $phrase = $rel->link->type->name;
-        $groups{ $phrase } ||= [];
-        push @{ $groups{$phrase} }, $rel;
-    }
-
-    return \%groups;
 }
 
 around TO_JSON => sub {

@@ -1,7 +1,10 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import $ from 'jquery';
 import ko from 'knockout';
@@ -10,6 +13,7 @@ import _ from 'lodash';
 import {SERIES_ORDERING_TYPE_AUTOMATIC} from '../common/constants';
 import MB from '../common/MB';
 import formatDate from '../common/utility/formatDate';
+import nonEmpty from '../common/utility/nonEmpty';
 import {hasSessionStorage} from '../common/utility/storage';
 import validation from '../edit/validation';
 
@@ -89,20 +93,32 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
         event: function (relationships, series) {
             return _.sortBy(
                 relationships,
-                function (r) { return r.target(series).begin_date || '' },
-                function (r) { return r.target(series).end_date || '' },
-                function (r) { return r.target(series).time || '' }
+                r => r.target(series).begin_date || '',
+                r => r.target(series).end_date || '',
+                r => r.target(series).time || '',
             );
         },
         release: function (relationships, series) {
             return _.sortBy(
                 relationships,
-                function (r) { return _(r.target(series).events).map(getDate).sort().head() },
-                function (r) { return _(r.target(series).labels).map(getCatalogNumber).sort().head() }
+                function (r) {
+                    return _(r.target(series).events)
+                        .map(getDate)
+                        .sort()
+                        .head();
+                },
+                function (r) {
+                    return _(r.target(series).labels)
+                        .map(getCatalogNumber)
+                        .sort()
+                        .head();
+                },
             );
         },
         release_group: function (relationships, series) {
-            return _.sortBy(relationships, function (r) { return r.target(series).firstReleaseDate || '' });
+            return _.sortBy(relationships, function (r) {
+                return r.target(series).firstReleaseDate || '';
+            });
         }
     };
 
@@ -134,9 +150,9 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
         var index = 0;
 
         for (var i = 0, len = relationships.length; i < len; i++) {
-            var relationship = relationships[i],
-                editData = relationship.editData(),
-                prefix = fieldPrefix + "." + index;
+            const relationship = relationships[i];
+            const editData = relationship.editData();
+            const prefix = fieldPrefix + "." + index;
 
             if (!editData.linkTypeID) {
                 continue;
@@ -203,7 +219,7 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
             pushInput(prefix, "link_type_id", editData.linkTypeID || "");
 
             if (relationship.getLinkType().orderable_direction !== 0) {
-                if (relationship.added() || changeData.linkOrder) {
+                if (relationship.added() || nonEmpty(changeData.linkOrder)) {
                     pushInput(prefix, "link_order", editData.linkOrder);
                 }
             }
@@ -214,7 +230,6 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
 
     export function prepareSubmission(formName) {
         var submitted = [];
-        var submittedLinks;
         var vm;
         var source = MB.sourceEntity;
         var hiddenInputs = document.createDocumentFragment();
@@ -232,7 +247,7 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
         $("#page form button[type=submit]").prop("disabled", true);
         $("input[type=hidden]", "#relationship-editor").remove();
 
-        if (vm = MB.sourceRelationshipEditor) {
+        if ((vm = MB.sourceRelationshipEditor)) {
             addHiddenInputs(pushInput, vm, formName);
             submitted = submitted.concat(source.relationshipsInViewModel(vm)());
         }
@@ -254,7 +269,7 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
             ));
         }
 
-        if (vm = MB.sourceExternalLinksEditor) {
+        if ((vm = MB.sourceExternalLinksEditor)) {
             vm.getFormData(formName + '.url', fieldCount, pushInput);
 
             if (hasSessionStorage && vm.state.links.length) {

@@ -9,14 +9,13 @@
 
 import * as React from 'react';
 
-import * as manifest from '../../../manifest';
 
 const style = {float: 'left', margin: '1em'};
 
 const GuessCaseIcon = () => (
   <img
     alt=""
-    src={manifest.pathTo('/images/icons/guesscase.32x32.png')}
+    src={require('../../../images/icons/guesscase.32x32.png')}
     style={style}
   />
 );

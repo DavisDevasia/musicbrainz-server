@@ -1,11 +1,10 @@
-const $ = require('jquery');
-const _ = require('lodash');
-const ko = require('knockout');
+import $ from 'jquery';
+import _ from 'lodash';
+import ko from 'knockout';
 
-const {SERIES_ORDERING_TYPE_AUTOMATIC} = require('./common/constants');
-const {lp_attributes} = require('./common/i18n/attributes');
-const MB = require('./common/MB');
-const initializeDuplicateChecker = require('./edit/check-duplicates');
+import {SERIES_ORDERING_TYPE_AUTOMATIC} from './common/constants';
+import MB from './common/MB';
+import initializeDuplicateChecker from './edit/check-duplicates';
 
 $(function () {
   var $type = $("#id-edit-series\\.type_id");
@@ -63,7 +62,7 @@ $(function () {
   ko.applyBindings(series, $("#series-type-bubble")[0]);
   ko.applyBindings(series, $("#ordering-type-bubble")[0]);
 
-  MB.Control.initialize_guess_case("series", "id-edit-series");
+  MB.Control.initializeGuessCase("series", "id-edit-series");
 
   $orderingType.on("change", function () {
     series.orderingTypeID(+this.value);

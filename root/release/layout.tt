@@ -1,10 +1,10 @@
 [%~ main_title = l('Release “{name}” by {artist}', {
-        artist => artist_credit(release.artist_credit, plain => 1),
+        artist => artist_credit_plain(release.artist_credit),
         name => release.name
 }) ~%]
 [%~ WRAPPER "layout.tt" title=title ? main_title _ " - ${title}" : main_title ~%]
     <div id="content">
-        [%~ INCLUDE "release/header.tt" ~%]
+        [%~ React.embed(c, 'release/ReleaseHeader', { release => release, page => page }) ~%]
         [%~ content ~%]
     </div>
 

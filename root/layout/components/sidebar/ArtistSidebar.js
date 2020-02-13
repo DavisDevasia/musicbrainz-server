@@ -16,11 +16,13 @@ import {
   artistEndLabel,
 } from '../../../artist/utils';
 import {withCatalystContext} from '../../../context';
-import CommonsImage from '../../../static/scripts/common/components/CommonsImage';
-import DescriptiveLink from '../../../static/scripts/common/components/DescriptiveLink';
-import {l} from '../../../static/scripts/common/i18n';
+import CommonsImage
+  from '../../../static/scripts/common/components/CommonsImage';
+import DescriptiveLink
+  from '../../../static/scripts/common/components/DescriptiveLink';
 import entityHref from '../../../static/scripts/common/utility/entityHref';
-import isSpecialPurposeArtist from '../../../static/scripts/common/utility/isSpecialPurposeArtist';
+import isSpecialPurposeArtist
+  from '../../../static/scripts/common/utility/isSpecialPurposeArtist';
 import * as age from '../../../utility/age';
 import ExternalLinks from '../ExternalLinks';
 
@@ -40,15 +42,21 @@ import SidebarTags from './SidebarTags';
 import SidebarType from './SidebarType';
 import SubscriptionLinks from './SubscriptionLinks';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +artist: ArtistT,
-|};
+};
 
 const ArtistSidebar = ({$c, artist}: Props) => {
   const artistAge = age.age(artist);
   const gid = encodeURIComponent(artist.gid);
   const isSpecialPurpose = isSpecialPurposeArtist(artist);
+  const {
+    area,
+    begin_area: beginArea,
+    end_area: endArea,
+    gender,
+  } = artist;
 
   return (
     <div id="sidebar">
@@ -70,9 +78,9 @@ const ArtistSidebar = ({$c, artist}: Props) => {
 
         <SidebarType entity={artist} typeType="artist_type" />
 
-        {artist.gender ? (
+        {gender ? (
           <SidebarProperty className="gender" label={l('Gender:')}>
-            {l(artist.gender.name)}
+            {l(gender.name)}
           </SidebarProperty>
         ) : null}
 
@@ -82,9 +90,12 @@ const ArtistSidebar = ({$c, artist}: Props) => {
           label={artistBeginLabel(artist.typeID)}
         />
 
-        {artist.begin_area ? (
-          <SidebarProperty className="begin_area" label={artistBeginAreaLabel(artist.typeID)}>
-            <DescriptiveLink entity={artist.begin_area} />
+        {beginArea ? (
+          <SidebarProperty
+            className="begin_area"
+            label={artistBeginAreaLabel(artist.typeID)}
+          >
+            <DescriptiveLink entity={beginArea} />
           </SidebarProperty>
         ) : null}
 
@@ -94,15 +105,18 @@ const ArtistSidebar = ({$c, artist}: Props) => {
           label={artistEndLabel(artist.typeID)}
         />
 
-        {artist.end_area ? (
-          <SidebarProperty className="end_area" label={artistEndAreaLabel(artist.typeID)}>
-            <DescriptiveLink entity={artist.end_area} />
+        {endArea ? (
+          <SidebarProperty
+            className="end_area"
+            label={artistEndAreaLabel(artist.typeID)}
+          >
+            <DescriptiveLink entity={endArea} />
           </SidebarProperty>
         ) : null}
 
-        {artist.area ? (
+        {area ? (
           <SidebarProperty className="area" label={l('Area:')}>
-            <DescriptiveLink entity={artist.area} />
+            <DescriptiveLink entity={area} />
           </SidebarProperty>
         ) : null}
 

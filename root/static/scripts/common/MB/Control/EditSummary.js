@@ -1,20 +1,22 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2015 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2015 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
-const $ = require('jquery');
+import $ from 'jquery';
 
-const {l} = require('../../i18n');
-const MB = require('../../MB');
+import MB from '../../MB';
 
 MB.Control.EditSummary = function (container) {
     var self = {};
 
-    var $container = $(container),
-        $toggleEditNote = $container.find('.edit-note-toggle'),
-        $editNote = $container.find('.add-edit-note'),
-        $editNoteField = $editNote.find('textarea');
+    const $container = $(container);
+    const $toggleEditNote = $container.find('.edit-note-toggle');
+    const $editNote = $container.find('.add-edit-note');
+    const $editNoteField = $editNote.find('textarea');
 
     self.addNote = function () {
         $toggleEditNote

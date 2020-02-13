@@ -37,6 +37,7 @@ use MusicBrainz::Server::Entity::Util::Release qw(
 
 use aliased 'MusicBrainz::Server::Entity::ArtistCredit';
 use List::AllUtils qw( any );
+use MusicBrainz::Server::ControllerUtils::JSON qw( serialize_pager );
 use MusicBrainz::Server::Entity::Recording;
 use MusicBrainz::Server::Translation qw( l );
 use Set::Scalar;
@@ -105,17 +106,34 @@ sub show : Chained('load') PathPart('') {
     $c->model('ReleaseLabel')->load(@releases);
     $c->model('Label')->load(map { $_->all_labels } @releases);
     $c->model('ReleaseStatus')->load(@releases);
+    $c->model('ReleaseGroup')->load(@releases);
+    $c->model('ReleaseGroupType')->load(map { $_->release_group }
+        @releases);
 
+    my %props = (
+        numberOfRevisions => $c->stash->{number_of_revisions},
+        pager             => serialize_pager($c->stash->{pager}),
+        recording         => $c->stash->{recording},
+        tracks            => group_by_release_status_nested(
+                                sub { shift->medium->release },
+                                @$tracks),
+    );
     $c->stash(
-        tracks =>
-            group_by_release_status_nested(
-                sub { shift->medium->release },
-                @$tracks),
-        template => 'recording/index.tt',
+        component_path => 'recording/RecordingIndex',
+        component_props => \%props,
+        current_view => 'Node',
     );
 }
 
-sub fingerprints : Chained('load') PathPart('fingerprints') { }
+sub fingerprints : Chained('load') PathPart('fingerprints') {
+    my ($self, $c) = @_;
+
+    $c->stash(
+        component_path => 'recording/RecordingFingerprints',
+        component_props => { recording => $c->stash->{recording} },
+        current_view => 'Node',
+    );
+}
 
 # Stuff that has the sidebar and needs collection info
 after [qw( show collections details tags aliases fingerprints )] => sub {

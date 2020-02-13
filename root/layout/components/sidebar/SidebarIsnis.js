@@ -9,14 +9,13 @@
 
 import * as React from 'react';
 
-import {l} from '../../../static/scripts/common/i18n';
 import formatIsni from '../../../utility/formatIsni';
 
 import {SidebarProperty} from './SidebarProperties';
 
 const isniUrl = 'http://www.isni.org/';
 
-const buildSidebarIsni = (isni, index) => (
+const buildSidebarIsni = (isni) => (
   <SidebarProperty
     className="isni-code"
     key={'isni-code-' + isni.isni}
@@ -28,9 +27,9 @@ const buildSidebarIsni = (isni, index) => (
   </SidebarProperty>
 );
 
-type Props = {|
-  +entity: {...IsniCodesRoleT},
-|};
+type Props = {
+  +entity: $ReadOnly<{...IsniCodesRoleT, ...}>,
+};
 
 const SidebarIsnis = ({entity}: Props):
   React.ChildrenArray<React.Element<typeof SidebarProperty>> => (

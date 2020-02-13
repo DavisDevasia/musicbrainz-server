@@ -6,13 +6,13 @@
 # Gioele  <email address hidden>, 2012
 # Gioele <email address hidden>, 2012
 # leofiore <email address hidden>, 2012
-# Luca Salini <email address hidden>, 2016-2018
+# Luca Salini <email address hidden>, 2016-2019
 # Luca Salini <email address hidden>, 2013-2015
 # Luca Salini <email address hidden>, 2012
 msgid ""
 msgstr ""
 "Project-Id-Version: MusicBrainz\n"
-"PO-Revision-Date: 2018-12-22 14:21+0000\n"
+"PO-Revision-Date: 2019-11-06 23:13+0000\n"
 "Last-Translator: Luca Salini <email address hidden>\n"
 "Language-Team: Italian (http://www.transifex.com/musicbrainz/musicbrainz/language/it/)\n"
 "MIME-Version: 1.0\n"
@@ -1228,6 +1228,11 @@ msgctxt "label_type"
 msgid "Bootleg Production"
 msgstr "Produzione di bootleg"
 
+#: DB:release_packaging/name:19
+msgctxt "release_packaging"
+msgid "Box"
+msgstr "Scatola"
+
 #: DB:work_attribute_type_allowed_value/value:607
 msgctxt "work_attribute_type_allowed_value"
 msgid "Bozlak"
@@ -2420,6 +2425,13 @@ msgctxt "medium_format"
 msgid "Floppy Disk"
 msgstr "Floppy disk"
 
+#: DB:gender/description:4
+msgctxt "gender"
+msgid ""
+"For cases where gender just doesn't apply at all (like companies entered as "
+"artists)."
+msgstr "Per i casi in cui il genere non è applicabile (per esempio, società inserite come artisti)."
+
 #: DB:work_attribute_type/name:16
 msgctxt "work_attribute_type"
 msgid "Form (Ottoman, Turkish)"
@@ -3064,6 +3076,16 @@ msgstr "ID per la società di diritti belga SABAM"
 msgctxt "work_attribute_type"
 msgid "ID for the International Copyright Enterprise"
 msgstr "ID per l'International Copyright Enterprise"
+
+#: DB:work_attribute_type/description:3
+msgctxt "work_attribute_type"
+msgid "ID for the Japanese rights society JASRAC"
+msgstr "ID per la società di diritti giapponese JASRAC"
+
+#: DB:work_attribute_type/description:33
+msgctxt "work_attribute_type"
+msgid "ID for the Japanese rights society NexTone"
+msgstr "ID per la società di diritti giapponese NexTone"
 
 #: DB:work_attribute_type/description:27
 msgctxt "work_attribute_type"
@@ -4039,6 +4061,11 @@ msgctxt "work_attribute_type_allowed_value"
 msgid "Mevlidişerif"
 msgstr "Mevlidişerif"
 
+#: DB:medium_format/name:83
+msgctxt "medium_format"
+msgid "Microcassette"
+msgstr "Microcassetta"
+
 #: DB:medium_format/name:6
 msgctxt "medium_format"
 msgid "MiniDisc"
@@ -4559,6 +4586,11 @@ msgctxt "work_attribute_type_allowed_value"
 msgid "Nevruzi Rumi"
 msgstr "Nevruzi Rumi"
 
+#: DB:work_attribute_type/name:33
+msgctxt "work_attribute_type"
+msgid "NexTone ID"
+msgstr "ID NexTone"
+
 #: DB:work_attribute_type_allowed_value/value:471
 msgctxt "work_attribute_type_allowed_value"
 msgid "Neşataver"
@@ -4653,6 +4685,11 @@ msgstr "Nişabureyn"
 msgctxt "release_packaging"
 msgid "None"
 msgstr "Nessuno"
+
+#: DB:gender/name:4
+msgctxt "gender"
+msgid "Not applicable"
+msgstr "Non applicabile"
 
 #: DB:work_attribute_type_allowed_value/value:491
 msgctxt "work_attribute_type_allowed_value"
@@ -4944,6 +4981,16 @@ msgstr "Luogo"
 msgctxt "alias_type"
 msgid "Place name"
 msgstr "Nome luogo"
+
+#: DB:release_packaging/description:20
+msgctxt "release_packaging"
+msgid "Plastic CD tray inside a cardboard slipcover"
+msgstr "Tray CD di plastica dentro una sovraccoperta di cartone"
+
+#: DB:release_packaging/name:18
+msgctxt "release_packaging"
+msgid "Plastic Sleeve"
+msgstr "Custodia di plastica"
 
 #: DB:work_type/name:28
 msgctxt "work_type"
@@ -5711,6 +5758,11 @@ msgctxt "work_attribute_type_allowed_value"
 msgid "Sitārkhānī"
 msgstr "Sitārkhānī"
 
+#: DB:release_packaging/name:20
+msgctxt "release_packaging"
+msgid "Slidepack"
+msgstr "Slidepack"
+
 #: DB:release_packaging/name:2
 msgctxt "release_packaging"
 msgid "Slim Jewel Case"
@@ -6127,6 +6179,13 @@ msgid ""
 "medium."
 msgstr "Lo strato CD di un SACD ibrido. Lo strato SACD va aggiunto come supporto separato."
 
+#: DB:medium_format/description:82
+msgctxt "medium_format"
+msgid ""
+"The CD side of a vinyl + CD VinylDisc. The vinyl side should be added as a "
+"separate medium."
+msgstr "Il lato CD di un VinylDisc vinile + CD. Il lato vinile va aggiunto come un supporto separato."
+
 #: DB:medium_format/description:60
 msgctxt "medium_format"
 msgid ""
@@ -6157,6 +6216,13 @@ msgid ""
 "separate medium."
 msgstr "Lo strato DVD (video) di un DualDisc. Lo strato CD va aggiunto come supporto separato."
 
+#: DB:medium_format/description:80
+msgctxt "medium_format"
+msgid ""
+"The DVD side of a vinyl + DVD VinylDisc. The vinyl side should be added as a"
+" separate medium."
+msgstr "Il lato DVD di un VinylDisc vinile + DVD. Il lato vinile va aggiunto come un supporto separato."
+
 #: DB:medium_format/description:64
 msgctxt "medium_format"
 msgid ""
@@ -6183,6 +6249,13 @@ msgstr "L'operetta è un genere di opera leggera sia in termini musicali che di 
 msgctxt "release_packaging"
 msgid "The traditional CD case, made of hard, brittle plastic."
 msgstr "La custodia per CD tradizionale, in plastica rigida e fragile."
+
+#: DB:medium_format/description:81
+msgctxt "medium_format"
+msgid ""
+"The vinyl side of a VinylDisc. The CD or DVD side should be added as a "
+"separate medium."
+msgstr "Il lato vinile di un VinylDisc. Il lato CD o DVD va aggiunto come un supporto separato."
 
 #: DB:work_type/description:23
 msgctxt "work_type"
@@ -6480,6 +6553,21 @@ msgstr "Vinile"
 msgctxt "medium_format"
 msgid "VinylDisc"
 msgstr "VinylDisc"
+
+#: DB:medium_format/name:82
+msgctxt "medium_format"
+msgid "VinylDisc (CD side)"
+msgstr "VinylDisc (lato CD)"
+
+#: DB:medium_format/name:80
+msgctxt "medium_format"
+msgid "VinylDisc (DVD side)"
+msgstr "VinylDisc (lato DVD)"
+
+#: DB:medium_format/name:81
+msgctxt "medium_format"
+msgid "VinylDisc (Vinyl side)"
+msgstr "VinylDisc (lato vinile)"
 
 #: DB:work_attribute_type_allowed_value/value:259
 #: DB:work_attribute_type_allowed_value/value:1047

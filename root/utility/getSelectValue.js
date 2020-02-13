@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2017 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -8,7 +8,7 @@
  */
 
 export default function getSelectValue(
-  field: FieldT<number | string>,
+  field: ReadOnlyFieldT<?StrOrNum>,
   options: MaybeGroupedOptionsT,
   allowEmpty: boolean = false,
 ): string {
@@ -18,7 +18,7 @@ export default function getSelectValue(
   if (allowEmpty) {
     return '';
   }
-  let value: number | string;
+  let value: StrOrNum;
   if (options.grouped) {
     value = options.options[0].options[0].value;
   } else {

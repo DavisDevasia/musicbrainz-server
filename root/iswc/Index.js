@@ -13,25 +13,24 @@ import {withCatalystContext} from '../context';
 import Layout from '../layout';
 import CodeLink from '../static/scripts/common/components/CodeLink';
 import WorkListEntry from '../static/scripts/common/components/WorkListEntry';
-import {l, ln} from '../static/scripts/common/i18n';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +iswcs: $ReadOnlyArray<IswcT>,
   +works: $ReadOnlyArray<WorkT>,
-|};
+};
 
 const Index = ({$c, iswcs, works}: Props) => {
   const userExists = $c.user_exists;
   const iswc = iswcs[0];
   return (
-    <Layout fullWidth title={l('ISWC “{iswc}”', {iswc: iswc.iswc})}>
+    <Layout fullWidth title={texp.l('ISWC “{iswc}”', {iswc: iswc.iswc})}>
       <h1>
-        {l('ISWC “{iswc}”',
-          {iswc: <CodeLink code={iswc} key="iswc" />})}
+        {exp.l('ISWC “{iswc}”',
+               {iswc: <CodeLink code={iswc} key="iswc" />})}
       </h1>
       <h2>
-        {ln(
+        {texp.ln(
           'Associated with {num} work',
           'Associated with {num} works',
           works.length,
@@ -43,7 +42,7 @@ const Index = ({$c, iswcs, works}: Props) => {
           <thead>
             <tr>
               {userExists ? (
-                <th style={{width: '1em'}}>
+                <th>
                   <input type="checkbox" />
                 </th>
               ) : null}
@@ -57,8 +56,7 @@ const Index = ({$c, iswcs, works}: Props) => {
           <tbody>
             {works.map((work, index) => (
               <WorkListEntry
-                hasISWCColumn={false}
-                hasMergeColumn
+                checkboxes="add-to-merge"
                 index={index}
                 key={work.id}
                 work={work}

@@ -1,5 +1,5 @@
 /*
- * @flow
+ * @flow strict
  * Copyright (C) 2018 MetaBrainz Foundation
  *
  * This file is part of MusicBrainz, the open internet music database,
@@ -9,7 +9,6 @@
 
 import * as React from 'react';
 
-import {l} from '../static/scripts/common/i18n';
 import uriWith from '../utility/uriWith';
 import {withCatalystContext} from '../context';
 
@@ -21,9 +20,13 @@ const FilterLink = (
   return (
     <li>
       {filtered === true ? (
-        <a href={uriWith(reqUri, {filter: 0})}>{l('Show all results.')}</a>
+        <a href={uriWith(reqUri, {filter: 0})}>
+          {l('Show all results.')}
+        </a>
       ) : (
-        <a href={uriWith(reqUri, {filter: 1})}>{l('Show only results that are in my subscribed entities.')}</a>
+        <a href={uriWith(reqUri, {filter: 1})}>
+          {l('Show only results that are in my subscribed entities.')}
+        </a>
       )}
     </li>
   );

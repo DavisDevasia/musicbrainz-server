@@ -15,7 +15,6 @@ import {
 } from '../../constants';
 import {withCatalystContext} from '../../context';
 import * as DBDefs from '../../static/scripts/common/DBDefs';
-import {l} from '../../static/scripts/common/i18n';
 import {
   editorMayAddNote,
   editorMayApprove,
@@ -26,11 +25,11 @@ import returnUri from '../../utility/returnUri';
 
 import Vote from './Vote';
 
-type Props = {|
+type Props = {
   +$c: CatalystContextT,
   +edit: EditT,
   +index: number,
-|};
+};
 
 const EditSummary = ({$c, edit, index}: Props) => {
   const user = $c.user;
@@ -40,15 +39,16 @@ const EditSummary = ({$c, edit, index}: Props) => {
 
   return (
     <>
-      {edit.status !== EDIT_STATUS_OPEN && edit.status !== EDIT_STATUS_APPLIED ? (
-        <div className="edit-status">
-          {getEditStatusName(edit)}
-        </div>
-      ) : null}
+      {edit.status !== EDIT_STATUS_OPEN &&
+        edit.status !== EDIT_STATUS_APPLIED ? (
+          <div className="edit-status">
+            {getEditStatusName(edit)}
+          </div>
+        ) : null}
 
       <Vote edit={edit} index={index} summary />
 
-      {!DBDefs.DB_READ_ONLY && (mayAddNote || mayApprove || mayCancel) ? (
+      {$c.user_exists && !DBDefs.DB_READ_ONLY && (mayAddNote || mayApprove || mayCancel) ? (
         <div className="cancel-edit buttons">
           {mayAddNote ? (
             <a className="positive edit-note-toggle">{l('Add Note')}</a>
@@ -72,16 +72,17 @@ const EditSummary = ({$c, edit, index}: Props) => {
             </a>
           ) : null}
 
-          {edit.status === EDIT_STATUS_OPEN && DBDefs.DB_STAGING_TESTING_FEATURES ? (
-            <>
-              <a className="positive" href={`/test/accept-edit/${edit.id}`}>
-                {l('Accept edit')}
-              </a>
-              <a className="negative" href={`/test/reject-edit/${edit.id}`}>
-                {l('Reject edit')}
-              </a>
-            </>
-          ) : null}
+          {edit.status === EDIT_STATUS_OPEN &&
+            DBDefs.DB_STAGING_TESTING_FEATURES ? (
+              <>
+                <a className="positive" href={`/test/accept-edit/${edit.id}`}>
+                  {l('Accept edit')}
+                </a>
+                <a className="negative" href={`/test/reject-edit/${edit.id}`}>
+                  {l('Reject edit')}
+                </a>
+              </>
+            ) : null}
         </div>
       ) : null}
     </>

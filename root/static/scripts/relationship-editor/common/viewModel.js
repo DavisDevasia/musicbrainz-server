@@ -1,15 +1,21 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import $ from 'jquery';
 import ko from 'knockout';
 import _ from 'lodash';
 
-import {N_l} from '../../common/i18n';
+import localizeLinkAttributeTypeDescription
+    from '../../common/i18n/localizeLinkAttributeTypeDescription';
+import localizeLinkAttributeTypeName
+    from '../../common/i18n/localizeLinkAttributeTypeName';
+import linkedEntities from '../../common/linkedEntities';
 import MB from '../../common/MB';
-import typeInfo from '../../common/typeInfo';
 import parseDate from '../../common/utility/parseDate';
 import request from '../../common/utility/request';
 import {hasSessionStorage} from '../../common/utility/storage';
@@ -32,32 +38,48 @@ const addAnotherEntityLabels = {
 
 const RE = MB.relationshipEditor = MB.relationshipEditor || {};
 
-    function mapItems(result, item) {
-        if (item.id) {
-            result[item.id] = item;
+    RE.exportTypeInfo = _.once(function (typeInfo, attrInfo) {
+        const attrChildren = _.groupBy(attrInfo, x => x.parent_id);
+
+        function mapItems(result, item) {
+            if (item.id) {
+                result[item.id] = item;
+            }
+            if (item.gid) {
+                result[item.gid] = item;
+            }
+            switch (item.entityType) {
+                case 'link_attribute_type':
+                    const children = attrChildren[item.id];
+                    if (children) {
+                        item.children = children;
+                    }
+                    break;
+                case 'link_type':
+                    _.transform(item.children, mapItems, result);
+                    break;
+            }
         }
-        if (item.gid) {
-            result[item.gid] = item;
-        }
-        _.transform(item.children, mapItems, result);
-    }
 
+        Object.assign(linkedEntities, {
+            link_type_tree: typeInfo,
+            link_type: _(typeInfo)
+                .values()
+                .flatten()
+                .transform(mapItems, {})
+                .value(),
+            link_attribute_type: _.transform(attrInfo, mapItems, {}),
+        });
 
-    RE.exportTypeInfo = _.once(function (_typeInfo, _attrInfo) {
-        typeInfo.link_type.byTypes = _typeInfo;
-
-        typeInfo.link_type.byId = _(_typeInfo).values().flatten().transform(mapItems, {}).value();
-        typeInfo.link_attribute_type = _(_attrInfo).values().transform(mapItems, {}).value();
-
-        _.each(typeInfo.link_type.byId, function (type) {
+        _.each(linkedEntities.link_type, function (type) {
             _.each(type.attributes, function (typeAttr, id) {
-                typeAttr.attribute = typeInfo.link_attribute_type[id];
+                typeAttr.attribute = linkedEntities.link_attribute_type[id];
             });
         });
 
         MB.allowedRelations = {};
 
-        _(_typeInfo).keys().each(function (typeString) {
+        _(typeInfo).keys().each(function (typeString) {
             var types = typeString.split("-");
             var type0 = types[0];
             var type1 = types[1];
@@ -74,10 +96,13 @@ const RE = MB.relationshipEditor = MB.relationshipEditor || {};
         });
 
         // Sort each list of types alphabetically.
-        _(MB.allowedRelations).values().invokeMap('sort').value();
+        _(MB.allowedRelations)
+            .values()
+            .invokeMap('sort')
+            .value();
 
-        _.each(typeInfo.link_attribute_type, function (attr) {
-            attr.root = typeInfo.link_attribute_type[attr.rootID];
+        _.each(linkedEntities.link_attribute_type, function (attr) {
+            attr.root = linkedEntities.link_attribute_type[attr.root_id];
         });
     });
 
@@ -109,17 +134,25 @@ export class ViewModel {
 
         _sortedRelationships(relationships, source) {
             return relationships
-                .sortBy(function (r) { return r.lowerCaseTargetName(source) })
+                .sortBy(r => r.lowerCaseTargetName(source))
                 .sortBy("linkOrder");
         }
 
         addAnotherEntityLabel(group, entity) {
             const entityType = group.values.peek()[0].target(entity).entityType;
-            return addAnotherEntityLabels[entityType].toLocaleString();
+            return addAnotherEntityLabels[entityType]();
+        }
+
+        localizeLinkAttributeTypeName(type) {
+            return localizeLinkAttributeTypeName(type);
+        }
+
+        localizeLinkAttributeTypeDescription(type) {
+            return localizeLinkAttributeTypeDescription(type);
         }
     }
 
-    _.assign(ViewModel.prototype, {
+    Object.assign(ViewModel.prototype, {
         relationshipClass: fields.Relationship,
         activeDialog: ko.observable(),
     });
@@ -168,11 +201,11 @@ MB.initRelationshipEditors = function (args) {
 };
 
 MB.getRelationship = function (data, source) {
-    var target = data.target;
+    const target = data.target;
 
     data = _.clone(data);
 
-    var backward = source.entityType > target.entityType;
+    let backward = source.entityType > target.entityType;
 
     if (source.entityType === target.entityType) {
         backward = (data.direction === "backward");
@@ -180,20 +213,23 @@ MB.getRelationship = function (data, source) {
 
     data.entities = backward ? [target, source] : [source, target];
 
-    var viewModel = getRelationshipEditor(data, source);
+    const viewModel = getRelationshipEditor(data, source);
 
     if (viewModel) {
+        let cacheKey;
         if (data.id) {
-            var cacheKey = _.map(data.entities, "entityType").concat(data.id).join("-");
-            var cached = viewModel.cache[cacheKey];
+            cacheKey = _.map(data.entities, "entityType").concat(data.id).join("-");
+            const cached = viewModel.cache[cacheKey];
 
             if (cached) {
                 return cached;
             }
         }
-        var relationship = new viewModel.relationshipClass(data, source, viewModel);
-        return data.id ? (viewModel.cache[cacheKey] = relationship) : relationship;
+        const relationship = new viewModel.relationshipClass(data, source, viewModel);
+        return cacheKey ? (viewModel.cache[cacheKey] = relationship) : relationship;
     }
+
+    return null;
 };
 
 function getRelationshipEditor(data, source) {
@@ -202,11 +238,11 @@ function getRelationshipEditor(data, source) {
     }
 
     var target = data.target;
-    var linkType = typeInfo.link_type.byId[data.linkTypeID];
+    var linkType = linkedEntities.link_type[data.linkTypeID];
 
     if ((target && target.entityType === 'url') ||
         (linkType && (linkType.type0 === 'url' || linkType.type1 === 'url'))) {
-        return; // handled by the external links editor
+        return null; // handled by the external links editor
     }
 
     if (MB.releaseRelationshipEditor) {
@@ -216,6 +252,8 @@ function getRelationshipEditor(data, source) {
     if (source === MB.sourceRelationshipEditor.source) {
         return MB.sourceRelationshipEditor;
     }
+
+    return null;
 }
 
 function addSubmittedRelationship(data, source) {
@@ -234,7 +272,7 @@ function addPostedRelationships(source) {
         return;
     }
 
-    let submittedRelationships = window.sessionStorage.getItem('submittedRelationships');
+    const submittedRelationships = window.sessionStorage.getItem('submittedRelationships');
     if (MB.formWasPosted && submittedRelationships) {
         _.each(JSON.parse(submittedRelationships), function (data) {
             addSubmittedRelationship(data, source);
@@ -250,7 +288,7 @@ function addRelationshipsFromQueryString(source) {
     var fields = parseQueryString(window.location.search);
 
     _.each(fields.rels, function (rel) {
-        var linkType = typeInfo.link_type.byId[rel.type];
+        var linkType = linkedEntities.link_type[rel.type];
         var targetIsUUID = uuidRegex.test(rel.target);
 
         if (!linkType && !targetIsUUID) {
@@ -276,7 +314,7 @@ function addRelationshipsFromQueryString(source) {
 
         if (linkType) {
             data.attributes = _.transform(rel.attributes, function (accum, attr) {
-                var attrInfo = typeInfo.link_attribute_type[attr.type];
+                var attrInfo = linkedEntities.link_attribute_type[attr.type];
 
                 if (attrInfo && linkType.attributes[attrInfo.id]) {
                     accum.push({
@@ -313,15 +351,17 @@ var uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[345][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-
 function parseQueryString(queryString) {
     var queryStringRegex = /(?:\\?|&)([A-z0-9\-_.]+)=([^&]+)/g;
     var fields = {};
-    var subField, match, parts;
+    let subField;
+    let match;
+    let parts;
 
-    while (match = queryStringRegex.exec(queryString)) {
+    while ((match = queryStringRegex.exec(queryString))) {
         subField = fields;
         parts = match[1].split('.');
 
         _.each(parts, function (part, index) {
             if (index === parts.length - 1) {
-                subField[part] = decodeURIComponent(match[2])
+                subField[part] = decodeURIComponent(match[2]);
             } else {
                 subField = subField[part] = subField[part] || {};
             }

@@ -30,10 +30,8 @@ sub serialize
             my $ret = {
                 $plural => [ map { serialize_entity($_, $inc, $opts, 1) } sort_by { $_->gid } @{ $entity->{items} } ],
             };
-            if (defined($entity->{offset}) || defined($entity->{total})) {
-                $ret->{$singular . '-offset'} = number($entity->{offset});
-                $ret->{$singular . '-count' } = number($entity->{total});
-            }
+            $ret->{$singular . '-offset'} = number($entity->{offset}) if defined($entity->{offset});
+            $ret->{$singular . '-count' } = number($entity->{total}) if defined($entity->{total});
             return encode_json($ret);
         }
     }
@@ -129,7 +127,10 @@ sub autocomplete_editor {
 sub output_error {
     my ($self, $err) = @_;
 
-    return encode_json({ error => $err });
+    return encode_json({
+        error => $err,
+        help => 'For usage, please see: https://musicbrainz.org/development/mmd',
+    });
 }
 
 sub output_success {
@@ -300,6 +301,21 @@ sub autocomplete_series {
     my ($self, $results, $pager) = @_;
 
     my $output = _with_primary_alias($results);
+
+    push @$output, {
+        pages => $pager->last_page,
+        current => $pager->current_page
+    } if $pager;
+
+    return encode_json($output);
+}
+
+sub autocomplete_genre {
+    my ($self, $results, $pager) = @_;
+
+    my $output = _with_primary_alias($results, sub {
+        shift->TO_JSON
+    });
 
     push @$output, {
         pages => $pager->last_page,

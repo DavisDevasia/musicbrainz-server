@@ -12,7 +12,6 @@ import * as React from 'react';
 import {withCatalystContext} from '../context';
 import Layout from '../layout';
 import formatUserDate from '../utility/formatUserDate';
-import {l} from '../static/scripts/common/i18n';
 
 import ArtistList from './components/ArtistList';
 import FilterLink from './FilterLink';
@@ -31,16 +30,28 @@ const PossibleCollaborations = ({
 
     <ul>
       <li>
-        {l('This report lists artists which have "&" in their names but no member or \
-            collaboration relationships. If the artist is usually seen as an actual group, \
-            member relationships should be added. If it\'s a short term collaboration, it \
-            should be split if possible (see {how_to_split_artists|How to Split Artists}). \
-            If it is a collaboration with its own name and can\'t be split, collaboration \
-            relationships should be added to it.',
-        {how_to_split_artists: '/doc/How_to_Split_Artists'})}
+        {exp.l(
+          `This report lists artists which have “&” in their names
+           but no membership-related relationships (none of member,
+           collaborator, conductor, founder nor subgroup). If the artist
+           is usually seen as an actual group, member relationships should
+           be added. If it’s a short term collaboration, it should be split
+           if possible (see {how_to_split_artists|How to Split Artists}).
+           If it is a collaboration with its own name and can’t be split,
+           collaboration relationships should be added to it. For some
+           special cases, such as “Person & His Orchestra”, conductor
+           and/or founder might be the best choice.`,
+          {how_to_split_artists: '/doc/How_to_Split_Artists'},
+        )}
       </li>
-      <li>{l('Total artists found: {count}', {count: pager.total_entries})}</li>
-      <li>{l('Generated on {date}', {date: formatUserDate($c.user, generated)})}</li>
+      <li>
+        {texp.l('Total artists found: {count}',
+                {count: pager.total_entries})}
+      </li>
+      <li>
+        {texp.l('Generated on {date}',
+                {date: formatUserDate($c, generated)})}
+      </li>
 
       {canBeFiltered ? <FilterLink filtered={filtered} /> : null}
     </ul>

@@ -1,30 +1,44 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
-const ko = require('knockout');
-const _ = require('lodash');
+import ko from 'knockout';
+import _ from 'lodash';
 
-const {hex_sha1} = require('../../../lib/sha1/sha1');
-const {VIDEO_ATTRIBUTE_GID} = require('../../common/constants');
+import {hex_sha1 as hexSha1} from '../../../lib/sha1/sha1';
+import {VIDEO_ATTRIBUTE_GID} from '../../common/constants';
 import * as TYPES from '../../common/constants/editTypes';
-const MB = require('../../common/MB');
-const typeInfo = require('../../common/typeInfo');
-const clean = require('../../common/utility/clean');
-const nonEmpty = require('../../common/utility/nonEmpty');
-const request = require('../../common/utility/request');
+import linkedEntities from '../../common/linkedEntities';
+import MB from '../../common/MB';
+import clean from '../../common/utility/clean';
+import nonEmpty from '../../common/utility/nonEmpty';
+import request from '../../common/utility/request';
 
 (function (edit) {
 
     edit.TYPES = TYPES;
 
 
-    function value(arg) { return typeof arg === "function" ? arg() : arg }
-    function string(arg) { return clean(value(arg)) }
-    function number(arg) { var num = parseInt(value(arg), 10); return isNaN(num) ? null : num }
-    function array(arg, type) { return _.map(value(arg), type) }
-    function nullableString(arg) { return string(arg) || null }
+    function value(arg) {
+        return typeof arg === "function" ? arg() : arg;
+    }
+    function string(arg) {
+        return clean(value(arg));
+    }
+    function number(arg) {
+        var num = parseInt(value(arg), 10);
+        return isNaN(num) ? null : num;
+    }
+    function array(arg, type) {
+        return _.map(value(arg), type);
+    }
+    function nullableString(arg) {
+        return string(arg) || null;
+    }
 
 
     var fields = edit.fields = {
@@ -45,7 +59,7 @@ const request = require('../../common/utility/request');
                 return {names: []};
             }
 
-            ac = _.map(ac, function (credit, index) {
+            const names = _.map(ac.names, function (credit, index) {
                 var artist = value(credit.artist) || {};
 
                 var name = {
@@ -63,7 +77,7 @@ const request = require('../../common/utility/request');
                 name.join_phrase = joinPhrase.replace(/\s{2,}/g, " ");
 
                 // Trim trailing whitespace for the final join phrase only.
-                if (index === ac.length - 1) {
+                if (index === ac.names.length - 1) {
                     name.join_phrase = _.trimEnd(name.join_phrase);
                 }
 
@@ -71,7 +85,7 @@ const request = require('../../common/utility/request');
 
                 return name;
             });
-            return { names: ac };
+            return {names};
         },
 
         externalLinkRelationship: function (link, source) {
@@ -137,11 +151,11 @@ const request = require('../../common/utility/request');
 
             data.attributes = _(ko.unwrap(relationship.attributes))
                 .invokeMap('toJS')
-                .sortBy(function (a) { return a.type.id })
+                .sortBy(a => a.type.id)
                 .value();
 
             if (_.isNumber(data.linkTypeID)) {
-                if (typeInfo.link_type.byId[data.linkTypeID].orderable_direction !== 0) {
+                if (linkedEntities.link_type[data.linkTypeID].orderable_direction !== 0) {
                     data.linkOrder = number(relationship.linkOrder) || 0;
                 }
             }
@@ -178,16 +192,21 @@ const request = require('../../common/utility/request');
         release: function (release) {
             var releaseGroupID = (release.releaseGroup() || {}).id;
 
-            var events = _(value(release.events)).map(function (data) {
-                var event = {
-                    date:       fields.partialDate(data.date),
-                    country_id: number(data.countryID)
-                };
+            var events = _(value(release.events))
+                .map(function (data) {
+                    var event = {
+                        date:       fields.partialDate(data.date),
+                        country_id: number(data.countryID)
+                    };
 
-                if (_(event.date).values().some(nonEmpty) || event.country_id !== null) {
-                    return event;
-                }
-            }).compact().value();
+                    if (_(event.date).values().some(nonEmpty) || event.country_id !== null) {
+                        return event;
+                    }
+
+                    return null;
+                })
+                .compact()
+                .value();
 
             return {
                 name:               string(release.name),
@@ -258,7 +277,7 @@ const request = require('../../common/utility/request');
 
             return memo + key + (_.isObject(value) ? editHash(value) : value);
         }
-        return hex_sha1(_.reduce(keys, keyValue, ""));
+        return hexSha1(_.reduce(keys, keyValue, ""));
     }
 
 
@@ -277,7 +296,7 @@ const request = require('../../common/utility/request');
 
     function editConstructor(type, callback) {
         return function (args, ...rest) {
-            args = _.extend({ edit_type: type }, args);
+            args = {...args, edit_type: type};
 
             callback && callback.apply(null, [args].concat(rest));
             args.hash = editHash(args);
@@ -326,7 +345,9 @@ const request = require('../../common/utility/request');
     edit.releaseAddReleaseLabel = editConstructor(
         TYPES.EDIT_RELEASE_ADDRELEASELABEL,
 
-        function (args) { delete args.release_label }
+        function (args) {
+            delete args.release_label;
+        },
     );
 
 
@@ -379,7 +400,9 @@ const request = require('../../common/utility/request');
 
     edit.relationshipCreate = editConstructor(
         TYPES.EDIT_RELATIONSHIP_CREATE,
-        function (args) { delete args.id }
+        function (args) {
+            delete args.id;
+        },
     );
 
 
@@ -423,7 +446,9 @@ const request = require('../../common/utility/request');
 
 
     function editEndpoint(endpoint) {
-        function omitHash(edit) { return _.omit(edit, "hash") }
+        function omitHash(edit) {
+            return _.omit(edit, "hash");
+        }
 
         return function (data, context) {
             data.edits = _.map(data.edits, omitHash);
@@ -442,4 +467,4 @@ const request = require('../../common/utility/request');
 
 }(MB.edit = {}));
 
-module.exports = MB.edit;
+export default MB.edit;

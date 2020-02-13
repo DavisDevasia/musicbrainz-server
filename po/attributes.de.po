@@ -4,6 +4,7 @@
 # nikki2 <email address hidden>, 2012
 # Daniel Schury <email address hidden>, 2011
 # Daniel Schury <email address hidden>, 2011
+# David Kellner <email address hidden>, 2019
 # Eckhard Henkel <email address hidden>, 2018
 # Elmar Stichnoth, 2017
 # Elmar Stichnoth, 2017
@@ -20,6 +21,8 @@
 # happykraut, 2017
 # Leo_Verto <email address hidden>, 2017
 # Leo_Verto <email address hidden>, 2017
+# Marc Rodrigues <email address hidden>, 2019
+# Mark Spike, 2019
 # Mineo <email address hidden>, 2011
 # Wieland Hoffmann <email address hidden>, 2011
 # nikki, 2013-2014
@@ -28,7 +31,7 @@
 # Nikolai Prokoschenko <email address hidden>, 2011
 # nikki, 2013
 # Patrick <email address hidden>, 2015
-# Philipp Wolfer <email address hidden>, 2012,2018
+# Philipp Wolfer <email address hidden>, 2012,2018-2019
 # Philipp Wolfer <email address hidden>, 2012
 # S.Brandt <email address hidden>, 2014-2016
 # Shepard, 2011
@@ -43,8 +46,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: MusicBrainz\n"
-"PO-Revision-Date: 2018-12-18 09:34+0000\n"
-"Last-Translator: nikki\n"
+"PO-Revision-Date: 2019-12-11 07:23+0000\n"
+"Last-Translator: Philipp Wolfer <email address hidden>\n"
 "Language-Team: German (http://www.transifex.com/musicbrainz/musicbrainz/language/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -190,7 +193,7 @@ msgctxt "instrument_type"
 msgid ""
 "A grouping of related but different instruments, like the different violin-"
 "like instruments"
-msgstr ""
+msgstr "Eine Gruppe von verwandten aber unterschiedlichen Instrumenten, z. B. violinenartige Instrumente"
 
 #: DB:work_attribute_type_allowed_value/value:28
 msgctxt "work_attribute_type_allowed_value"
@@ -235,13 +238,13 @@ msgstr "Eine Party, ein Empfang oder eine andere Art von Veranstaltung, die anl�
 #: DB:release_packaging/description:17
 msgctxt "release_packaging"
 msgid "A perfect bound book with a sleeve at the end to hold a CD"
-msgstr ""
+msgstr "Ein gebundes Buch mit einem Umschlag am Ende der eine CD beherbergt"
 
 #: DB:place_type/description:8
 msgctxt "place_type"
 msgid ""
 "A place (generally a factory) at which physical media are manufactured."
-msgstr ""
+msgstr "Ein Ort (in der Regel eine Fabrik), in der physische Medien produziert werden."
 
 #: DB:place_type/description:5
 msgctxt "place_type"
@@ -256,14 +259,14 @@ msgctxt "place_type"
 msgid ""
 "A place designed for non-live production of music, typically a recording "
 "studio."
-msgstr ""
+msgstr "Ein Ort, bestimmt für nicht live eingespielte Musikproduktionen, typischerweise ein Aufnahmestudio."
 
 #: DB:place_type/description:2
 msgctxt "place_type"
 msgid ""
 "A place that has live artistic performances as one of its primary functions,"
 " such as a concert hall."
-msgstr ""
+msgstr "Ein Ort, wie z. B. eine Konzerthalle, dessen wesentliche Funktion die Aufführung von künstlerischen Live-Auftritten ist. "
 
 #: DB:place_type/description:6
 msgctxt "place_type"
@@ -271,7 +274,7 @@ msgid ""
 "A place that has worship or religious studies as its main function. "
 "Religious buildings often host concerts and serve as recording locations, "
 "especially for classical music."
-msgstr ""
+msgstr "Ein Ort, der im Wesentlichen religiösen Gottesdiensten oder Studien vorbehalten ist. Religiöse Einrichtungen beherbergen oft Konzerte oder dienen als Aufnahmeorte, insbesonder für klassische Musik. "
 
 #: DB:place_type/description:4
 msgctxt "place_type"
@@ -279,7 +282,7 @@ msgid ""
 "A place whose main purpose is to host outdoor sport events, typically "
 "consisting of a pitch surrounded by a structure for spectators with no roof,"
 " or a roof which can be retracted."
-msgstr ""
+msgstr "Ein Ort, dessen wesentliche Bestimmung die Durchführung von outdoor Sportereignissen ist. Typischerweise bestehend aus einem Sportfeld umgeben von einer Infrastruktur für Zuschauer ohne Dach, oder einem Dach, das eingezogen werden kann. "
 
 #: DB:work_type/description:28
 msgctxt "work_type"
@@ -312,7 +315,7 @@ msgctxt "place_type"
 msgid ""
 "A school, university or other similar educational institution (especially, "
 "but not only, one where music is taught)"
-msgstr ""
+msgstr "Eine Schule, Universität oder vergleichbare Bildungseinrichtung (insbesondere aber nicht ausschließlich solche, in denen Musik unterrichtet wird)"
 
 #: DB:series_type/description:6
 msgctxt "series_type"
@@ -347,7 +350,7 @@ msgstr "Eine Reihe von Veröffentlichungen"
 #: DB:series_type/description:5
 msgctxt "series_type"
 msgid "A series of works which form a catalogue of classical compositions."
-msgstr ""
+msgstr "Eine Serie von Werken, die einen Katalog klassischer Kompositionen bildet."
 
 #: DB:series_type/description:4
 msgctxt "series_type"
@@ -360,7 +363,7 @@ msgid ""
 "A song cycle is a group of songs designed to be performed in a sequence as a"
 " single entity. In most cases, all of the songs are by the same composer, "
 "and often use words from the same poet or lyricist."
-msgstr ""
+msgstr "Ein Liederzyklus ist eine Reihe von Liedern, die dafür bestimmt ist, in einer Sequenz als vollständige Einheit vorgetragen zu werden. In den meisten Fällen stammen alle Lieder vom gleichen Komponisten und bestehen aus Texten vom gleichen Dichter oder Texter."
 
 #: DB:work_type/description:17
 msgctxt "work_type"
@@ -369,7 +372,7 @@ msgid ""
 "with or without instruments, performed by singing. This is the most common "
 "form by far in folk and popular music, but also fairly common in a classical"
 " context (\"art songs\")."
-msgstr ""
+msgstr "Ein Lied ist in seinem Ursprung (und nach wie vor) eine Komposition für Stimme, mit oder ohne Instrumente, als Gesang vorgetragen. Dies ist die bei weitem gängiste Form in Volks- und Popularmusik, aber auch im klassischen Kontext üblich (\"Kunstlied\")."
 
 #: DB:work_type/description:22
 msgctxt "work_type"
@@ -383,7 +386,7 @@ msgctxt "instrument_type"
 msgid ""
 "A standard grouping of instruments often played together, like a string "
 "quartet"
-msgstr ""
+msgstr "Eine Standardgruppierung von häufig gemeinsam gespielten Instrumenten, wie z. B. ein Streicherquartett."
 
 #: DB:work_type/description:6
 msgctxt "work_type"
@@ -434,7 +437,7 @@ msgstr "as-Moll"
 #: DB:work_attribute_type_allowed_value/value:817
 msgctxt "work_attribute_type_allowed_value"
 msgid "A-sharp major"
-msgstr ""
+msgstr "Ais-Dur"
 
 #: DB:work_attribute_type_allowed_value/value:30
 msgctxt "work_attribute_type_allowed_value"
@@ -444,7 +447,7 @@ msgstr "ais-Moll"
 #: DB:work_attribute_type/name:23
 msgctxt "work_attribute_type"
 msgid "AKM ID"
-msgstr ""
+msgstr "AKM-ID"
 
 #: DB:work_attribute_type/name:13
 msgctxt "work_attribute_type"
@@ -592,7 +595,7 @@ msgid ""
 "An alternate version of a release where the titles have been changed. These "
 "don't correspond to any real release and should be linked to the original "
 "release using the transl(iter)ation relationship."
-msgstr ""
+msgstr "Eine alternative Version der Veröffentlichung, bei der die Titel verändert wurden. Diese entsprechen keiner echten Veröffentlichung und sollten mittel der Transl(iter)ationsbeziehung mit dem Original verknüpft werden. "
 
 #: DB:work_type/description:1
 msgctxt "work_type"
@@ -607,7 +610,7 @@ msgctxt "work_type"
 msgid ""
 "An audio drama is a dramatized, purely acoustic performance, broadcast on "
 "radio or published on an audio medium (tape, CD, etc.)."
-msgstr ""
+msgstr "Ein Hörspiel ist eine dramatisierte, rein akkustische Aufführung, Radioübertragung oder Veröffentlichung auf einem Medium (Kassette, CD, etc.). "
 
 #: DB:event_type/description:2
 msgctxt "event_type"
@@ -679,7 +682,7 @@ msgstr "Jegliche vom Künstler und/oder dem Label offiziell abgesegnete Veröffe
 #: DB:work_attribute_type_allowed_value/value:311
 msgctxt "work_attribute_type_allowed_value"
 msgid "Araban"
-msgstr ""
+msgstr "Araban"
 
 #: DB:work_attribute_type_allowed_value/value:312
 msgctxt "work_attribute_type_allowed_value"
@@ -1232,7 +1235,7 @@ msgstr "Blu-ray"
 #: DB:medium_format/name:79
 msgctxt "medium_format"
 msgid "Blu-ray-R"
-msgstr ""
+msgstr "Blu-ray-R"
 
 #: DB:medium_format/name:35
 msgctxt "medium_format"
@@ -1259,6 +1262,11 @@ msgctxt "label_type"
 msgid "Bootleg Production"
 msgstr "Bootleg-Produktion"
 
+#: DB:release_packaging/name:19
+msgctxt "release_packaging"
+msgid "Box"
+msgstr "Box"
+
 #: DB:work_attribute_type_allowed_value/value:607
 msgctxt "work_attribute_type_allowed_value"
 msgid "Bozlak"
@@ -1267,7 +1275,7 @@ msgstr ""
 #: DB:instrument_alias_type/name:3
 msgctxt "alias_type"
 msgid "Brand name"
-msgstr ""
+msgstr "Markenname"
 
 #: DB:release_group_primary_type/name:12
 msgctxt "release_group_primary_type"
@@ -1363,7 +1371,7 @@ msgstr "Ces-Dur"
 #: DB:work_attribute_type_allowed_value/value:812
 msgctxt "work_attribute_type_allowed_value"
 msgid "C-flat minor"
-msgstr ""
+msgstr "ces-Moll"
 
 #: DB:work_attribute_type_allowed_value/value:4
 msgctxt "work_attribute_type_allowed_value"
@@ -1586,7 +1594,7 @@ msgctxt "area_type"
 msgid ""
 "Country is used for areas included (or previously included) in ISO 3166-1, "
 "e.g. United States."
-msgstr ""
+msgstr "Land wird für Gebiete verwendet, die in ISO 3166-1 enthalten sind (oder zuvor enthalten waren), z. B. die Vereinigten Staaten."
 
 #: DB:area_type/name:7
 msgctxt "area_type"
@@ -1600,7 +1608,7 @@ msgid ""
 "not the main administrative divisions but are also not municipalities, e.g. "
 "counties in the USA. These are not considered when displaying the parent "
 "areas for a given area."
-msgstr ""
+msgstr "Kreis wird für kleinere Verwaltungseinheiten eines Landes verwendet, die nicht die Hauptverwaltungseinheiten sind, aber auch keine Gemeinden, z. B. Countys in den USA, Landkreise in Deutschland oder Bezirke in Österreich und der Schweiz. Diese werden bei der Anzeige der übergeordneten Bereiche für einen bestimmten Bereich nicht berücksichtigt."
 
 #: DB:work_attribute_type_allowed_value/value:608
 msgctxt "work_attribute_type_allowed_value"
@@ -1676,7 +1684,7 @@ msgstr "des-Moll"
 #: DB:work_attribute_type_allowed_value/value:813
 msgctxt "work_attribute_type_allowed_value"
 msgid "D-sharp major"
-msgstr ""
+msgstr "Dis-Dur"
 
 #: DB:work_attribute_type_allowed_value/value:10
 msgctxt "work_attribute_type_allowed_value"
@@ -1902,7 +1910,7 @@ msgstr "Dhēnuka"
 #: DB:release_packaging/name:17
 msgctxt "release_packaging"
 msgid "Digibook"
-msgstr ""
+msgstr "Digibook"
 
 #: DB:release_packaging/name:3
 msgctxt "release_packaging"
@@ -1997,17 +2005,17 @@ msgstr "DualDisc"
 #: DB:medium_format/name:67
 msgctxt "medium_format"
 msgid "DualDisc (CD side)"
-msgstr "DualDisc (CD Seite)"
+msgstr "DualDisc (CD-Seite)"
 
 #: DB:medium_format/name:65
 msgctxt "medium_format"
 msgid "DualDisc (DVD-Audio side)"
-msgstr "DualDisc (DVD-Audio Seite)"
+msgstr "DualDisc (DVD-Audio-Seite)"
 
 #: DB:medium_format/name:66
 msgctxt "medium_format"
 msgid "DualDisc (DVD-Video side)"
-msgstr "DualDisc (DVD-Video Seite)"
+msgstr "DualDisc (DVD-Video-Seite)"
 
 #: DB:work_attribute_type_allowed_value/value:612
 msgctxt "work_attribute_type_allowed_value"
@@ -2169,7 +2177,7 @@ msgstr "es-Moll"
 #: DB:work_attribute_type_allowed_value/value:814
 msgctxt "work_attribute_type_allowed_value"
 msgid "E-sharp major"
-msgstr ""
+msgstr "Eis-Dur"
 
 #: DB:work_attribute_type_allowed_value/value:15
 msgctxt "work_attribute_type_allowed_value"
@@ -2189,7 +2197,7 @@ msgstr "Edison Diamond Disc"
 #: DB:place_type/name:7
 msgctxt "place_type"
 msgid "Educational institution"
-msgstr ""
+msgstr "Bildungseinrichtung"
 
 #: DB:instrument_type/name:4
 msgctxt "instrument_type"
@@ -2204,7 +2212,7 @@ msgstr "Erweiterte CD"
 #: DB:instrument_type/name:6
 msgctxt "instrument_type"
 msgid "Ensemble"
-msgstr ""
+msgstr "Ensemble"
 
 #: DB:work_attribute_type_allowed_value/value:356
 msgctxt "work_attribute_type_allowed_value"
@@ -2234,7 +2242,7 @@ msgstr "Veranstaltungsname"
 #: DB:series_type/name:6
 msgctxt "series_type"
 msgid "Event series"
-msgstr ""
+msgstr "Veranstaltungsreihe"
 
 #: DB:work_attribute_type_allowed_value/value:729
 msgctxt "work_attribute_type_allowed_value"
@@ -2339,7 +2347,7 @@ msgstr ""
 #: DB:instrument_type/name:7
 msgctxt "instrument_type"
 msgid "Family"
-msgstr ""
+msgstr "Familie"
 
 #: DB:work_attribute_type_allowed_value/value:615
 msgctxt "work_attribute_type_allowed_value"
@@ -2431,7 +2439,7 @@ msgctxt "medium_format"
 msgid ""
 "Flat discs with grooves used in phonographs/gramophones. For shellac and "
 "vinyl records, use that specifically"
-msgstr ""
+msgstr "Flache Scheiben mit Rillen für Phonographen/Grammophone. Für Schellack- und Vinylplatten das Spezifische verwenden"
 
 #: DB:medium_format/name:51
 msgctxt "medium_format"
@@ -2449,7 +2457,14 @@ msgstr "Die flexible Disc (Flexidisc, Schallfolie oder Flexi) ist eine Schallpla
 #: DB:medium_format/name:76
 msgctxt "medium_format"
 msgid "Floppy Disk"
-msgstr ""
+msgstr "Diskette"
+
+#: DB:gender/description:4
+msgctxt "gender"
+msgid ""
+"For cases where gender just doesn't apply at all (like companies entered as "
+"artists)."
+msgstr "Für Fälle, in denen das Geschlecht einfach nicht anwendbar ist (wie bei Unternehmen, die als Interpreten eingetragen sind)."
 
 #: DB:work_attribute_type/name:16
 msgctxt "work_attribute_type"
@@ -2499,7 +2514,7 @@ msgstr "Ges-Dur"
 #: DB:work_attribute_type_allowed_value/value:816
 msgctxt "work_attribute_type_allowed_value"
 msgid "G-flat minor"
-msgstr ""
+msgstr "ges-Moll"
 
 #: DB:work_attribute_type_allowed_value/value:24
 msgctxt "work_attribute_type_allowed_value"
@@ -2814,7 +2829,7 @@ msgstr "Hezeç"
 #: DB:medium_format/name:75
 msgctxt "medium_format"
 msgid "HiPac"
-msgstr ""
+msgstr "HiPac"
 
 #: DB:work_attribute_type_allowed_value/value:391
 msgctxt "work_attribute_type_allowed_value"
@@ -3084,27 +3099,37 @@ msgstr ""
 #: DB:work_attribute_type/name:29
 msgctxt "work_attribute_type"
 msgid "ICE ID"
-msgstr ""
+msgstr "ICE-ID"
 
 #: DB:work_attribute_type/description:28
 msgctxt "work_attribute_type"
 msgid "ID for the Belgian rights society SABAM"
-msgstr ""
+msgstr "ID für die belgische Rechtegesellschaft SABAM"
 
 #: DB:work_attribute_type/description:29
 msgctxt "work_attribute_type"
 msgid "ID for the International Copyright Enterprise"
-msgstr ""
+msgstr "ID für das International Copyright Enterprise"
+
+#: DB:work_attribute_type/description:3
+msgctxt "work_attribute_type"
+msgid "ID for the Japanese rights society JASRAC"
+msgstr "ID für die japanische Rechtegesellschaft JASRAC"
+
+#: DB:work_attribute_type/description:33
+msgctxt "work_attribute_type"
+msgid "ID for the Japanese rights society NexTone"
+msgstr "ID für die japanische Rechtegesellschaft NexTone"
 
 #: DB:work_attribute_type/description:27
 msgctxt "work_attribute_type"
 msgid "ID for the Mexican rights society SACM"
-msgstr ""
+msgstr "ID für die mexikanische Rechtegesellschaft SACM"
 
 #: DB:work_attribute_type/description:30
 msgctxt "work_attribute_type"
 msgid "ID for the Polish rights society ZAiKS"
-msgstr ""
+msgstr "ID für die polnische Rechtegesellschaft ZAiKS"
 
 #: DB:work_attribute_type/name:14
 msgctxt "work_attribute_type"
@@ -3124,14 +3149,14 @@ msgstr "Imprint"
 #: DB:work_type/name:30
 msgctxt "work_type"
 msgid "Incidental music"
-msgstr ""
+msgstr "Bühnenmusik/Begleitmusik"
 
 #: DB:work_type/description:30
 msgctxt "work_type"
 msgid ""
 "Incidental music is music written as background for (usually) a theatre "
 "play."
-msgstr ""
+msgstr "Bühnenmusik/Begleitmusik ist Musik, die (meist) als Hintergrund für ein Theaterstück geschrieben wird."
 
 #: DB:place_type/name:5
 msgctxt "place_type"
@@ -3214,7 +3239,7 @@ msgid ""
 "Island is used for islands and atolls which don't form subdivisions of their"
 " own, e.g. Skye. These are not considered when displaying the parent areas "
 "for a given area."
-msgstr ""
+msgstr "Insel wird für Inseln und Atolle verwendet, die keine eigenen Unterteilungen bilden, z. B. Skye. Diese werden bei der Anzeige der übergeordneten Gebiete für ein bestimmtes Gebiet nicht berücksichtigt."
 
 #: DB:work_attribute_type/name:3
 msgctxt "work_attribute_type"
@@ -4070,6 +4095,11 @@ msgctxt "work_attribute_type_allowed_value"
 msgid "Mevlidişerif"
 msgstr "Mevlidişerif"
 
+#: DB:medium_format/name:83
+msgctxt "medium_format"
+msgid "Microcassette"
+msgstr "Mikrokassette"
+
 #: DB:medium_format/name:6
 msgctxt "medium_format"
 msgid "MiniDisc"
@@ -4590,6 +4620,11 @@ msgctxt "work_attribute_type_allowed_value"
 msgid "Nevruzi Rumi"
 msgstr ""
 
+#: DB:work_attribute_type/name:33
+msgctxt "work_attribute_type"
+msgid "NexTone ID"
+msgstr "NexTone-ID"
+
 #: DB:work_attribute_type_allowed_value/value:471
 msgctxt "work_attribute_type_allowed_value"
 msgid "Neşataver"
@@ -4684,6 +4719,11 @@ msgstr "Nişabureyn"
 msgctxt "release_packaging"
 msgid "None"
 msgstr "Keine"
+
+#: DB:gender/name:4
+msgctxt "gender"
+msgid "Not applicable"
+msgstr "Nicht zutreffend"
 
 #: DB:work_attribute_type_allowed_value/value:491
 msgctxt "work_attribute_type_allowed_value"
@@ -4843,7 +4883,7 @@ msgstr "Ouvertüre"
 #: DB:editor_collection_type/name:2
 msgctxt "collection_type"
 msgid "Owned music"
-msgstr ""
+msgstr "Eigene Musik"
 
 #: DB:work_attribute_type_allowed_value/value:762
 msgctxt "work_attribute_type_allowed_value"
@@ -4959,7 +4999,7 @@ msgstr "Peşrev"
 #: DB:medium_format/name:73
 msgctxt "medium_format"
 msgid "Phonograph record"
-msgstr ""
+msgstr "Phonographenaufnahme"
 
 #: DB:medium_format/name:15
 msgctxt "medium_format"
@@ -4976,6 +5016,16 @@ msgctxt "alias_type"
 msgid "Place name"
 msgstr "Örtlichkeitsname"
 
+#: DB:release_packaging/description:20
+msgctxt "release_packaging"
+msgid "Plastic CD tray inside a cardboard slipcover"
+msgstr "CD-Tray aus Kunststoff in einem Pappschuber"
+
+#: DB:release_packaging/name:18
+msgctxt "release_packaging"
+msgid "Plastic Sleeve"
+msgstr "Plastikhülle"
+
 #: DB:work_type/name:28
 msgctxt "work_type"
 msgid "Play"
@@ -4989,7 +5039,7 @@ msgstr ""
 #: DB:medium_format/name:45
 msgctxt "medium_format"
 msgid "Playbutton"
-msgstr ""
+msgstr "Playbutton"
 
 #: DB:work_type/name:21
 msgctxt "work_type"
@@ -5205,7 +5255,7 @@ msgstr "Ravicandrika"
 #: DB:cover_art_archive.art_type/name:14
 msgctxt "cover_art_type"
 msgid "Raw/Unedited"
-msgstr ""
+msgstr "Raw/unbearbeitet"
 
 #: DB:editor_collection_type/name:12
 msgctxt "collection_type"
@@ -5220,7 +5270,7 @@ msgstr "Name der Aufnahme"
 #: DB:series_type/name:3
 msgctxt "series_type"
 msgid "Recording series"
-msgstr ""
+msgstr "Aufnahmenreihe"
 
 #: DB:medium_format/name:10
 msgctxt "medium_format"
@@ -5260,7 +5310,7 @@ msgstr "Name der Veröffentlichungsgruppe"
 #: DB:series_type/name:1
 msgctxt "series_type"
 msgid "Release group series"
-msgstr ""
+msgstr "Veröffentlichungsgruppenreihe"
 
 #: DB:release_alias_type/name:1
 msgctxt "alias_type"
@@ -5270,7 +5320,7 @@ msgstr "Name der Veröffentlichung"
 #: DB:series_type/name:2
 msgctxt "series_type"
 msgid "Release series"
-msgstr ""
+msgstr "Veröffentlichungsreihe"
 
 #: DB:place_type/name:6
 msgctxt "place_type"
@@ -5426,7 +5476,7 @@ msgstr "Rūpaka"
 #: DB:work_attribute_type/name:28
 msgctxt "work_attribute_type"
 msgid "SABAM ID"
-msgstr ""
+msgstr "SABAM ID"
 
 #: DB:medium_format/name:3
 msgctxt "medium_format"
@@ -5441,12 +5491,12 @@ msgstr "SACEM ID"
 #: DB:work_attribute_type/name:27
 msgctxt "work_attribute_type"
 msgid "SACM ID"
-msgstr ""
+msgstr "SACM ID"
 
 #: DB:work_attribute_type/name:24
 msgctxt "work_attribute_type"
 msgid "SADAIC ID"
-msgstr ""
+msgstr "SADAIC ID"
 
 #: DB:medium_format/name:62
 msgctxt "medium_format"
@@ -5740,6 +5790,11 @@ msgstr ""
 #: DB:work_attribute_type_allowed_value/value:843
 msgctxt "work_attribute_type_allowed_value"
 msgid "Sitārkhānī"
+msgstr ""
+
+#: DB:release_packaging/name:20
+msgctxt "release_packaging"
+msgid "Slidepack"
 msgstr ""
 
 #: DB:release_packaging/name:2
@@ -6158,6 +6213,13 @@ msgid ""
 "medium."
 msgstr "Die CD-Seite einer hybrid SACD. Die SACD-Seite sollte als separates Medium hinzugefügt werden."
 
+#: DB:medium_format/description:82
+msgctxt "medium_format"
+msgid ""
+"The CD side of a vinyl + CD VinylDisc. The vinyl side should be added as a "
+"separate medium."
+msgstr "Die CD-Seite einer Vinyl + CD VinylDisc. Die Vinyl-Seite sollte als separates Medium hinzugefügt werden."
+
 #: DB:medium_format/description:60
 msgctxt "medium_format"
 msgid ""
@@ -6188,6 +6250,13 @@ msgid ""
 "separate medium."
 msgstr "Die DVD (video)-Seite einer DualDisc. Die CD-Seite sollte als separates Medium hinzugefügt werden."
 
+#: DB:medium_format/description:80
+msgctxt "medium_format"
+msgid ""
+"The DVD side of a vinyl + DVD VinylDisc. The vinyl side should be added as a"
+" separate medium."
+msgstr "Die DVD-Seite einer Vinyl + DVD VinylDisc. Die Vinyl-Seite sollte als separates Medium hinzugefügt werden."
+
 #: DB:medium_format/description:64
 msgctxt "medium_format"
 msgid ""
@@ -6215,13 +6284,20 @@ msgctxt "release_packaging"
 msgid "The traditional CD case, made of hard, brittle plastic."
 msgstr "Die traditionelle CD-Hülle aus hartem, spröden Kunststoff."
 
+#: DB:medium_format/description:81
+msgctxt "medium_format"
+msgid ""
+"The vinyl side of a VinylDisc. The CD or DVD side should be added as a "
+"separate medium."
+msgstr "Die Vinyl-Seite einer VinylDisc. Die CD- oder DVD-Seite sollte als separates Medium hinzugefügt werden."
+
 #: DB:work_type/description:23
 msgctxt "work_type"
 msgid ""
 "This represents literary works written in prose, that is, written in "
 "relatively ordinary language without metrical structure (e.g. novels, short "
 "stories, essays...)."
-msgstr ""
+msgstr "Repräsentiert literarische Werke, die in Prosa geschrieben wurden, d. h. in einer relativ gewöhnlichen Sprache ohne metrische Struktur (z. B. Romane, Kurzgeschichten, Essays, …)."
 
 #: DB:work_attribute_type_allowed_value/value:1041
 msgctxt "work_attribute_type_allowed_value"
@@ -6363,7 +6439,7 @@ msgctxt "cover_art_type"
 msgid ""
 "Use for images that need work to be used for tagging (but can possibly "
 "already be used for reference)"
-msgstr ""
+msgstr "Für Bilder, die vor der Verwendung fürs Tagging überarbeitet werden müssen (aber möglicherweise bereits als Referenz verwendet werden können)"
 
 #: DB:work_attribute_type/name:17
 msgctxt "work_attribute_type"
@@ -6510,7 +6586,22 @@ msgstr "Vinyl"
 #: DB:medium_format/name:48
 msgctxt "medium_format"
 msgid "VinylDisc"
-msgstr "Vinyl-Platte"
+msgstr "VinylDisc"
+
+#: DB:medium_format/name:82
+msgctxt "medium_format"
+msgid "VinylDisc (CD side)"
+msgstr "VinylDisc (CD-Seite)"
+
+#: DB:medium_format/name:80
+msgctxt "medium_format"
+msgid "VinylDisc (DVD side)"
+msgstr "VinylDisc (DVD-Seite)"
+
+#: DB:medium_format/name:81
+msgctxt "medium_format"
+msgid "VinylDisc (Vinyl side)"
+msgstr "VinylDisc (Vinyl-Seite)"
 
 #: DB:work_attribute_type_allowed_value/value:259
 #: DB:work_attribute_type_allowed_value/value:1047
@@ -6576,7 +6667,7 @@ msgstr "Werkname"
 #: DB:series_type/name:4
 msgctxt "series_type"
 msgid "Work series"
-msgstr ""
+msgstr "Werkreihe"
 
 #: DB:work_attribute_type_allowed_value/value:277
 msgctxt "work_attribute_type_allowed_value"
@@ -6627,7 +6718,7 @@ msgstr "Yürüksofyan"
 #: DB:work_attribute_type/name:30
 msgctxt "work_attribute_type"
 msgid "ZAiKS ID"
-msgstr ""
+msgstr "ZAiKS-ID"
 
 #: DB:work_attribute_type_allowed_value/value:780
 msgctxt "work_attribute_type_allowed_value"
@@ -6697,7 +6788,7 @@ msgstr ""
 #: DB:medium_format/name:77
 msgctxt "medium_format"
 msgid "Zip Disk"
-msgstr ""
+msgstr "Zip-Diskette"
 
 #: DB:work_attribute_type_allowed_value/value:599
 msgctxt "work_attribute_type_allowed_value"

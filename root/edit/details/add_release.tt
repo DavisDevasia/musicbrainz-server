@@ -29,7 +29,7 @@
 
   [% IF edit.display_data.comment %]
   <tr>
-    <th>[% l('Disambiguation:') %]</th>
+    <th>[% add_colon(l('Disambiguation')) %]</th>
     <td>[% edit.display_data.comment | html %]</td>
   </tr>
   [% END %]
@@ -72,7 +72,12 @@
   [% IF edit.display_data.events.size %]
   <tr>
     <th>[% l('Release events:') %]</th>
-    <td>[% release_events(edit.display_data.events) %]</td>
+    <td>
+      [% React.embed(c, 'static/scripts/common/components/ReleaseEvents', {
+           abbreviated => boolean_to_json(0),
+           events => edit.display_data.events,
+         }) %]
+    </td>
   </tr>
   [% END %]
 </table>

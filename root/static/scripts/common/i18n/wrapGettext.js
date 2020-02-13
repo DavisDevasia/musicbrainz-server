@@ -1,28 +1,27 @@
-// Copyright (C) 2015 MetaBrainz Foundation
-//
-// This file is part of MusicBrainz, the open internet music database,
-// and is licensed under the GPL version 2, or (at your option) any
-// later version: http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * @flow
+ * Copyright (C) 2015 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
-const isNodeJS = require('detect-node');
-const sliced = require('sliced');
+import isNodeJS from 'detect-node';
+import Jed from 'jed';
 
-const cleanMsgid = require('./cleanMsgid').default;
-const expand2 = require('./expand2').default;
+import cleanMsgid from './cleanMsgid';
 
 let gettext;
+let serverGettext;
 if (isNodeJS) {
-  // Avoid bundling this module in the browser by using a dynamic require().
-  const gettextPath = '../../../../server/gettext';
-  gettext = require(gettextPath);
+  gettext = require('../../../../server/gettext');
+  serverGettext = gettext;
 } else {
-  const Jed = require('jed');
-  const jedData = require('./jedData');
+  const jedData = require('../../jed-data');
   // jedData contains all domains used by the client.
   gettext = new Jed(jedData[jedData.locale]);
 }
-
-const canLoadDomain = typeof gettext.loadDomain === 'function';
 
 /*
  * On the usage of cleanMsgid:
@@ -35,32 +34,33 @@ const canLoadDomain = typeof gettext.loadDomain === 'function';
  */
 
 function tryLoadDomain(domain) {
-  if (canLoadDomain && !gettext.options.locale_data[domain]) {
-    gettext.loadDomain(domain);
+  if (serverGettext &&
+      !serverGettext.jedInstance.options.locale_data[domain]) {
+    serverGettext.loadDomain(domain);
   }
 }
 
-export function dgettext(domain) {
-  tryLoadDomain(domain);
-  return function (key, args) {
+export function dgettext(domain: GettextDomain) {
+  return function (key: string) {
+    tryLoadDomain(domain);
     key = cleanMsgid(key);
-    return expand2(gettext.dgettext(domain, key), args);
+    return gettext.dgettext(domain, key);
   };
 }
 
-export function dngettext(domain) {
-  tryLoadDomain(domain);
-  return function (skey, pkey, val, args) {
+export function dngettext(domain: GettextDomain) {
+  return function (skey: string, pkey: string, val: number) {
+    tryLoadDomain(domain);
     skey = cleanMsgid(skey);
     pkey = cleanMsgid(pkey);
-    return expand2(gettext.dngettext(domain, skey, pkey, val), args);
+    return gettext.dngettext(domain, skey, pkey, val);
   };
 }
 
-export function dpgettext(domain) {
-  tryLoadDomain(domain);
-  return function (key, context, args) {
+export function dpgettext(domain: GettextDomain) {
+  return function (key: string, context: string) {
+    tryLoadDomain(domain);
     key = cleanMsgid(key);
-    return expand2(gettext.dpgettext(domain, context, key), args);
+    return gettext.dpgettext(domain, context, key);
   };
 }

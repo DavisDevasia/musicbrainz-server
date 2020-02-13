@@ -9,9 +9,9 @@
 
 import * as React from 'react';
 
-import {l} from '../../static/scripts/common/i18n';
 import EntityLink from '../../static/scripts/common/components/EntityLink';
-import formatEntityTypeName from '../../static/scripts/common/utility/formatEntityTypeName';
+import formatEntityTypeName
+  from '../../static/scripts/common/utility/formatEntityTypeName';
 import loopParity from '../../utility/loopParity';
 import type {ResultsPropsT} from '../types';
 
@@ -42,7 +42,6 @@ function buildResult(result, index) {
 }
 
 const AnnotationResults = ({
-  $c,
   form,
   lastUpdated,
   pager,

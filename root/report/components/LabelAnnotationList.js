@@ -9,7 +9,6 @@
 
 import * as React from 'react';
 
-import {l} from '../../static/scripts/common/i18n';
 import PaginatedResults from '../../components/PaginatedResults';
 import EntityLink from '../../static/scripts/common/components/EntityLink';
 import loopParity from '../../utility/loopParity';
@@ -30,10 +29,16 @@ const LabelAnnotationList = ({
       </thead>
       <tbody>
         {items.map((item, index) => (
-          <tr className={loopParity(index)} key={item.label.gid}>
-            <td>
-              <EntityLink entity={item.label} />
-            </td>
+          <tr className={loopParity(index)} key={item.label_id}>
+            {item.label ? (
+              <td>
+                <EntityLink entity={item.label} />
+              </td>
+            ) : (
+              <td>
+                {l('This label no longer exists.')}
+              </td>
+            )}
             <td dangerouslySetInnerHTML={{__html: item.text}} />
             <td>{item.created}</td>
           </tr>

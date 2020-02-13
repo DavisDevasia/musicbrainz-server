@@ -9,21 +9,27 @@
 
 import React from 'react';
 
+import {unwrapNl} from '../static/scripts/common/i18n';
+
 import FormRow from './FormRow';
 import FieldErrors from './FieldErrors';
 import FormLabel from './FormLabel';
 
-type Props = {|
-  +field: FieldT<string>,
+type RadioOptionsT = $ReadOnlyArray<{
+  +label: string | (() => string | React$MixedElement),
+  +value: number | string,
+}>;
+
+type Props = {
+  +field: ReadOnlyFieldT<string>,
   +label: string,
-  +options: SelectOptionsT,
+  +options: RadioOptionsT,
   +required?: boolean,
-|};
+};
 
 const FormRowRadio = ({
   field,
   label,
-  onChange,
   options,
   required = false,
 }: Props) => (
@@ -41,7 +47,7 @@ const FormRowRadio = ({
               value={option.value}
             />
             {' '}
-            {option.label.toLocaleString()}
+            {unwrapNl<string | React$MixedElement>(option.label)}
           </label>
           {index < options.length - 1 ? <br /> : null}
         </React.Fragment>

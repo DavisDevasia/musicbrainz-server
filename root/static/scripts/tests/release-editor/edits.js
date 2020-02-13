@@ -1,52 +1,33 @@
-// This file is part of MusicBrainz, the open internet music database.
-// Copyright (C) 2014 MetaBrainz Foundation
-// Licensed under the GPL version 2, or (at your option) any later version:
-// http://www.gnu.org/licenses/gpl-2.0.txt
+/*
+ * Copyright (C) 2014 MetaBrainz Foundation
+ *
+ * This file is part of MusicBrainz, the open internet music database,
+ * and is licensed under the GPL version 2, or (at your option) any
+ * later version: http://www.gnu.org/licenses/gpl-2.0.txt
+ */
 
 import '../typeInfo';
 
-import $ from 'jquery';
 import ko from 'knockout';
 import _ from 'lodash';
 import test from 'tape';
-import ReactTestUtils from 'react-dom/test-utils';
-import ReactDOM from 'react-dom';
 
 import MB from '../../common/MB';
 import validation from '../../edit/validation';
 import fields from '../../release-editor/fields';
-import {triggerChange, triggerClick, addURL} from '../external-links-editor/utils';
 
 import * as common from './common';
 
 var releaseEditor = MB.releaseEditor;
 MB.formatsWithDiscIDs = [1];
 
-function addReleaseTest(name, callback) {
-    test(name, function (t) {
-        var data = $.extend(true, {}, common.testRelease);
-        var medium = data.mediums[0];
-
-        medium.originalID = medium.id;
-
-        delete medium.id;
-        delete data.labels[0].id;
-        delete data.labels[1].id;
-
-        callback(t, common.setupReleaseAdd(data));
-
-        MB.entityCache = {};
-        validation.errorFields([]);
-    });
-}
-
 test("releaseReorderMediums edits are not generated for new releases", function (t) {
     t.plan(1);
 
     var release = new fields.Release({
         mediums: [
-            { position: 1, tracks: [ { name: "foo" } ] },
-            { position: 2, tracks: [ { name: "bar" } ] },
+            { position: 1, tracks: [{ name: "foo" }] },
+            { position: 2, tracks: [{ name: "bar" }] },
         ]
     });
 
@@ -256,7 +237,6 @@ test("mediumCreate edits are not given conflicting positions", function (t) {
 
     var mediums = release.mediums;
     var medium1 = mediums()[0];
-    var medium3 = mediums()[1];
 
     medium1.position(4);
 

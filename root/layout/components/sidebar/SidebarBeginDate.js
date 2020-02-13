@@ -9,18 +9,19 @@
 
 import * as React from 'react';
 
-import bracketed from '../../../static/scripts/common/utility/bracketed';
+import {bracketedText}
+  from '../../../static/scripts/common/utility/bracketed';
 import formatDate from '../../../static/scripts/common/utility/formatDate';
 import isDateEmpty from '../../../static/scripts/common/utility/isDateEmpty';
 import {displayAgeAgo} from '../../../utility/age';
 
 import {SidebarProperty} from './SidebarProperties';
 
-type Props = {|
+type Props = {
   +age?: [number, number, number] | null,
-  +entity: {...DatePeriodRoleT},
+  +entity: $ReadOnly<{...DatePeriodRoleT, ...}>,
   +label: string,
-|};
+};
 
 const SidebarBeginDate = ({age, entity, label}: Props) => (
   isDateEmpty(entity.begin_date) ? (
@@ -29,7 +30,7 @@ const SidebarBeginDate = ({age, entity, label}: Props) => (
     <SidebarProperty className="begin-date" label={label}>
       {formatDate(entity.begin_date)}
       {(age && isDateEmpty(entity.end_date))
-        ? ' ' + bracketed(displayAgeAgo(age))
+        ? ' ' + bracketedText(displayAgeAgo(age))
         : null}
     </SidebarProperty>
   )

@@ -63,9 +63,12 @@ sub load
 sub load_for_releases
 {
     my ($self, @releases) = @_;
+
+    @releases = grep { !$_->mediums_loaded } @releases;
+    return unless @releases;
+
     my %id_to_release = object_to_ids(@releases);
     my @ids = keys %id_to_release;
-
 
     return unless @ids; # nothing to do
     my $query = "SELECT " . $self->_columns . "
@@ -81,6 +84,8 @@ sub load_for_releases
             weaken($medium->{release}); # XXX HACK!
         }
     }
+
+    $_->mediums_loaded(1) for @releases;
 }
 
 sub update
@@ -226,44 +231,6 @@ sub set_lengths_to_cdtoc
     $self->c->model('Recording')->_delete_from_cache(@recording_ids);
 }
 
-sub merge
-{
-    my ($self, $new_medium_id, $old_medium_id) = @_;
-    my @recording_merges = @{
-        $self->sql->select_list_of_lists(
-            'SELECT DISTINCT newt.recording AS new, oldt.recording AS old
-               FROM track oldt
-               JOIN track newt ON newt.position = oldt.position
-              WHERE newt.medium = ? AND oldt.medium = ?
-                AND newt.recording != oldt.recording',
-            $new_medium_id, $old_medium_id
-        )
-    };
-
-    # We need to make sure that for each old recording, there is only 1 new recording
-    # to merge into. If there is > 1, then it's not clear what we should merge into.
-    my %target_count;
-    $target_count{ $_->[1] }++ for @recording_merges;
-
-    # MBS-8614. Track recording merges, to resolve cases where a recording is
-    # a merge source on one track (after which it gets deleted), and a merge
-    # target on another track (in which case we should instead use the ID of
-    # the target from the first merge).
-    my %merge_targets;
-
-    for my $recording_merge (@recording_merges) {
-        my ($new, $old) = @$recording_merge;
-        next if $target_count{$old} > 1;
-
-        $new = $merge_targets{$new} // $new;
-        $self->c->model('Recording')->merge($new, $old);
-        $merge_targets{$old} = $new;
-    }
-
-    $self->c->model('Track')->merge_mediums($new_medium_id, $old_medium_id);
-}
-
-
 =method reorder
 
     reorder
@@ -307,6 +274,7 @@ sub load_related_info {
     $self->c->model('ArtistCredit')->load(@tracks);
 
     my @recordings = $self->c->model('Recording')->load(@tracks);
+    $self->c->model('ArtistCredit')->load(@recordings);
     $self->c->model('Recording')->load_meta(@recordings);
     $self->c->model('Recording')->load_gid_redirects(@recordings);
     $self->c->model('Recording')->rating->load_user_ratings($user_id, @recordings) if $user_id;

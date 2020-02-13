@@ -8,20 +8,17 @@
  */
 
 import * as React from 'react';
-import moment from 'moment';
-import 'moment-strftime';
-import 'moment-timezone';
 import _ from 'lodash';
+import mutate from 'mutate-cow';
 
 import FormRow from '../../../../components/FormRow';
 import FormRowCheckbox from '../../../../components/FormRowCheckbox';
 import FormRowSelect from '../../../../components/FormRowSelect';
 import FormSubmit from '../../../../components/FormSubmit';
-import {l, N_l} from '../../common/i18n';
-import {Lens, prop, set, compose3} from '../../common/utility/lens';
+import {formatUserDateObject} from '../../../../utility/formatUserDate';
 import hydrate from '../../../../utility/hydrate';
 
-type PreferencesFormT = FormT<{|
+type PreferencesFormT = FormT<{
   +datetime_format: FieldT<string>,
   +email_on_no_vote: FieldT<boolean>,
   +email_on_notes: FieldT<boolean>,
@@ -36,17 +33,18 @@ type PreferencesFormT = FormT<{|
   +subscribe_to_created_series: FieldT<boolean>,
   +subscriptions_email_period: FieldT<string>,
   +timezone: FieldT<string>,
-|}>;
+}>;
 
-type Props = {|
+type Props = {
+  +$c: CatalystContextT | SanitizedCatalystContextT,
   +form: PreferencesFormT,
   +timezone_options: MaybeGroupedOptionsT,
-|};
+};
 
-type State = {|
+type State = {
   form: PreferencesFormT,
   timezoneOptions: MaybeGroupedOptionsT,
-|};
+};
 
 const allowedDateTimeFormats = [
   '%Y-%m-%d %H:%M %Z',
@@ -63,12 +61,12 @@ const allowedDateTimeFormats = [
   '%m.%d.%Y %H:%M',
 ];
 
-function buildDateTimeFormatOptions(timezone) {
-  const hereAndNow = moment.tz(timezone);
+function buildDateTimeFormatOptions($c, timezone) {
+  const hereAndNow = new Date();
   return {
     grouped: false,
     options: allowedDateTimeFormats.map(a => ({
-      label: hereAndNow.strftime(a),
+      label: formatUserDateObject($c, hereAndNow, {format: a, timezone}),
       value: a,
     })),
   };
@@ -82,15 +80,6 @@ const subscriptionsEmailPeriodOptions = {
     {label: N_l('Never'), value: 'never'},
   ],
 };
-
-const timezoneFieldLens: Lens<PreferencesFormT, string> =
-  compose3(prop('field'), prop('timezone'), prop('value'));
-
-const dateTimeFormatFieldLens: Lens<PreferencesFormT, string> =
-  compose3(prop('field'), prop('datetime_format'), prop('value'));
-
-const subscriptionsEmailPeriodFieldLens: Lens<PreferencesFormT, string> =
-  compose3(prop('field'), prop('subscriptions_email_period'), prop('value'));
 
 class PreferencesForm extends React.Component<Props, State> {
   constructor(props: Props) {
@@ -108,28 +97,30 @@ class PreferencesForm extends React.Component<Props, State> {
 
   handleTimezoneChange(e: SyntheticEvent<HTMLSelectElement>) {
     const selectedTimezone = e.currentTarget.value;
-    this.setState(prevState => ({
-      form: set(
-        timezoneFieldLens,
-        selectedTimezone,
-        prevState.form,
-      ),
+    this.setState(prevState => mutate<State, _>(prevState, newState => {
+      newState.form.field.timezone.value = selectedTimezone;
     }));
   }
 
-  handleTimezoneGuess: (e: SyntheticEvent<HTMLButtonElement>) => void;
+  handleTimezoneGuess: () => void;
 
-  handleTimezoneGuess(e: SyntheticEvent<HTMLButtonElement>) {
-    const guess = moment.tz.guess();
-    // $FlowFixMe - $ReadOnlyArray is incompatible with array type
-    if (_.some(this.state.timezoneOptions.options, {value: guess})) {
-      this.setState(prevState => ({
-        form: set(
-          timezoneFieldLens,
-          guess,
-          prevState.form,
-        ),
-      }));
+  handleTimezoneGuess() {
+    let maybeGuess;
+    try {
+      maybeGuess = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch (e) {
+      // ignored where Intl.DateTimeFormat is unsupported
+    }
+    const guess = maybeGuess;
+    if (guess) {
+      for (const option of this.state.timezoneOptions.options) {
+        if (option.value === guess) {
+          this.setState(prevState => mutate<State, _>(prevState, newState => {
+            newState.form.field.timezone.value = guess;
+          }));
+          break;
+        }
+      }
     }
   }
 
@@ -137,12 +128,8 @@ class PreferencesForm extends React.Component<Props, State> {
 
   handleDateTimeFormatChange(e: SyntheticEvent<HTMLSelectElement>) {
     const selectedDateTimeFormat = e.currentTarget.value;
-    this.setState(prevState => ({
-      form: set(
-        dateTimeFormatFieldLens,
-        selectedDateTimeFormat,
-        prevState.form,
-      ),
+    this.setState(prevState => mutate<State, _>(prevState, newState => {
+      newState.form.field.datetime_format.value = selectedDateTimeFormat;
     }));
   }
 
@@ -151,12 +138,9 @@ class PreferencesForm extends React.Component<Props, State> {
 
   handleSubscriptionsEmailPeriodChange(e: SyntheticEvent<HTMLSelectElement>) {
     const selectedSubscriptionsEmailPeriod = e.currentTarget.value;
-    this.setState(prevState => ({
-      form: set(
-        subscriptionsEmailPeriodFieldLens,
-        selectedSubscriptionsEmailPeriod,
-        prevState.form,
-      ),
+    this.setState(prevState => mutate<State, _>(prevState, newState => {
+      newState.form.field.subscriptions_email_period.value =
+        selectedSubscriptionsEmailPeriod;
     }));
   }
 
@@ -187,7 +171,10 @@ class PreferencesForm extends React.Component<Props, State> {
             field={field.datetime_format}
             label={l('Date/time format:')}
             onChange={this.handleDateTimeFormatChange}
-            options={buildDateTimeFormatOptions(field.timezone.value)}
+            options={buildDateTimeFormatOptions(
+              this.props.$c,
+              field.timezone.value,
+            )}
           />
         </fieldset>
         <fieldset>
@@ -213,15 +200,25 @@ class PreferencesForm extends React.Component<Props, State> {
           <legend>{l('Email')}</legend>
           <FormRowCheckbox
             field={field.email_on_no_vote}
-            label={l('Mail me when one of my edits gets a "no" vote. (Note: the email is only sent for the first "no" vote, not each one)')}
+            label={l(
+              `Mail me when one of my edits gets a "no" vote.
+               (Note: the email is only sent for the first "no" vote,
+               not each one)`,
+            )}
           />
           <FormRowCheckbox
             field={field.email_on_notes}
-            label={l('When I add a note to an edit, mail me all future notes for that edit.')}
+            label={l(
+              `When I add a note to an edit,
+               mail me all future notes for that edit.`,
+            )}
           />
           <FormRowCheckbox
             field={field.email_on_vote}
-            label={l('When I vote on an edit, mail me all future notes for that edit.')}
+            label={l(
+              `When I vote on an edit,
+               mail me all future notes for that edit.`,
+            )}
           />
           <FormRowSelect
             field={field.subscriptions_email_period}
@@ -254,4 +251,5 @@ class PreferencesForm extends React.Component<Props, State> {
 }
 
 export type PreferencesFormPropsT = Props;
-export default hydrate<Props>('preferences-form', PreferencesForm);
+
+export default hydrate<Props>('div.preferences-form', PreferencesForm);

@@ -11,31 +11,33 @@ import React from 'react';
 
 import {withCatalystContext} from '../context';
 import Layout from '../layout';
-import ArtistCreditLink from '../static/scripts/common/components/ArtistCreditLink';
+import ArtistCreditLink
+  from '../static/scripts/common/components/ArtistCreditLink';
 import CodeLink from '../static/scripts/common/components/CodeLink';
 import EntityLink from '../static/scripts/common/components/EntityLink';
-import {l, ln} from '../static/scripts/common/i18n';
-import {artistCreditFromArray} from '../static/scripts/common/immutable-entities';
-import formatTrackLength from '../static/scripts/common/utility/formatTrackLength';
+import formatTrackLength
+  from '../static/scripts/common/utility/formatTrackLength';
 import loopParity from '../utility/loopParity';
 
-type PropsT = {|
+type PropsT = {
   +$c: CatalystContextT,
   +isrcs: $ReadOnlyArray<IsrcT>,
   +recordings: $ReadOnlyArray<RecordingT>,
-|};
+};
 
 const Index = ({$c, isrcs, recordings}: PropsT) => {
   const userExists = $c.user_exists;
   const isrc = isrcs[0];
   return (
-    <Layout fullWidth title={l('ISRC “{isrc}”', {isrc: isrc.isrc})}>
+    <Layout fullWidth title={texp.l('ISRC “{isrc}”', {isrc: isrc.isrc})}>
       <h1>
-        {l('ISRC “{isrc}”',
-          {isrc: <CodeLink code={isrc} key="isrc" />})}
+        {exp.l(
+          'ISRC “{isrc}”',
+          {isrc: <CodeLink code={isrc} key="isrc" />},
+        )}
       </h1>
       <h2>
-        {ln(
+        {texp.ln(
           'Associated with {num} recording',
           'Associated with {num} recordings',
           recordings.length,
@@ -47,7 +49,7 @@ const Index = ({$c, isrcs, recordings}: PropsT) => {
           <thead>
             <tr>
               {userExists ? (
-                <th style={{width: '1em'}}>
+                <th>
                   <input type="checkbox" />
                 </th>
               ) : null}
@@ -73,11 +75,7 @@ const Index = ({$c, isrcs, recordings}: PropsT) => {
                 ) : null}
                 <td><EntityLink entity={recording} /></td>
                 <td>
-                  <ArtistCreditLink
-                    artistCredit={
-                      artistCreditFromArray(recording.artistCredit)
-                    }
-                  />
+                  <ArtistCreditLink artistCredit={recording.artistCredit} />
                 </td>
                 <td>{formatTrackLength(recording.length)}</td>
               </tr>
@@ -87,7 +85,9 @@ const Index = ({$c, isrcs, recordings}: PropsT) => {
         {userExists ? (
           <div className="row">
             <span className="buttons">
-              <button type="submit">{l('Add selected recordings for merging')}</button>
+              <button type="submit">
+                {l('Add selected recordings for merging')}
+              </button>
             </span>
           </div>
         ) : null}

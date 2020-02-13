@@ -26,6 +26,7 @@ use MusicBrainz::Server::Data::Utils qw(
 );
 use MusicBrainz::Server::Constants qw(
     $PART_OF_AREA_LINK_TYPE
+    %ENTITIES
     %ENTITIES_WITH_RELATIONSHIP_CREDITS
     @RELATABLE_ENTITIES
     entities_with
@@ -64,15 +65,22 @@ sub _new_from_row
 
     my $weaken;
     if (defined $obj) {
+        $info{source} = $obj;
+        $info{source_type} = $obj->entity_type;
+
         if ($matching_entity_type == 0 && $entity0 == $obj->id) {
             $weaken = 'entity0';
             $info{entity0} = $obj;
             $info{direction} = $MusicBrainz::Server::Entity::Relationship::DIRECTION_FORWARD;
+            $info{source_credit} = $info{entity0_credit};
+            $info{target_credit} = $info{entity1_credit};
         }
         elsif ($matching_entity_type == 1 && $entity1 == $obj->id) {
             $weaken = 'entity1';
             $info{entity1} = $obj;
             $info{direction} = $MusicBrainz::Server::Entity::Relationship::DIRECTION_BACKWARD;
+            $info{source_credit} = $info{entity1_credit};
+            $info{target_credit} = $info{entity0_credit};
         }
         else {
             carp "Neither relationship end-point matched the object.";
@@ -120,7 +128,7 @@ sub get_by_ids
 sub _load
 {
     my ($self, $type, $target_types, $use_cardinality, @objs) = @_;
-    my @target_types = @$target_types;
+    my @target_types = uniq @$target_types;
     my @types = map { [ sort($type, $_) ] } @target_types;
     my @rels;
     foreach my $t (@types) {
@@ -135,14 +143,22 @@ sub _load
         my (@cond, @params, $target, $target_id, $source_id, $query);
 
         if ($type eq $type0) {
-            push @cond, "entity0 IN (" . placeholders(@ids) . ")";
+            my $condstring = "entity0 IN (" . placeholders(@ids) . ")";
+            if ($use_cardinality) {
+                $condstring = "($condstring AND entity0_cardinality = 0)";
+            }
+            push @cond, $condstring;
             push @params, @ids;
             $target = $type1;
             $target_id = 'entity1';
             $source_id = 'entity0';
         }
         if ($type eq $type1) {
-            push @cond, "entity1 IN (" . placeholders(@ids) . ")";
+            my $condstring = "entity1 IN (" . placeholders(@ids) . ")";
+            if ($use_cardinality) {
+                $condstring = "($condstring AND entity1_cardinality = 0)";
+            }
+            push @cond, $condstring;
             push @params, @ids;
             $target = $type0;
             $target_id = 'entity0';
@@ -151,18 +167,26 @@ sub _load
 
         # If the source and target types are the same, two possible conditions
         # will have been added above, so join them with an OR.
-        @cond = ("(" . join(" OR ", @cond) . ")");
-        push @cond, "${source_id}_cardinality = 0" if $use_cardinality;
+        @cond = join(" OR ", @cond);
 
         my $select = "l_${type0}_${type1}.* FROM l_${type0}_${type1}
                       JOIN link l ON link = l.id
                       JOIN link_type lt ON lt.id = l.link_type";
 
-        my $order = 'l.begin_date_year, l.begin_date_month, l.begin_date_day,
+        my $order = 'lt.name, link_order,
+                     l.begin_date_year, l.begin_date_month, l.begin_date_day,
                      l.end_date_year,   l.end_date_month,   l.end_date_day,
                      l.ended';
 
-        $order .= $target eq 'url' ? ', url' : ", musicbrainz_collate(${target}.name)";
+        if ($ENTITIES{$target}{sort_name}) {
+            $order .= ", musicbrainz_collate(${target}.sort_name)";
+        } elsif ($target eq 'url') {
+            $order .= ', url';
+        } else {
+            $order .= ", musicbrainz_collate(${target}.name)";
+        }
+
+        $order .= ', lt.child_order';
 
         $query = "SELECT $select
                     JOIN $target ON $target_id = ${target}.id
@@ -220,12 +244,34 @@ sub load_entities
         if ($rel->entity0_id && !defined($rel->entity0)) {
             my $type = $rel->link->type->entity0_type;
             my $obj = $data_by_type{$type}->{$rel->entity0_id};
-            $rel->entity0($obj) if defined($obj);
+
+            if (defined $obj) {
+                $rel->entity0($obj);
+
+                if ($rel->direction == $MusicBrainz::Server::Entity::Relationship::DIRECTION_BACKWARD) {
+                    $rel->target($obj);
+                    $rel->target_type($type);
+                } elsif (!defined $rel->source) {
+                    $rel->source($obj);
+                    $rel->source_type($type);
+                }
+            }
         }
         if ($rel->entity1_id && !defined($rel->entity1)) {
             my $type = $rel->link->type->entity1_type;
             my $obj = $data_by_type{$type}->{$rel->entity1_id};
-            $rel->entity1($obj) if defined($obj);
+
+            if (defined $obj) {
+                $rel->entity1($obj);
+
+                if ($rel->direction == $MusicBrainz::Server::Entity::Relationship::DIRECTION_FORWARD) {
+                    $rel->target($obj);
+                    $rel->target_type($type);
+                } elsif (!defined $rel->source) {
+                    $rel->source($obj);
+                    $rel->source_type($type);
+                }
+            }
         }
     }
 
@@ -258,7 +304,11 @@ sub _load_subset {
     }
 
     $self->c->model('Link')->load(@rels);
-    $self->c->model('LinkType')->load(map { $_->link } @rels);
+    my @links = map { $_->link } @rels;
+    $self->c->model('LinkType')->load(@links);
+    my @link_types = map { $_->type } @links;
+    $self->c->model('LinkType')->load_root_ids(@link_types);
+    $self->c->model('LinkAttributeType')->load(map { $_->all_attributes } @link_types);
     $self->load_entities(@rels);
 
     return @rels;

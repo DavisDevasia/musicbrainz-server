@@ -7,11 +7,12 @@
  * later version: http://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-import {l} from '../i18n';
-
 import formatDate from './formatDate';
 
-export default function formatEndDate<+T: {...DatePeriodRoleT}>(entity: T) {
+export default function formatEndDate<+T: $ReadOnly<{
+  ...DatePeriodRoleT,
+  ...,
+}>>(entity: T) {
   return entity.end_date
     ? formatDate(entity.end_date)
     : entity.ended ? l('[unknown]') : null;
