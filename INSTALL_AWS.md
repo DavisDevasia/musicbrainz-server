@@ -215,7 +215,7 @@ Make sure you run it inside `screen` and let java use available memory using -Xm
 cd /home/search
 cp search-server/index/target/index-2.0-SNAPSHOT-jar-with-dependencies.jar .
 screen -S dl wget http://ftp.freedb.org/pub/freedb/freedb-complete-20181201.tar.bz2
-screen -S indexing -dmL java -Xmx4096M -jar index-2.0-SNAPSHOT-jar-with-dependencies.jar --indexes-dir /home/search/indexdata --freedb-dump freedb-complete-20181201.tar.bz2
+screen -S indexing -dmL java -Xmx4096M -jar index-2.0-SNAPSHOT-jar-with-dependencies.jar -d musicbrainz_db -u musicbrainz --indexes-dir /home/search/indexdata --freedb-dump freedb-complete-20181201.tar.bz2
 ```
 
 ## Configure auto-index updating parameters
